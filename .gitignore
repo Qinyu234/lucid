@@ -1,0 +1,13 @@
+# 数据路径
+output/
+
+# 可选：如果 input 是临时数据
+# input/
+
+# python环境
+.venv/
+
+# 系统/IDE
+.vscode/
+__pycache__/
+*.pyc
