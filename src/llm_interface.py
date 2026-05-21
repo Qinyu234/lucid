@@ -1,52 +1,106 @@
-# =========================
-# FUNCTION: LLM Interface
-# PURPOSE:
-# Expand active tree nodes using Qwen coder
-# =========================
-
 from .llm import generate
 
 
-def traverse_and_fill(tree,llm):
+def expand_structure(
+    tree,
+    llm
+):
 
     root=tree["root"]
 
-    queue=[root]
+    if root.children:
 
-    while queue:
+        return
 
-        node=queue.pop()
+    prompt=f"""
+goal:
 
-        if node.completed:
-            continue
+{root.semantic}
 
-        prompt=build_prompt(node)
+Create helper functions.
 
-        code=generate(prompt)
+Output only python skeleton.
+
+Example:
+
+def capture():
+    pass
+"""
+
+    code=generate(
+        prompt
+    )
+
+    root.code+=(
+        "\n"+code
+    )
+
+
+def traverse_and_fill(
+    tree,
+    llm
+):
+
+    nodes=collect_active_nodes(
+        tree
+    )
+
+    for node in nodes:
+
+        prompt=build_prompt(
+            node
+        )
+
+        code=generate(
+            prompt
+        )
 
         node.update_code(
-            node.code+"\n"+code
-        )
-
-        node.mark_completed()
-
-        queue.extend(
-            node.children
+            node.code+
+            "\n"+
+            code
         )
 
 
-def build_prompt(node):
+def collect_active_nodes(
+    tree
+):
+
+    nodes=[]
+
+    q=[tree["root"]]
+
+    while q:
+
+        n=q.pop()
+
+        if not n.completed:
+
+            nodes.append(
+                n
+            )
+
+        q.extend(
+            n.children
+        )
+
+    return nodes
+
+
+def build_prompt(
+    node
+):
 
     return f"""
 semantic:
 
 {node.semantic}
 
-current code:
+existing code:
 
 {node.code}
 
-continue implementation
+Implement code.
 
-only output code
+Only output code.
 """

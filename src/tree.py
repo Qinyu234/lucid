@@ -93,43 +93,34 @@ def init_tree(seed):
         "iteration":0
     }
 
-
 def is_converged(tree):
 
     root=tree["root"]
 
-    queue=[root]
+    q=[root]
 
     active=0
 
-    max_depth=0
+    total=0
 
-    nodes=0
+    while q:
 
-    while queue:
+        node=q.pop()
 
-        node=queue.pop()
+        total+=1
 
-        nodes+=1
+        if len(
+            node.code
+        )<50:
 
-        max_depth=max(
-            max_depth,
-            node.depth
-        )
-
-        if not node.completed:
             active+=1
 
-        queue.extend(
+        q.extend(
             node.children
         )
 
-    # 防夜间爆炸
+    if total>100:
 
-    if nodes>100:
-        return True
-
-    if max_depth>6:
         return True
 
     return active==0

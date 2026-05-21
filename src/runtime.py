@@ -1,18 +1,16 @@
 # =========================
 # FUNCTION: Program Growth Runtime
 # PURPOSE:
-# Expand project from src/main.py
-# using iterative local generation.
+# Grow structure first, then fill implementation.
 #
 # LLM:
+#   - expand project
 #   - write code
-#   - split structure
 #
 # HOST:
 #   - maintain tree
-#   - semantic storage
-#   - filesystem sync
-#   - convergence
+#   - semantic
+#   - filesystem
 # =========================
 
 from .tree import (
@@ -21,6 +19,7 @@ from .tree import (
 )
 
 from .llm_interface import (
+    expand_structure,
     traverse_and_fill
 )
 
@@ -41,11 +40,9 @@ from .fsmap import (
 )
 
 
-def run(seed,llm,max_iters=50):
+def run(seed,llm,max_iters=30):
 
     tree=init_tree(seed)
-
-    tree["iteration"]=0
 
     while True:
 
@@ -55,37 +52,52 @@ def run(seed,llm,max_iters=50):
             f"[ITER] {tree['iteration']}"
         )
 
-        # LLM扩展当前活跃节点
+        # phase1
+        expand_structure(
+            tree,
+            llm
+        )
+
+        # phase2
         traverse_and_fill(
             tree,
             llm
         )
 
-        # 更新semantic
         update_semantic(
             tree
         )
 
-        # 从代码分析缺失函数
         undefined=find_undefined(
             tree
         )
 
-        # 基于undefined扩展tree
         if undefined:
+
+            print(
+                "undefined:",
+                undefined
+            )
 
             add_nodes(
                 tree,
                 undefined
             )
 
-        # 同步到staging
         sync_filesystem(
             tree
         )
 
-        # 收敛
-        if is_converged(tree):
+        print(
+            "children:",
+            len(
+                tree["root"].children
+            )
+        )
+
+        if is_converged(
+            tree
+        ):
 
             print(
                 "[DONE]"
@@ -96,7 +108,7 @@ def run(seed,llm,max_iters=50):
         if tree["iteration"]>=max_iters:
 
             print(
-                "[STOP] iteration limit"
+                "[STOP]"
             )
 
             break
