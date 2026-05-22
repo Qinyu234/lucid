@@ -1,32 +1,36 @@
-# =========================
-# MODULE: validator
-# FUNCTION: validator
-#
-# PURPOSE:
-# validate input json structure
-# =========================
+from copy import deepcopy
+
+from .schema import validate_job_input
+from .schema.engine import load_schema, validate
+from .errors import error_packet
 
 
-def validator(data):
+def validator(data: dict) -> dict:
 
     if not isinstance(data, dict):
-        return False
+        return _fail("root not dict")
 
-    if "jobs" not in data:
-        return False
+    result = validate_job_input(data)
+    if not result.ok:
+        return _fail("; ".join(result.errors))
 
-    for job in data["jobs"]:
+    normalized = deepcopy(data)
+    job_schema = load_schema("job_schema.json")
 
-        if "id" not in job or job["id"] == "":
-            return False
+    for i, job in enumerate(normalized["jobs"]):
 
-        if "goal" not in job or job["goal"] == "":
-            return False
+        job_result = validate(job, job_schema, path=f"$.jobs[{i}]")
+        if not job_result.ok:
+            return _fail("; ".join(job_result.errors))
 
-        if "language" not in job or job["language"] == "":
-            job["language"] = "python"
+    return {
+        "valid": True,
+        "data": normalized,
+    }
 
-        if "root_path" not in job or job["root_path"] == "":
-            return False
 
-    return True
+def _fail(msg: str) -> dict:
+    packet = error_packet("VALIDATION_ERROR", msg)
+    packet["valid"] = False
+    packet["data"] = None
+    return packet

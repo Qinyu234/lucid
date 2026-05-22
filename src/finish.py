@@ -1,16 +1,31 @@
-# =========================
-# MODULE: finish
-# FUNCTION: finish
-#
-# PURPOSE:
-# final runtime completion report
-# =========================
+from .log import get_logger, log_event
 
 
-def finish():
+def finish(context: dict) -> dict:
 
-    print("\n====================")
+    logger = get_logger()
+    results = context.get("results", []) if context else []
 
-    print("ALL JOBS FINISHED")
+    ok_count = sum(1 for r in results if r.get("result", {}).get("status") == "done")
+    err_count = sum(1 for r in results if r.get("result", {}).get("status") == "error")
+    incomplete = len(results) - ok_count - err_count
 
-    print("SYSTEM EXIT OK")
+    summary = {
+        "status": "OK" if err_count == 0 else "PARTIAL",
+        "total": len(results),
+        "done": ok_count,
+        "error": err_count,
+        "incomplete": incomplete,
+        "results": results,
+    }
+
+    log_event(
+        logger,
+        "runtime_summary",
+        total=summary["total"],
+        done=ok_count,
+        error=err_count,
+        incomplete=incomplete,
+    )
+
+    return summary

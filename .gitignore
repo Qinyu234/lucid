@@ -1,5 +1,5 @@
-# 数据路径
-output/
+# 运行产物（与 io/input、io/schema 分离）
+io/output/
 
 # 可选：如果 input 是临时数据
 # input/

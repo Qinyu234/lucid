@@ -1,27 +1,16 @@
+from src.schema.io import empty_io
+
+
 def seed(job):
 
     return {
-
-        # =====================
-        # system identity（原 id）
-        # =====================
         "function_name": job["id"],
-
-        # =====================
-        # semantic layer
-        # =====================
         "semantic": job["goal"],
-
-        # =====================
-        # structure
-        # =====================
         "children": [],
-
+        "topology": None,
         "status": "growing",
-
-        # =====================
-        # filesystem root
-        # =====================
-        "code_path": job["root_path"]
-
+        "tag": None,
+        "case": None,
+        "io": empty_io(),
+        "code_path": job["root_path"],
     }

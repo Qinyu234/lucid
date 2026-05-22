@@ -1,26 +1,35 @@
 def build_prompt(node):
 
-        return f"""
-You are a strict decomposition engine.
+    io = node.get("io") or {}
 
-You MUST decompose the given node into IPO structure.
+    return f"""
+You are a strict task decomposition engine.
+
+Decompose the CURRENT NODE into at most 4 execution steps.
 
 CURRENT NODE:
-{node}
+semantic: {node.get("semantic")}
+io.in: {io.get("in", [])}
+io.out: {io.get("out", [])}
 
 OUTPUT FORMAT (STRICT JSON ONLY):
 
 {{
-  "input": [],
-  "process": [],
-  "output": []
+  "io": {{ "in": [], "out": [] }},
+  "steps": [
+    {{
+      "semantic": "short step description",
+      "tag": null,
+      "io": {{ "in": [], "out": [] }}
+    }}
+  ]
 }}
 
 RULES:
-- ONLY return valid JSON
-- DO NOT output explanations
-- DO NOT output markdown
-- Each field must be a list of short semantic fragments
-- Do NOT generate code or file paths
-- Keep items minimal and atomic
+- ONLY return valid JSON, no markdown
+- steps: 1 to 4 items
+- each step needs io.in and io.out (snake_case key names in ctx data)
+- sequential steps: step[i].io.out should overlap step[i+1].io.in
+- tag only for mutually exclusive branches; all tagged must be unique
+- DO NOT output code, paths, or topology names
 """

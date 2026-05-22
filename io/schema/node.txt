@@ -1,0 +1,11 @@
+node = {
+    "semantic": "",
+    "function_name": "",
+    "children": [],
+    "status": "growing | done",
+    "topology": null | "SEQ" | "ROUTER",
+    "code_path": "",
+    "io": { "in": [], "out": [] },
+    "tag": null,
+    "case": null
+}

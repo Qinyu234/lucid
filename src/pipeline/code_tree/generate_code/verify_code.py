@@ -1,62 +1,45 @@
 import ast
 import os
+from pathlib import Path
+
+from src.config import load_app_config
+from src.import_rules import (
+    verify_init_imports,
+    verify_leaf_imports,
+    verify_single_run_function,
+)
 
 
-def verify_code(code, node):
-
-    # =========================
-    # 1. parse check
-    # =========================
+def verify_code(code: str, node: dict) -> tuple:
     try:
         tree = ast.parse(code)
-    except:
-        return False
+    except SyntaxError as e:
+        return False, str(e)
 
-    funcs = [n for n in tree.body if isinstance(n, ast.FunctionDef)]
+    ok, msg = verify_single_run_function(tree)
+    if not ok:
+        return False, msg
 
-    # must be exactly one function
-    if len(funcs) != 1:
-        return False
-
-    func = funcs[0]
-    func_name = func.name
-
-    path = node["code_path"]
     children = node.get("children", [])
+    cfg = load_app_config()
+    shared_root = Path(cfg.get("shared_dir", "io/output/shared")).name
 
-    file_name = os.path.basename(path)
-    folder_name = os.path.basename(os.path.dirname(path))
-
-    # =========================
-    # 2. INTERFACE NODE (__init__.py)
-    # =========================
     if children:
+        child_modules = {
+            c.get("function_name") for c in children if c.get("function_name")
+        }
+        return verify_init_imports(tree, child_modules)
 
-        # file must be __init__.py
-        if file_name != "__init__.py":
-            return False
+    ok, msg = verify_leaf_imports(tree, shared_root=shared_root)
+    if not ok:
+        return False, msg
 
-        # function must be __init__
-        if func_name != "__init__":
-            return False
+    fn = node.get("function_name") or ""
+    if not fn:
+        return False, "missing function_name"
 
-        # folder name must match semantic-derived name (soft rule optional)
-        return True
+    base = os.path.basename((node.get("code_path") or "").rstrip("/\\"))
+    if base != fn:
+        return False, "code_path basename must match function_name"
 
-    # =========================
-    # 3. LEAF NODE (.py file)
-    # =========================
-
-    expected_func = node["semantic"][:40].strip().replace(" ", "_")
-
-    expected_file = file_name.replace(".py", "")
-
-    # function name must match file name
-    if func_name != expected_file:
-        return False
-
-    # file name must match semantic-derived name
-    if expected_func and expected_func != expected_file:
-        return False
-
-    return True
+    return True, ""

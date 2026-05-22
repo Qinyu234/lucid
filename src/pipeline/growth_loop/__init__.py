@@ -1,167 +1,106 @@
+from src.dataflow import check_seq_chain
+from src.log import get_logger, log_event
+from src.schema import validate_node
+
 from .collect_growing_nodes import collect_growing_nodes
 from .expand import expand
-from .ipo_to_nodes import ipo_to_nodes
-from .filter import filter
+from .steps_to_nodes import steps_to_nodes
+from .assign_topology import assign_topology
+from .filter import filter, all_too_similar_to_parent
 from .attach_children import attach_children
 
 
-def growth_loop(root):
+def growth_loop(root, job_id=None):
 
-    MAX_RETRY = 3
-
+    logger = get_logger(job_id)
     iter_count = 0
+
+    log_event(logger, "growth_loop_start", job_id=job_id)
 
     while True:
 
-        print("\n===== LOOP =====")
+        log_event(logger, "growth_loop_iter", iter=iter_count)
 
-        print(
-            "ITER:",
-            iter_count
-        )
-
-        # =====================
-        # collect active nodes
-        # =====================
-
-        nodes = collect_growing_nodes(
-            root
-        )
-
-        print("GROWING:")
-
-        print([
-            x.get("semantic")
-            for x in nodes
-        ])
-
-        # =====================
-        # convergence
-        # =====================
+        nodes = collect_growing_nodes(root)
 
         if len(nodes) == 0:
-
-            print(
-                "NO ACTIVE NODES"
-            )
-
+            log_event(logger, "growth_loop_converged", iter=iter_count)
             break
-
-        # =====================
-        # process nodes
-        # =====================
 
         for node in nodes:
 
-            print("\nNODE:")
-
-            print(
-                node["semantic"]
+            log_event(
+                logger,
+                "growth_expand_start",
+                semantic=node.get("semantic"),
+                function_name=node.get("function_name"),
             )
 
-            # =====================
-            # EXPAND
-            # =====================
+            expanded = expand(node, job_id=job_id)
+            steps = expanded.get("steps", [])
 
-            ipo = expand(node)
-
-            print("IPO:")
-
-            print(ipo)
-
-            # =====================
-            # IPO → NODE
-            # =====================
-
-            proposal = ipo_to_nodes(
-                ipo
-            )
-
-            # =====================
-            # FILTER
-            # =====================
-
-            proposal = filter(
-                proposal
-            )
-
-            print("PROPOSAL:")
-
-            print(proposal)
-
-            accepted = (
-                len(proposal) > 0
-            )
-
-            print(
-                "ACCEPTED:",
-                accepted
-            )
-
-            # =====================
-            # retry
-            # =====================
-
-            if not accepted:
-
-                node["retry"] = (
-                    node.get(
-                        "retry",
-                        0
-                    ) + 1
+            if not steps:
+                fails = node.get("expand_fail", 0) + 1
+                node["expand_fail"] = fails
+                log_event(
+                    logger,
+                    "growth_expand_failed",
+                    level=30,
+                    expand_fail=fails,
+                    semantic=node.get("semantic"),
                 )
-
-                print(
-                    "RETRY:",
-                    node["retry"]
-                )
-
-                # =====================
-                # convergence fallback
-                # =====================
-
-                if (
-                    node["retry"]
-                    >= MAX_RETRY
-                ):
-
-                    node[
-                        "status"
-                    ] = "done"
-
+                if fails >= 5:
+                    node["status"] = "done"
+                    node["converge_reason"] = "expand_failed"
                 continue
 
-            # =====================
-            # normalize child state
-            # =====================
+            node["expand_fail"] = 0
+
+            raw_proposal = steps_to_nodes(steps)
+
+            if all_too_similar_to_parent(raw_proposal, node.get("semantic")):
+                node["status"] = "done"
+                node["converge_reason"] = "similarity"
+                log_event(logger, "growth_similarity_converged", reason="all_steps_similar_to_parent")
+                continue
+
+            topology = assign_topology(steps)
+            proposal = filter(raw_proposal, parent_semantic=node.get("semantic"))
+
+            if not proposal:
+                node["status"] = "done"
+                node["converge_reason"] = "similarity"
+                log_event(logger, "growth_similarity_converged", reason="filter_empty")
+                continue
 
             for child in proposal:
-
-                child[
-                    "status"
-                ] = "growing"
-
-            # =====================
-            # attach children
-            # =====================
+                child["status"] = "growing"
+                vr, _ = validate_node(child)
+                if not vr.ok:
+                    log_event(logger, "growth_child_schema_warn", level=30, errors=vr.errors)
 
             attach_children(
                 node,
-                proposal
+                proposal,
+                topology,
+                boundary={"io": expanded.get("io")},
             )
 
-            # =====================
-            # current node complete
-            #
-            # children take over
-            # =====================
+            if topology == "SEQ":
+                check_seq_chain(node["children"], job_id=job_id)
 
-            if node.get(
-                "children"
-            ):
+            if node.get("children"):
+                node["status"] = "done"
+                node["converge_reason"] = "expanded"
+                vr, prepared = validate_node(node)
+                if vr.ok:
+                    node["io"] = prepared["io"]
 
-                node[
-                    "status"
-                ] = "done"
+                log_event(
+                    logger,
+                    "growth_node_expanded",
+                    topology=topology,
+                    children=len(node["children"]),
+                )
 
         iter_count += 1

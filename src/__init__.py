@@ -1,28 +1,72 @@
+import logging
+
 from .io import io
 from .validator import validator
-from .pipeline import pipeline
 from .report import report
 from .finish import finish
+from .log import setup_logging, get_logger, log_event
+from .errors import error_packet
 
 
 def src():
 
-    # 1. read data
-    data = io()
+    from .pipeline import pipeline
 
-    # 2. validate data
-    valid = validator(data)
+    setup_logging()
+    logger = get_logger()
 
-    if not valid:
+    try:
+        log_event(logger, "runtime_start")
 
-        return
+        data = io()
+        log_event(logger, "io_loaded", job_count=len(data.get("jobs", [])))
 
-    jobs = data["jobs"]
+        valid_packet = validator(data)
 
-    for job in jobs:
+        if not valid_packet.get("valid", False):
+            log_event(
+                logger,
+                "validation_failed",
+                level=logging.ERROR,
+                message=valid_packet.get("message"),
+            )
+            return valid_packet
 
-        result = pipeline(job)
+        jobs = valid_packet["data"]["jobs"]
+        results = []
 
-        report(job, result)
+        log_event(logger, "jobs_start", count=len(jobs))
 
-    finish()
+        for i, job in enumerate(jobs):
+
+            log_event(logger, "job_start", index=i, job_id=job.get("id"))
+
+            result = pipeline(job)
+
+            report_out = report(job, result)
+
+            results.append({
+                "job": job,
+                "result": result,
+                "report": report_out,
+            })
+
+            if result.get("status") == "error":
+                log_event(
+                    logger,
+                    "job_error",
+                    level=logging.ERROR,
+                    job_id=job.get("id"),
+                    code=result.get("code"),
+                    message=result.get("message"),
+                )
+
+        final = finish({"results": results})
+
+        log_event(logger, "runtime_finish", status=final.get("status"))
+
+        return final
+
+    except Exception as e:
+        logger.exception("runtime_unhandled")
+        return error_packet("RUNTIME_ERROR", str(e))

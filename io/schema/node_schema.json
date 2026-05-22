@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "required": ["semantic", "function_name", "children", "status", "io"],
+  "properties": {
+    "semantic": { "type": "string", "minLength": 1 },
+    "function_name": { "type": "string" },
+    "children": { "type": "array" },
+    "status": { "type": "string", "enum": ["growing", "done"] },
+    "topology": { "type": ["string", "null"] },
+    "code_path": { "type": "string" },
+    "io": {
+      "type": "object",
+      "required": ["in", "out"],
+      "properties": {
+        "in": { "type": "array", "items": { "type": "string" } },
+        "out": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "tag": { "type": ["string", "null"] },
+    "case": { "type": ["string", "null"] }
+  }
+}

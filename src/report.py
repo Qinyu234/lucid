@@ -1,22 +1,21 @@
-# =========================
-# MODULE: report
-# FUNCTION: report
-#
-# PURPOSE:
-# report execution result per job
-# =========================
+from .log import get_logger, log_event
 
 
-def report(job, result):
+def report(job: dict, result: dict) -> dict:
 
-    print("\n====================")
+    logger = get_logger(job.get("id"))
+    job_id = job.get("id", "unknown")
+    status = result.get("status", "unknown")
 
-    print("JOB:", job["id"])
+    summary = {
+        "job_id": job_id,
+        "status": status,
+        "errors": result.get("errors"),
+        "code": result.get("code"),
+        "message": result.get("message"),
+    }
 
-    print("STATUS:", result.get("status", "unknown"))
+    level = 40 if status == "error" else 20
+    log_event(logger, "job_report", level=level, **{k: v for k, v in summary.items() if v is not None})
 
-    print("ITER:", result.get("iteration", 0))
-
-    if "message" in result:
-
-        print("MESSAGE:", result["message"])
+    return summary

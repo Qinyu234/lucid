@@ -1,0 +1,5 @@
+{
+    "goal": "",
+    "language": "python",
+    "root_path": "io/output/workplace/<job_id>"
+}

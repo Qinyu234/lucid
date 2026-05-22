@@ -1,0 +1,8 @@
+{
+  "output_dir": "io/output",
+  "shared_dir": "io/output/shared",
+  "memory_file": "io/output/memory/leaves.json",
+  "logs_dir": "io/output/logs",
+  "memory_similarity": 0.88,
+  "schema_dir": "io/schema"
+}
