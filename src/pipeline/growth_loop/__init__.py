@@ -1,69 +1,167 @@
 from .collect_growing_nodes import collect_growing_nodes
-from .ipo_to_node import ipo_to_nodes
 from .expand import expand
+from .ipo_to_nodes import ipo_to_nodes
 from .filter import filter
 from .attach_children import attach_children
-from .update_status import update_status
 
 
 def growth_loop(root):
 
     MAX_RETRY = 3
 
+    iter_count = 0
+
     while True:
 
+        print("\n===== LOOP =====")
+
+        print(
+            "ITER:",
+            iter_count
+        )
+
         # =====================
-        # 1. collect active nodes
+        # collect active nodes
         # =====================
 
-        nodes = collect_growing_nodes(root)
+        nodes = collect_growing_nodes(
+            root
+        )
+
+        print("GROWING:")
+
+        print([
+            x.get("semantic")
+            for x in nodes
+        ])
 
         # =====================
         # convergence
         # =====================
 
         if len(nodes) == 0:
+
+            print(
+                "NO ACTIVE NODES"
+            )
+
             break
 
         # =====================
-        # 2. process nodes (NODE-DRIVEN)
+        # process nodes
         # =====================
 
         for node in nodes:
 
-            # =====================
-            # INPUT (node itself, no task layer)
-            # =====================
+            print("\nNODE:")
 
-            active_context = node.get("semantic")
+            print(
+                node["semantic"]
+            )
 
             # =====================
-            # TRANSFORM
+            # EXPAND
             # =====================
 
             ipo = expand(node)
 
-            proposal = ipo_to_nodes(ipo)
+            print("IPO:")
 
-            accepted = filter(proposal)
+            print(ipo)
 
             # =====================
-            # retry mechanism
+            # IPO → NODE
+            # =====================
+
+            proposal = ipo_to_nodes(
+                ipo
+            )
+
+            # =====================
+            # FILTER
+            # =====================
+
+            proposal = filter(
+                proposal
+            )
+
+            print("PROPOSAL:")
+
+            print(proposal)
+
+            accepted = (
+                len(proposal) > 0
+            )
+
+            print(
+                "ACCEPTED:",
+                accepted
+            )
+
+            # =====================
+            # retry
             # =====================
 
             if not accepted:
 
-                node["retry"] = node.get("retry", 0) + 1
+                node["retry"] = (
+                    node.get(
+                        "retry",
+                        0
+                    ) + 1
+                )
 
-                if node["retry"] >= MAX_RETRY:
-                    node["status"] = "done"
+                print(
+                    "RETRY:",
+                    node["retry"]
+                )
+
+                # =====================
+                # convergence fallback
+                # =====================
+
+                if (
+                    node["retry"]
+                    >= MAX_RETRY
+                ):
+
+                    node[
+                        "status"
+                    ] = "done"
 
                 continue
 
             # =====================
-            # OUTPUT
+            # normalize child state
             # =====================
 
-            attach_children(node, proposal)
+            for child in proposal:
 
-            update_status(node)
+                child[
+                    "status"
+                ] = "growing"
+
+            # =====================
+            # attach children
+            # =====================
+
+            attach_children(
+                node,
+                proposal
+            )
+
+            # =====================
+            # current node complete
+            #
+            # children take over
+            # =====================
+
+            if node.get(
+                "children"
+            ):
+
+                node[
+                    "status"
+                ] = "done"
+
+        iter_count += 1

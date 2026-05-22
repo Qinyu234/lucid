@@ -4,41 +4,71 @@ from .write_file import write_file
 
 def code_tree(root):
 
-    stack = [(root, "")]
+    stack = [root]
 
     while stack:
 
-        node, base_path = stack.pop()
+        node = stack.pop()
+
+        children = node.get(
+            "children",
+            []
+        )
+
+        path = node[
+            "code_path"
+        ]
 
         # =========================
-        # build path
+        # BRANCH NODE
         # =========================
-        name = node["semantic"][:40].strip().replace(" ", "_")
-        if not name:
-            name = "unnamed_function"
 
-        path = f"{base_path}/{name}" if base_path else name
-
-        node["code_path"] = path
-
-        children = node.get("children", [])
-
-        # =========================
-        # BRANCH NODE → __init__.py
-        # =========================
         if children:
 
-            code = generate_code(node)
-            write_file(f"{path}/__init__.py", code)
+            code = generate_code(
+                node
+            )
 
-            # push children
+            write_file(
+                f"{path}/__init__.py",
+                code
+            )
+
+            # =========================
+            # propagate children path
+            # =========================
+
             for child in children:
-                stack.append((child, path))
+
+                fn = child.get(
+                    "function_name"
+                )
+
+                if not fn:
+
+                    fn = "unnamed"
+
+                child[
+                    "code_path"
+                ] = (
+                    f"{path}/{fn}"
+                )
+
+                stack.append(
+                    child
+                )
 
             continue
 
         # =========================
-        # LEAF NODE → .py file
+        # LEAF NODE
         # =========================
-        code = generate_code(node)
-        write_file(f"{path}.py", code)
+
+        code = generate_code(
+            node
+        )
+
+        write_file(
+            f"{path}.py",
+            code
+        )

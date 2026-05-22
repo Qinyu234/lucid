@@ -1,47 +1,16 @@
-# =========================
-# FUNCTION:
-# collect_growing_nodes
-#
-# PURPOSE:
-# traverse tree
-# collect active nodes
-#
-# RULE:
-# only collect:
-# status=="growing"
-# =========================
+def collect_growing_nodes(root):
 
+    stack = [root]
+    result = []
 
-def collect_growing_nodes(node):
+    while stack:
 
-    nodes = []
+        node = stack.pop()
 
-    # =====================
-    # current node
-    # =====================
+        if node.get("status") == "growing":
+            result.append(node)
 
-    if node["status"] == "growing":
+        for child in node.get("children", []):
+            stack.append(child)
 
-        nodes.append(
-            node
-        )
-
-    # =====================
-    # children
-    # =====================
-
-    for child in node["children"]:
-
-        child_nodes = (
-
-            collect_growing_nodes(
-                child
-            )
-
-        )
-
-        nodes.extend(
-            child_nodes
-        )
-
-    return nodes
+    return result
