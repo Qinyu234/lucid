@@ -4,34 +4,92 @@ from .config import get_llm_scenario
 from .log import get_logger
 
 
-def call_llm(scenario: str, prompt: str, job_id: str | None = None) -> str:
-
-    profile = get_llm_scenario(scenario)
-    logger = get_logger(job_id)
-
+def _build_payload(profile: dict, prompt: str, use_format: bool) -> dict:
     payload = {
         "model": profile["model"],
         "prompt": prompt,
         "stream": False,
     }
-
     fmt = profile.get("format")
-    if fmt:
+    if use_format and fmt:
         payload["format"] = fmt
+    return payload
 
-    try:
-        response = requests.post(
-            profile["api_url"],
-            json=payload,
-            timeout=int(profile.get("timeout_sec", 120)),
-        )
-        response.raise_for_status()
-        data = response.json()
-        text = data.get("response", "") or ""
-        if not text.strip():
-            logger.warning("llm empty response scenario=%s", scenario)
-        return text
 
-    except Exception as e:
-        logger.error("llm call failed scenario=%s err=%s", scenario, e)
+def _extract_response(data: dict) -> str:
+    if not isinstance(data, dict):
         return ""
+    text = data.get("response") or data.get("message", {}).get("content", "")
+    if isinstance(text, dict):
+        text = text.get("content", "")
+    return (text or "").strip()
+
+
+def call_llm(scenario: str, prompt: str, job_id: str | None = None) -> str:
+
+    profile = get_llm_scenario(scenario)
+    logger = get_logger(job_id)
+    url = profile["api_url"]
+    timeout = int(profile.get("timeout_sec", 120))
+
+    # 部分 Ollama 模型在 format=json 时会 500；失败则去掉 format 重试
+    tries = [True, False] if profile.get("format") else [False]
+
+    last_err = None
+
+    for use_format in tries:
+        payload = _build_payload(profile, prompt, use_format)
+
+        try:
+            response = requests.post(url, json=payload, timeout=timeout)
+
+            if not response.ok:
+                body = (response.text or "")[:500]
+                logger.error(
+                    "llm http error scenario=%s status=%s format=%s body=%s",
+                    scenario,
+                    response.status_code,
+                    use_format,
+                    body,
+                )
+                if use_format and response.status_code >= 500:
+                    last_err = f"HTTP {response.status_code}"
+                    continue
+                return ""
+
+            data = response.json()
+            text = _extract_response(data)
+
+            if not text:
+                logger.warning(
+                    "llm empty response scenario=%s format=%s",
+                    scenario,
+                    use_format,
+                )
+                if use_format:
+                    continue
+                return ""
+
+            if use_format and profile.get("format"):
+                logger.debug("llm ok scenario=%s with format=%s", scenario, profile.get("format"))
+            elif profile.get("format"):
+                logger.info("llm ok scenario=%s without format (fallback)", scenario)
+
+            return text
+
+        except requests.RequestException as e:
+            last_err = str(e)
+            logger.error(
+                "llm request failed scenario=%s format=%s err=%s",
+                scenario,
+                use_format,
+                e,
+            )
+            if use_format:
+                continue
+            return ""
+
+    if last_err:
+        logger.error("llm all attempts failed scenario=%s last=%s", scenario, last_err)
+
+    return ""
