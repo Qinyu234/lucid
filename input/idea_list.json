@@ -1,0 +1,16 @@
+{
+    "jobs": [
+        {
+            "id": "ocr_game_logger",
+            "goal": "基于OCR的屏幕识别，实现游戏自动数据记录",
+            "language": "python",
+            "root_path": "output/workplace/ocr_game_logger"
+        },
+        {
+            "id": "log_analyzer",
+            "goal": "分析日志文件并生成统计报告",
+            "language": "python",
+            "root_path": "output/workplace/log_analyzer"
+        }
+    ]
+}
