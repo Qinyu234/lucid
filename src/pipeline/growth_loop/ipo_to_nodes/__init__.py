@@ -5,25 +5,40 @@ def ipo_to_nodes(ipo):
 
     children = []
 
-    for x in ipo["input"] + ipo["process"] + ipo["output"]:
+    for x in ipo.get("input", []) + \
+             ipo.get("process", []) + \
+             ipo.get("output", []):
+
+        if not x:
+            continue
 
         node = {
 
-            "semantic": x,
+            "semantic": str(x),
 
-            # ⭐关键：这里必须生成符号
-            "function_name": generate_function_name({
-                "semantic": x
-            }),
+            "function_name": None,
 
             "children": [],
 
-            # ✔ 统一状态，不要 todo/growing 混用
             "status": "growing",
 
             "code_path": None
 
         }
+
+        name = generate_function_name(node)
+
+        # =========================
+        # hard safety check
+        # =========================
+
+        if (
+            not isinstance(name, str)
+            or name.strip() == ""
+        ):
+            name = "node_" + str(abs(hash(x)))[:8]
+
+        node["function_name"] = name
 
         children.append(node)
 
