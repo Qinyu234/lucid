@@ -1,13 +1,3 @@
-# =========================
-# BUSINESS LOGIC ENTRY
-# ENTRY: python -m src
-#
-# RULES:
-# - no imports
-# - no external input params
-# - functions named after module files
-# =========================
-
 from .io import io
 from .validator import validator
 from .pipeline import pipeline
