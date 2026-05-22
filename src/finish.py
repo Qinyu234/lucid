@@ -8,7 +8,7 @@ def finish(context: dict) -> dict:
 
     ok_count = sum(1 for r in results if r.get("result", {}).get("status") == "done")
     err_count = sum(1 for r in results if r.get("result", {}).get("status") == "error")
-    incomplete = len(results) - ok_count - err_count
+    incomplete = sum(1 for r in results if r.get("result", {}).get("status") == "incomplete")
 
     summary = {
         "status": "OK" if err_count == 0 else "PARTIAL",

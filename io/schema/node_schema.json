@@ -5,7 +5,7 @@
     "semantic": { "type": "string", "minLength": 1 },
     "function_name": { "type": "string" },
     "children": { "type": "array" },
-    "status": { "type": "string", "enum": ["growing", "done"] },
+    "status": { "type": "string", "enum": ["growing", "done", "failed"] },
     "topology": { "type": ["string", "null"] },
     "code_path": { "type": "string" },
     "io": {

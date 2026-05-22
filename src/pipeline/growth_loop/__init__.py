@@ -10,14 +10,27 @@ from .filter import filter, all_too_similar_to_parent
 from .attach_children import attach_children
 
 
+def _mark_leaf(node, reason: str):
+    node["status"] = "done"
+    node["role"] = "leaf"
+    node["converge_reason"] = reason
+
+
+def _mark_failed(node, reason: str = "expand_failed"):
+    node["status"] = "failed"
+    node["role"] = "leaf"
+    node["converge_reason"] = reason
+
+
 def growth_loop(root, job_id=None):
 
     logger = get_logger(job_id)
     iter_count = 0
+    max_iters = 50
 
     log_event(logger, "growth_loop_start", job_id=job_id)
 
-    while True:
+    while iter_count < max_iters:
 
         log_event(logger, "growth_loop_iter", iter=iter_count)
 
@@ -50,8 +63,8 @@ def growth_loop(root, job_id=None):
                     semantic=node.get("semantic"),
                 )
                 if fails >= 5:
-                    node["status"] = "done"
-                    node["converge_reason"] = "expand_failed"
+                    _mark_failed(node)
+                    log_event(logger, "growth_expand_give_up", level=40)
                 continue
 
             node["expand_fail"] = 0
@@ -59,8 +72,7 @@ def growth_loop(root, job_id=None):
             raw_proposal = steps_to_nodes(steps)
 
             if all_too_similar_to_parent(raw_proposal, node.get("semantic")):
-                node["status"] = "done"
-                node["converge_reason"] = "similarity"
+                _mark_leaf(node, "similarity")
                 log_event(logger, "growth_similarity_converged", reason="all_steps_similar_to_parent")
                 continue
 
@@ -68,13 +80,13 @@ def growth_loop(root, job_id=None):
             proposal = filter(raw_proposal, parent_semantic=node.get("semantic"))
 
             if not proposal:
-                node["status"] = "done"
-                node["converge_reason"] = "similarity"
+                _mark_leaf(node, "similarity")
                 log_event(logger, "growth_similarity_converged", reason="filter_empty")
                 continue
 
             for child in proposal:
                 child["status"] = "growing"
+                child["role"] = "leaf"
                 vr, _ = validate_node(child)
                 if not vr.ok:
                     log_event(logger, "growth_child_schema_warn", level=30, errors=vr.errors)
@@ -91,6 +103,7 @@ def growth_loop(root, job_id=None):
 
             if node.get("children"):
                 node["status"] = "done"
+                node["role"] = "composite"
                 node["converge_reason"] = "expanded"
                 vr, prepared = validate_node(node)
                 if vr.ok:
@@ -104,3 +117,6 @@ def growth_loop(root, job_id=None):
                 )
 
         iter_count += 1
+
+    if iter_count >= max_iters:
+        log_event(logger, "growth_loop_max_iters", level=30, max_iters=max_iters)

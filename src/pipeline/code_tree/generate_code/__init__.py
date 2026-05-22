@@ -2,7 +2,7 @@ import logging
 
 from src.llm import call_llm
 from src.log import get_logger, log_event
-from src.memory import ask_reuse, find_similar, register_leaf, render_reuse_wrapper
+from src.memory import recall_for_reuse, render_reuse_wrapper
 
 from .build_prompt import build_prompt
 from .verify_code import verify_code
@@ -12,22 +12,25 @@ def generate_code(node, max_retry=3, job_id=None):
 
     logger = get_logger(job_id)
 
-    similar = find_similar(node.get("semantic", ""))
-    if similar:
-        decision = ask_reuse(node, similar, job_id=job_id)
+    for cand in recall_for_reuse(node, job_id=job_id):
+        code = render_reuse_wrapper(cand["module"])
+        ok, err = verify_code(code, node)
+        if ok:
+            log_event(
+                logger,
+                "memory_reuse_ok",
+                module=cand.get("module"),
+                rerank=cand.get("_rerank_score"),
+                retrieve=cand.get("_retrieve_score"),
+            )
+            return code
         log_event(
             logger,
-            "memory_reuse_check",
-            reuse=decision.get("reuse"),
-            reason=decision.get("reason"),
-            module=similar.get("module"),
+            "memory_reuse_verify_fail",
+            level=logging.WARNING,
+            module=cand.get("module"),
+            error=err,
         )
-        if decision.get("reuse"):
-            code = render_reuse_wrapper(similar["module"])
-            ok, err = verify_code(code, node)
-            if ok:
-                return code
-            log_event(logger, "memory_reuse_verify_fail", level=logging.WARNING, error=err)
 
     for attempt in range(max_retry):
 

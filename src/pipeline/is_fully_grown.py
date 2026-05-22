@@ -1,20 +1,15 @@
-def is_fully_grown(node):
+def is_fully_grown(node) -> bool:
 
-    # =========================
-    # 1. current node check
-    # =========================
-    if node.get("status") != "done":
+    status = node.get("status")
+
+    if status in ("growing", "failed"):
         return False
 
-    # =========================
-    # 2. leaf check
-    # =========================
-    children = node.get("children", [])
+    if status != "done":
+        return False
 
-    for child in children:
-
+    for child in node.get("children", []):
         if not is_fully_grown(child):
-
             return False
 
     return True

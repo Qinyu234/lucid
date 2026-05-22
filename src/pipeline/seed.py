@@ -9,8 +9,10 @@ def seed(job):
         "children": [],
         "topology": None,
         "status": "growing",
+        "role": "composite",
         "tag": None,
         "case": None,
         "io": empty_io(),
         "code_path": job["root_path"],
+        "code_ok": None,
     }

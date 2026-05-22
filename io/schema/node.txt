@@ -2,10 +2,13 @@ node = {
     "semantic": "",
     "function_name": "",
     "children": [],
-    "status": "growing | done",
+    "status": "growing | done | failed",
+    "role": "composite | leaf",
     "topology": null | "SEQ" | "ROUTER",
     "code_path": "",
     "io": { "in": [], "out": [] },
+    "code_ok": null,
+    "converge_reason": "",
     "tag": null,
     "case": null
 }

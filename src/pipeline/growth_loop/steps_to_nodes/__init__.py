@@ -17,11 +17,13 @@ def steps_to_nodes(steps: list) -> list:
             "function_name": None,
             "children": [],
             "status": "growing",
+            "role": "leaf",
             "code_path": None,
             "topology": None,
             "tag": step.get("tag"),
             "case": None,
             "io": normalize_io(step.get("io")),
+            "code_ok": None,
         }
 
         if step.get("tag") and case_map:

@@ -4,23 +4,23 @@
   "scenarios": {
     "expand": {
       "description": "decompose node into steps",
-      "model": "qwen3-8b",
+      "model": "qwen3:8B",
       "format": "json",
       "timeout_sec": 600
     },
     "naming": {
       "description": "semantic to function_name",
-      "model": "qwen2.5-coder-3b-Instruct",
+      "model": "qwen2.5-coder:3B",
       "timeout_sec": 600
     },
     "code": {
       "description": "leaf run(ctx) implementation",
-      "model": "qwen2.5-coder-7b",
+      "model": "qwen2.5-coder:7B",
       "timeout_sec": 600
     },
     "memory": {
       "description": "decide if an existing leaf can be reused",
-      "model": "qwen3-reranker-0.6b",
+      "model": "qwen3-reranker:0.6B",
       "format": "json",
       "timeout_sec": 600
     }

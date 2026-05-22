@@ -18,8 +18,18 @@ _DEFAULT_APP = {
     "shared_dir": str(OUTPUT_DIR / "shared"),
     "memory_file": str(OUTPUT_DIR / "memory" / "leaves.json"),
     "logs_dir": str(OUTPUT_DIR / "logs"),
-    "memory_similarity": 0.88,
     "schema_dir": "io/schema",
+    "memory": {
+        "retrieve_top_k": 10,
+        "rerank_top_k": 5,
+        "keyword_weight": 0.35,
+        "embedding_weight": 0.65,
+        "embedding_min_score": 0.4,
+        "rerank_min_score": -2.0,
+        "io_require_out_subset": True,
+        "io_require_in_overlap": True,
+    },
+    "memory_reranker_model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
 }
 
 

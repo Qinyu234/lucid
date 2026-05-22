@@ -16,11 +16,13 @@ def attach_children(node, proposal, topology: str, boundary: dict | None = None)
             "function_name": p.get("function_name", ""),
             "children": [],
             "status": "growing",
+            "role": "leaf",
             "code_path": p.get("code_path") or "",
             "topology": None,
             "tag": p.get("tag"),
             "case": p.get("case"),
             "io": normalize_io(p.get("io")),
+            "code_ok": None,
         }
 
         node["children"].append(child)

@@ -26,13 +26,13 @@ def code_tree(root, job_id=None):
             code = render_init(node)
             out_path = f"{path}/__init__.py"
             write_file(out_path, code)
+            node["code_ok"] = True
 
             log_event(
                 logger,
                 "code_tree_write_init",
                 path=out_path,
                 topology=node.get("topology"),
-                io=node.get("io"),
             )
 
             for child in children:
@@ -42,9 +42,20 @@ def code_tree(root, job_id=None):
 
             continue
 
+        if node.get("status") == "failed":
+            node["code_ok"] = False
+            log_event(
+                logger,
+                "code_tree_skip_failed",
+                level=30,
+                semantic=node.get("semantic"),
+            )
+            continue
+
         code = generate_code(node, job_id=job_id)
 
         if not code:
+            node["code_ok"] = False
             log_event(
                 logger,
                 "code_tree_leaf_empty",
@@ -57,10 +68,6 @@ def code_tree(root, job_id=None):
         out_path = f"{path}.py"
         write_file(out_path, code)
         register_leaf(node, code, out_path)
+        node["code_ok"] = True
 
-        log_event(
-            logger,
-            "code_tree_write_leaf",
-            path=out_path,
-            io=node.get("io"),
-        )
+        log_event(logger, "code_tree_write_leaf", path=out_path)

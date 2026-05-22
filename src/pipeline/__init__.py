@@ -4,10 +4,10 @@ from src.errors import PipelineError, error_packet
 from src.log import get_logger, log_event
 from src.schema import validate_node
 
+from .assess import assess_job
 from .seed import seed
 from .growth_loop import growth_loop
 from .code_tree import code_tree
-from .is_fully_grown import is_fully_grown
 
 
 def pipeline(job):
@@ -33,13 +33,19 @@ def pipeline(job):
         growth_loop(root, job_id=job_id)
         code_tree(root, job_id=job_id)
 
-        status = "done" if is_fully_grown(root) else "incomplete"
+        status, issues = assess_job(root)
 
-        log_event(logger, "pipeline_finish", status=status)
+        log_event(
+            logger,
+            "pipeline_finish",
+            status=status,
+            issues=issues if issues else None,
+        )
 
         return {
             "job_id": job_id,
             "status": status,
+            "issues": issues,
             "tree": root,
         }
 
