@@ -15,7 +15,7 @@ from .report import report
 from .finish import finish
 
 
-def run():
+def src():
 
     # 1. read data
     data = io()
@@ -36,8 +36,3 @@ def run():
         report(job, result)
 
     finish()
-
-
-# entry point
-if __name__ == "__main__":
-    run()
