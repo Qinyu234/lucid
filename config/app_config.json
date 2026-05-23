@@ -4,6 +4,20 @@
   "memory_file": "io/output/memory/leaves.json",
   "logs_dir": "io/output/logs",
   "schema_dir": "io/schema",
+  "growth": {
+    "max_depth": 4,
+    "max_loop_iters": 20,
+    "max_expand_fail": 3,
+    "max_frontier_per_iter": 8,
+    "naming_use_llm": false,
+    "similarity_threshold": 0.85
+  },
+  "tree_store": {
+    "enabled": true,
+    "subdir": "tree",
+    "keep_history": true,
+    "max_history": 100
+  },
   "memory": {
     "retrieve_top_k": 10,
     "rerank_top_k": 5,
@@ -14,5 +28,9 @@
     "io_require_out_subset": true,
     "io_require_in_overlap": true
   },
-  "memory_reranker_model": "cross-encoder/ms-marco-MiniLM-L-6-v2"
+  "memory_reranker_model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "tests": {
+    "enabled": true,
+    "write_conftest": true
+  }
 }

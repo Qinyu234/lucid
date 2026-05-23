@@ -1,44 +1,44 @@
-from src.llm_parse import extract_json_object
-from src.llm import call_llm
-from src.schema.io import empty_io, normalize_io
-from src.schema.node import validate_expand_output
-from src.log import get_logger
+from src.extract_json_object import extract_json_object
+from src.llm import llm
+from src.schema.io.empty_io import empty_io
+from src.schema.io.normalize_io import normalize_io
+from src.schema.validate_expand_output import validate_expand_output
+from src.log.get_logger import get_logger
 
 from .build_prompt import build_prompt
 
 MAX_STEPS = 4
 
 
-def _normalize_step(raw):
-    if isinstance(raw, str) and raw.strip():
-        return {"semantic": raw.strip(), "tag": None, "io": empty_io()}
-
-    if not isinstance(raw, dict):
-        return None
-
-    semantic = raw.get("semantic")
-    if not semantic or not str(semantic).strip():
-        return None
-
-    tag = raw.get("tag")
-    tag = None if tag in (None, "") else str(tag).strip()
-
-    io = normalize_io(raw.get("io") or raw)
-
-    return {
-        "semantic": str(semantic).strip(),
-        "tag": tag,
-        "io": io,
-    }
-
-
 def expand(node, max_retry=3, job_id=None):
+
+    def _normalize_step(raw):
+        if isinstance(raw, str) and raw.strip():
+            return {"semantic": raw.strip(), "tag": None, "io": empty_io()}
+
+        if not isinstance(raw, dict):
+            return None
+
+        semantic = raw.get("semantic")
+        if not semantic or not str(semantic).strip():
+            return None
+
+        tag = raw.get("tag")
+        tag = None if tag in (None, "") else str(tag).strip()
+
+        io = normalize_io(raw.get("io") or raw)
+
+        return {
+            "semantic": str(semantic).strip(),
+            "tag": tag,
+            "io": io,
+        }
 
     logger = get_logger(job_id)
 
     for attempt in range(max_retry):
 
-        raw = call_llm("expand", build_prompt(node), job_id=job_id)
+        raw = llm("expand", build_prompt(node), job_id=job_id)
 
         if not raw.strip():
             logger.warning("expand empty response attempt=%s", attempt)

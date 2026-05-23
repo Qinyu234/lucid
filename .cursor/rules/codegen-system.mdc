@@ -1,0 +1,29 @@
+---
+description: Code generator compiler rules (src pipeline + emission)
+alwaysApply: true
+---
+
+# Code Generator System
+
+## Two layers (same module contract)
+- **`src/`** — compiler; follow `codegen-src` rule (`tools/verify_src_contract.py`).
+- **`io/output/`** — generated runtime; follow `codegen-output` rule.
+
+## Node (single source of truth)
+Each node records: `semantic`, `function_name`, `io.in`, `io.out`, `role`, `topology`.
+
+## Emission
+- Composite → `render_init` template only (no LLM for `__init__.py`).
+- Leaf → LLM + AST verify; function name must equal `function_name`.
+- Leaf test → template `test_{function_name}.py` from typed io.
+- Shared copy → re-verify stdlib-only before `register_leaf`.
+
+## Topology templates
+- SEQ: chain `ctx = child(ctx)` using named imports.
+- ROUTER: dispatch on `ctx["meta"]["case"]` to child function.
+
+## Do not
+- Emit generic `def run()` in generated code.
+- Skip `verify_code` on `__init__.py`.
+- Register shared modules without stdlib import check.
+- Add multi-function leaf modules under `src/` without nesting or splitting.

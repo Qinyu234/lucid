@@ -1,14 +1,13 @@
+# io field: {"name": "key", "type": "str|int|float|bool|bytes|list|dict|any"}
+
 node = {
     "semantic": "",
     "function_name": "",
-    "children": [],
-    "status": "growing | done | failed",
-    "role": "composite | leaf",
-    "topology": null | "SEQ" | "ROUTER",
-    "code_path": "",
-    "io": { "in": [], "out": [] },
-    "code_ok": null,
-    "converge_reason": "",
-    "tag": null,
-    "case": null
+    "io": {
+        "in": [{"name": "", "type": "any"}],
+        "out": [{"name": "", "type": "any"}]
+    }
 }
+
+# Static rule (SEQ): step[i].out.name:type == step[i+1].in.name:type for linked keys
+# Registry: io/schema/type_registry.json + {job}/tree/io_registry.json

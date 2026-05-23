@@ -2,12 +2,14 @@ import json
 from pathlib import Path
 from dataclasses import dataclass, field
 
-from src.config import load_app_config
+from src.config.load_app_config import load_app_config
 
 _SCHEMA_CACHE: dict[str, dict] = {}
 
 _REF_MAP = {
     "job": "job_schema.json",
+    "io_spec": "io_spec_schema.json",
+    "io_field": "io_field.json",
 }
 
 

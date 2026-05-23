@@ -1,4 +1,4 @@
-from src.schema.io import empty_io
+from src.schema.io.empty_io import empty_io
 
 
 def seed(job):
@@ -14,5 +14,6 @@ def seed(job):
         "case": None,
         "io": empty_io(),
         "code_path": job["root_path"],
+        "depth": 0,
         "code_ok": None,
     }

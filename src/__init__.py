@@ -1,16 +1,17 @@
 import logging
 
-from .io import io
-from .validator import validator
-from .report import report
-from .finish import finish
-from .log import setup_logging, get_logger, log_event
-from .errors import error_packet
+from src.load_jobs import load_jobs
+from src.validator import validator
+from src.report import report
+from src.finish import finish
+from src.log.setup_logging import setup_logging
+from src.log.get_logger import get_logger
+from src.log.log_event import log_event
+from src.errors import error_packet
 
 
 def src():
-
-    from .pipeline import pipeline
+    from src.pipeline import pipeline
 
     setup_logging()
     logger = get_logger()
@@ -18,7 +19,7 @@ def src():
     try:
         log_event(logger, "runtime_start")
 
-        data = io()
+        data = load_jobs()
         log_event(logger, "io_loaded", job_count=len(data.get("jobs", [])))
 
         valid_packet = validator(data)
@@ -38,11 +39,9 @@ def src():
         log_event(logger, "jobs_start", count=len(jobs))
 
         for i, job in enumerate(jobs):
-
             log_event(logger, "job_start", index=i, job_id=job.get("id"))
 
             result = pipeline(job)
-
             report_out = report(job, result)
 
             results.append({
@@ -67,6 +66,6 @@ def src():
 
         return final
 
-    except Exception as e:
+    except Exception as exc:
         logger.exception("runtime_unhandled")
-        return error_packet("RUNTIME_ERROR", str(e))
+        return error_packet("RUNTIME_ERROR", str(exc))

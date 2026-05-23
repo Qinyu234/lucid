@@ -1,4 +1,5 @@
-from .log import get_logger, log_event
+from src.log.get_logger import get_logger
+from src.log.log_event import log_event
 
 
 def report(job: dict, result: dict) -> dict:
@@ -11,6 +12,7 @@ def report(job: dict, result: dict) -> dict:
         "job_id": job_id,
         "status": status,
         "issues": result.get("issues"),
+        "tree_path": result.get("tree_path"),
         "errors": result.get("errors"),
         "code": result.get("code"),
         "message": result.get("message"),

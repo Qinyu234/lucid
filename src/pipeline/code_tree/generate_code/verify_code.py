@@ -1,45 +1,43 @@
-import ast
 import os
 from pathlib import Path
 
-from src.config import load_app_config
-from src.import_rules import (
-    verify_init_imports,
-    verify_leaf_imports,
-    verify_single_run_function,
-)
+from src.config.load_app_config import load_app_config
+from src.import_rules import verify_generated_code
+from src.pipeline.repair_node_code_path import repair_node_code_path
 
 
 def verify_code(code: str, node: dict) -> tuple:
-    try:
-        tree = ast.parse(code)
-    except SyntaxError as e:
-        return False, str(e)
 
-    ok, msg = verify_single_run_function(tree)
-    if not ok:
-        return False, msg
+    def _expected_fn(node: dict) -> str:
+        return node.get("function_name") or "unnamed"
 
+    def _shared_root() -> str:
+        cfg = load_app_config()
+        return Path(cfg.get("shared_dir", "io/output/shared")).name
+
+    expected = _expected_fn(node)
     children = node.get("children", [])
-    cfg = load_app_config()
-    shared_root = Path(cfg.get("shared_dir", "io/output/shared")).name
+    shared = _shared_root()
 
     if children:
-        child_modules = {
-            c.get("function_name") for c in children if c.get("function_name")
-        }
-        return verify_init_imports(tree, child_modules)
+        child_modules = {c.get("function_name") for c in children if c.get("function_name")}
+        ok, msg = verify_generated_code(
+            code,
+            expected,
+            "init",
+            child_modules=child_modules,
+            shared_root=shared,
+        )
+        if not ok:
+            return ok, msg
+        base = os.path.basename((node.get("code_path") or "").rstrip("/\\"))
+        if base and base != expected:
+            return False, f"package folder name {base} must match function_name {expected}"
+        return True, ""
 
-    ok, msg = verify_leaf_imports(tree, shared_root=shared_root)
-    if not ok:
-        return False, msg
-
-    fn = node.get("function_name") or ""
-    if not fn:
-        return False, "missing function_name"
-
+    repair_node_code_path(node)
     base = os.path.basename((node.get("code_path") or "").rstrip("/\\"))
-    if base != fn:
-        return False, "code_path basename must match function_name"
+    if base != expected:
+        return False, f"code_path basename {base} must match function_name {expected}"
 
-    return True, ""
+    return verify_generated_code(code, expected, "leaf", shared_root=shared)

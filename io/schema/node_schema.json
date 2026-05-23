@@ -8,14 +8,7 @@
     "status": { "type": "string", "enum": ["growing", "done", "failed"] },
     "topology": { "type": ["string", "null"] },
     "code_path": { "type": "string" },
-    "io": {
-      "type": "object",
-      "required": ["in", "out"],
-      "properties": {
-        "in": { "type": "array", "items": { "type": "string" } },
-        "out": { "type": "array", "items": { "type": "string" } }
-      }
-    },
+    "io": { "ref": "io_spec" },
     "tag": { "type": ["string", "null"] },
     "case": { "type": ["string", "null"] }
   }

@@ -1,31 +1,29 @@
 import requests
 
-from .config import get_llm_scenario
-from .log import get_logger
+from src.config.get_llm_scenario import get_llm_scenario
+from src.log.get_logger import get_logger
 
 
-def _build_payload(profile: dict, prompt: str, use_format: bool) -> dict:
-    payload = {
-        "model": profile["model"],
-        "prompt": prompt,
-        "stream": False,
-    }
-    fmt = profile.get("format")
-    if use_format and fmt:
-        payload["format"] = fmt
-    return payload
+def llm(scenario: str, prompt: str, job_id: str | None = None) -> str:
 
+    def _build_payload(profile: dict, prompt: str, use_format: bool) -> dict:
+        payload = {
+            "model": profile["model"],
+            "prompt": prompt,
+            "stream": False,
+        }
+        fmt = profile.get("format")
+        if use_format and fmt:
+            payload["format"] = fmt
+        return payload
 
-def _extract_response(data: dict) -> str:
-    if not isinstance(data, dict):
-        return ""
-    text = data.get("response") or data.get("message", {}).get("content", "")
-    if isinstance(text, dict):
-        text = text.get("content", "")
-    return (text or "").strip()
-
-
-def call_llm(scenario: str, prompt: str, job_id: str | None = None) -> str:
+    def _extract_response(data: dict) -> str:
+        if not isinstance(data, dict):
+            return ""
+        text = data.get("response") or data.get("message", {}).get("content", "")
+        if isinstance(text, dict):
+            text = text.get("content", "")
+        return (text or "").strip()
 
     profile = get_llm_scenario(scenario)
     logger = get_logger(job_id)

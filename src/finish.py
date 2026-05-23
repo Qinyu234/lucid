@@ -1,4 +1,5 @@
-from .log import get_logger, log_event
+from src.log.get_logger import get_logger
+from src.log.log_event import log_event
 
 
 def finish(context: dict) -> dict:

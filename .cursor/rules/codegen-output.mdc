@@ -1,0 +1,29 @@
+---
+description: Generated project code under io/output (strict module contract)
+globs: io/output/**/*.py
+alwaysApply: false
+---
+
+# Generated Code Contract
+
+## Module shape
+- One file → one function; **function name = file stem** (without `.py`).
+- Package `__init__.py` → one function; **function name = folder name**.
+- File header comments must include: `# semantic:`, `# io.in:`, `# io.out:`.
+
+## Dataflow
+- Signature: `def name(ctx):` — `ctx` is a dict with `meta`, `state`, `data`, `error`.
+- Read/write only keys declared in node `io.in` / `io.out`.
+
+## Imports
+| Kind | Allowed |
+|------|---------|
+| `__init__.py` | `from .<child> import <child>` (direct children only), `from shared.<m> import <m>` |
+| leaf `.py` | stdlib, `from shared.<m> import <m>` |
+| `shared/*.py` | stdlib only |
+
+## Forbidden
+- Relative imports in leaf/shared.
+- Sibling or cross-package imports in leaf.
+- Multiple top-level functions/classes.
+- Using `run` as a generic name when module has a specific name.

@@ -1,0 +1,40 @@
+---
+description: Code generator compiler sources (src/) module contract
+globs: src/**/*.py
+alwaysApply: false
+---
+
+# Compiler Source Contract
+
+Same module shape as generated code, with compiler-specific imports.
+
+## Module shape
+- **Leaf** `src/.../name.py` → exactly one top-level `def name(...)`.
+- **Composite package** `src/.../pkg/__init__.py` → exactly one top-level `def pkg(...)`; orchestrate via `from .child import child`.
+- **Namespace package** → empty `__init__.py` (docstring only); import leaf modules directly.
+
+## Imports (compiler)
+| Kind | Allowed |
+|------|---------|
+| leaf `.py` | stdlib, `from src.<pkg>.<leaf> import <leaf>` |
+| composite `__init__.py` | `from .<child> import <child>`, `from src.<pkg>.<leaf> import <leaf>` |
+| forbidden | cross-sibling hacks, multiple top-level functions/classes |
+
+## Exemptions (infrastructure only)
+- `src/errors.py` — exception types
+- `src/import_rules.py` — AST verifier used by emitter
+- `src/schema/engine.py` — `ValidationResult` dataclass
+
+## Project layout
+```
+io/input/          jobs in
+io/schema/         JSON schemas + type registry
+io/output/         generated workplace + shared + logs
+config/            llm + app config
+src/               compiler (this rule)
+run.py             entry → src.src()
+tools/             verify_src_contract.py
+```
+
+## Private logic
+Prefer nested functions inside the single public function before adding new leaf files.

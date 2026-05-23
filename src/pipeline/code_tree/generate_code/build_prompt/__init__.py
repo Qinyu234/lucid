@@ -1,36 +1,51 @@
-from pathlib import Path
-
-from src.config import load_app_config
-
 from .context_builder import context_builder
 
 
-def build_prompt(node):
+def build_prompt(node, root=None):
 
-    context = context_builder(node)
-    cfg = load_app_config()
-    shared = Path(cfg.get("shared_dir", "io/output/shared")).name
+    context = context_builder(node, root=root)
+    fn = context["function_name"]
+    shared = context["shared_module_prefix"]
+
+    used_by_block = "\n".join(f"- {x}" for x in context["used_by"]) or "- (root or standalone leaf)"
+    template_imports = "\n".join(f"- {x}" for x in context["imports_from_template"]) or "- none"
 
     return f"""
 You are generating a Python leaf module.
 
-TASK:
+SEMANTIC:
 {context["semantic"]}
 
-DATAFLOW (ctx):
-- read ctx["data"] keys: {context["io_in"]}
-- write ctx["data"] keys: {context["io_out"]}
+PARENT CONTEXT:
+- parent module: {context["parent_function"] or "(none)"}
+- parent semantic: {context["parent_semantic"] or "(none)"}
+- parent topology: {context["parent_topology"] or "(none)"}
+- parent io.in: {context["parent_io_in"]}
+- parent io.out: {context["parent_io_out"]}
 
-IMPORT RULES (STRICT):
-- stdlib only, OR from {shared}.<module> import ...
-- NO relative imports
-- NO importing other project packages or sibling modules
+DATA TYPES (ctx["data"], name:type):
+- read io.in: {context["io_in"]}
+- write io.out: {context["io_out"]}
 
-CODE RULES:
+IMPORT / USED-BY (auto from template, do NOT violate):
+- allowed imports: stdlib, from {shared}.<module> import <name>
+- forbidden: relative imports, sibling imports
+- this module used by:
+{used_by_block}
+- parent template already contains:
+{template_imports}
+
+OUTPUT FORMAT:
+# semantic: {context["semantic"]}
+# io.in: {context["io_in"]}
+# io.out: {context["io_out"]}
+
+def {fn}(ctx):
+    ...
+
+RULES:
 - Output ONLY valid Python
-- Exactly ONE function: def run(ctx): ...
-- Only imports + run(), nothing else at module level
-- Use ctx.get("data", {{}}) and ctx.get("state", {{}})
+- Exactly ONE function named {fn}
+- Respect name:type when reading/writing ctx["data"]
 - Return ctx
-- No if __name__ == "__main__"
 """

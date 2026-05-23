@@ -5,22 +5,22 @@
     "expand": {
       "description": "decompose node into steps",
       "model": "qwen2.5-coder:3b",
-      "timeout_sec": 300
+      "timeout_sec": 600
     },
     "naming": {
       "description": "semantic to function_name",
-      "model": "qwen3:0.6B",
-      "timeout_sec": 120
+      "model": "qwen2.5-coder:3b",
+      "timeout_sec": 600
     },
     "code": {
       "description": "leaf run(ctx) implementation",
       "model": "qwen2.5-coder:7b",
-      "timeout_sec": 600
+      "timeout_sec": 3000
     },
     "memory": {
       "description": "optional LLM",
-      "model": "qwen3:0.6B",
-      "timeout_sec": 120
+      "model": "qwen2.5-coder:3b",
+      "timeout_sec": 600
     }
   }
 }
