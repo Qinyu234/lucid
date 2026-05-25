@@ -6,9 +6,11 @@ def build_prompt(node, root=None):
     context = context_builder(node, root=root)
     fn = context["function_name"]
     shared = context["shared_module_prefix"]
+    algorithm = context["algorithm_module_prefix"]
 
     used_by_block = "\n".join(f"- {x}" for x in context["used_by"]) or "- (root or standalone leaf)"
     template_imports = "\n".join(f"- {x}" for x in context["imports_from_template"]) or "- none"
+    allowed = ", ".join(context["allowed_imports"])
 
     return f"""
 You are generating a Python leaf module.
@@ -27,8 +29,13 @@ DATA TYPES (ctx["data"], name:type):
 - read io.in: {context["io_in"]}
 - write io.out: {context["io_out"]}
 
+ALGORITHM LIBRARY (fixed distribution + fixed business ONLY; pick if regime matches):
+{context["algorithm_catalog"]}
+
 IMPORT / USED-BY (auto from template, do NOT violate):
-- allowed imports: stdlib, from {shared}.<module> import <name>
+- allowed imports: {allowed}
+- example: from {algorithm}.encoding.huffman_known_weights import huffman_known_weights
+- use algorithm imports ONLY when node semantic/io matches fixed_task on catalog line
 - forbidden: relative imports, sibling imports
 - this module used by:
 {used_by_block}

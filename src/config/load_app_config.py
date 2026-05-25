@@ -9,6 +9,8 @@ OUTPUT_DIR = Path("io/output")
 _DEFAULT_APP = {
     "output_dir": str(OUTPUT_DIR),
     "shared_dir": str(OUTPUT_DIR / "shared"),
+    "algorithm_dir": str(OUTPUT_DIR / "algorithm"),
+    "algorithm_index": str(OUTPUT_DIR / "algorithm" / "index.json"),
     "memory_file": str(OUTPUT_DIR / "memory" / "leaves.json"),
     "logs_dir": str(OUTPUT_DIR / "logs"),
     "schema_dir": "io/schema",
@@ -16,9 +18,16 @@ _DEFAULT_APP = {
         "max_depth": 4,
         "max_loop_iters": 20,
         "max_expand_fail": 3,
-        "max_frontier_per_iter": 8,
+        "max_frontier_per_iter": 16,
         "naming_use_llm": False,
         "similarity_threshold": 0.85,
+        "attach_on_invalid_split": True,
+        "dedupe_siblings": True,
+    },
+    "codegen": {
+        "stub_on_fail": True,
+        "compile_check": True,
+        "require_all_branches": True,
     },
     "tree_store": {
         "enabled": True,

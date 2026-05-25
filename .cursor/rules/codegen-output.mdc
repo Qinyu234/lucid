@@ -18,9 +18,10 @@ alwaysApply: false
 ## Imports
 | Kind | Allowed |
 |------|---------|
-| `__init__.py` | `from .<child> import <child>` (direct children only), `from shared.<m> import <m>` |
-| leaf `.py` | stdlib, `from shared.<m> import <m>` |
+| `__init__.py` | `from .<child> import <child>`, `from shared.<m> import <m>`, `from algorithm.<cat>.<m> import <m>` |
+| leaf `.py` | stdlib, `from shared.<m> import <m>`, `from algorithm.<cat>.<m> import <m>` |
 | `shared/*.py` | stdlib only |
+| `algorithm/**/*.py` | stdlib only; header must document fixed_task + relative_advantage vs baseline |
 
 ## Forbidden
 - Relative imports in leaf/shared.

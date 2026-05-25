@@ -35,9 +35,13 @@ def verify_single_named_function(tree: ast.AST, expected_name: str) -> tuple:
     return True, ""
 
 
-def verify_leaf_imports(tree: ast.AST, shared_root: str = "shared") -> tuple:
-    """Leaf: stdlib + shared only; no relative imports."""
-    allowed = _stdlib_roots() | {shared_root}
+def verify_leaf_imports(
+    tree: ast.AST,
+    shared_root: str = "shared",
+    algorithm_root: str = "algorithm",
+) -> tuple:
+    """Leaf: stdlib + shared + algorithm; no relative imports."""
+    allowed = _stdlib_roots() | {shared_root, algorithm_root}
 
     for node in tree.body:
         if isinstance(node, ast.Import):
@@ -75,10 +79,12 @@ def verify_init_imports(
     tree: ast.AST,
     child_modules: set,
     shared_root: str = "shared",
+    algorithm_root: str = "algorithm",
 ) -> tuple:
     """
     __init__: from .<child> import <child> (one level),
-              from shared.<m> import <name>
+              from shared.<m> import <name>,
+              from algorithm.<...> import <name>
     """
     for node in tree.body:
         if isinstance(node, ast.Import):
@@ -93,7 +99,7 @@ def verify_init_imports(
                 return False, f"__init__ child import not allowed: {node.module}"
             continue
 
-        if node.level == 0 and _top_name(node.module) == shared_root:
+        if node.level == 0 and _top_name(node.module) in {shared_root, algorithm_root}:
             continue
 
         return False, f"__init__ import not allowed: {node.module}"
@@ -107,6 +113,7 @@ def verify_generated_code(
     kind: str,
     child_modules: set | None = None,
     shared_root: str = "shared",
+    algorithm_root: str = "algorithm",
 ) -> tuple:
     try:
         tree = ast.parse(code)
@@ -118,12 +125,12 @@ def verify_generated_code(
         return False, msg
 
     if kind == "leaf":
-        return verify_leaf_imports(tree, shared_root)
+        return verify_leaf_imports(tree, shared_root, algorithm_root)
 
     if kind == "init":
-        return verify_init_imports(tree, child_modules or set(), shared_root)
+        return verify_init_imports(tree, child_modules or set(), shared_root, algorithm_root)
 
-    if kind == "shared":
+    if kind in ("shared", "algorithm"):
         return verify_shared_imports(tree)
 
     return False, f"unknown kind: {kind}"

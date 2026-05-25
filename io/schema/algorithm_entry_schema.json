@@ -1,0 +1,39 @@
+{
+  "type": "object",
+  "required": ["module", "function_name", "category", "semantic", "fixed_task", "relative_advantage"],
+  "properties": {
+    "module": { "type": "string", "minLength": 1 },
+    "function_name": { "type": "string", "minLength": 1 },
+    "category": { "type": "string", "minLength": 1 },
+    "semantic": { "type": "string", "minLength": 1 },
+    "io": { "ref": "io_spec" },
+    "fixed_task": {
+      "type": "object",
+      "required": ["profile_id", "distribution", "business"],
+      "properties": {
+        "profile_id": { "type": "string", "minLength": 1 },
+        "distribution": { "type": "string", "minLength": 1 },
+        "business": { "type": "string", "minLength": 1 },
+        "constraints": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "relative_advantage": {
+      "type": "object",
+      "required": ["baseline", "metric", "margin"],
+      "properties": {
+        "baseline": { "type": "string", "minLength": 1 },
+        "metric": { "type": "string", "minLength": 1 },
+        "margin": { "type": "string", "minLength": 1 },
+        "regime_notes": { "type": "string" }
+      }
+    },
+    "complexity": {
+      "type": "object",
+      "properties": {
+        "time": { "type": "string" },
+        "space": { "type": "string" }
+      }
+    },
+    "references": { "type": "array", "items": { "type": "string" } }
+  }
+}

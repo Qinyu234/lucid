@@ -1,6 +1,8 @@
 {
   "output_dir": "io/output",
   "shared_dir": "io/output/shared",
+  "algorithm_dir": "io/output/algorithm",
+  "algorithm_index": "io/output/algorithm/index.json",
   "memory_file": "io/output/memory/leaves.json",
   "logs_dir": "io/output/logs",
   "schema_dir": "io/schema",
@@ -8,9 +10,16 @@
     "max_depth": 4,
     "max_loop_iters": 20,
     "max_expand_fail": 3,
-    "max_frontier_per_iter": 8,
+    "max_frontier_per_iter": 16,
     "naming_use_llm": false,
-    "similarity_threshold": 0.85
+    "similarity_threshold": 0.85,
+    "attach_on_invalid_split": true,
+    "dedupe_siblings": true
+  },
+  "codegen": {
+    "stub_on_fail": true,
+    "compile_check": true,
+    "require_all_branches": true
   },
   "tree_store": {
     "enabled": true,

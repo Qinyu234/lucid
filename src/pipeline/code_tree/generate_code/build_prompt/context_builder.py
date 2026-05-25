@@ -27,6 +27,9 @@ def context_builder(node: dict, root: dict | None = None):
 
     cfg = load_app_config()
     shared = Path(cfg.get("shared_dir", "io/output/shared")).name
+    algorithm = Path(cfg.get("algorithm_dir", "io/output/algorithm")).name
+
+    from src.algorithm.format_algorithm_catalog import format_algorithm_catalog
 
     return {
         "semantic": node.get("semantic", ""),
@@ -43,5 +46,11 @@ def context_builder(node: dict, root: dict | None = None):
         "used_by": used_by,
         "imports_from_template": imports_from_template,
         "shared_module_prefix": shared,
-        "allowed_imports": [f"stdlib", f"{shared}.<module>"],
+        "algorithm_module_prefix": algorithm,
+        "algorithm_catalog": format_algorithm_catalog(node),
+        "allowed_imports": [
+            "stdlib",
+            f"{shared}.<module>",
+            f"{algorithm}.<category>.<module>",
+        ],
     }

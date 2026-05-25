@@ -29,11 +29,22 @@ Same module shape as generated code, with compiler-specific imports.
 ```
 io/input/          jobs in
 io/schema/         JSON schemas + type registry
-io/output/         generated workplace + shared + logs
+io/output/         generated workplace + shared + algorithm + logs
 config/            llm + app config
 src/               compiler (this rule)
+src/algorithm/     algorithm registry + layout bootstrap
 run.py             entry → src.src()
 tools/             verify_src_contract.py
+```
+
+## Output layout
+```
+io/output/
+  workplace/     generated job packages
+  shared/        reusable leaf implementations
+  algorithm/     fixed-task algorithms (distribution+business pinned; index.json)
+  memory/        leaf recall index
+  logs/
 ```
 
 ## Private logic

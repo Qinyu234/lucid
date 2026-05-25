@@ -1,0 +1,14 @@
+# algorithm registry: io/output/algorithm/index.json
+#
+# Each entry is valid ONLY under a FIXED regime:
+#   fixed_task.distribution  — input statistics do not drift
+#   fixed_task.business     — business logic / pipeline shape is stable
+#
+# relative_advantage describes gain vs a named baseline UNDER that fixed regime.
+# Do NOT register algorithms that only win on average across drifting tasks.
+#
+# profiles: reusable fixed-task keys referenced by many algorithms
+#
+# categories (fixed_task_v2):
+#   encoding, vision, analytics, channel — original seeds
+#   llm, rl, robotics, calculus, logic, circuit, info_theory, maxflow, collision — extended

@@ -15,9 +15,14 @@ def verify_code(code: str, node: dict) -> tuple:
         cfg = load_app_config()
         return Path(cfg.get("shared_dir", "io/output/shared")).name
 
+    def _algorithm_root() -> str:
+        cfg = load_app_config()
+        return Path(cfg.get("algorithm_dir", "io/output/algorithm")).name
+
     expected = _expected_fn(node)
     children = node.get("children", [])
     shared = _shared_root()
+    algorithm = _algorithm_root()
 
     if children:
         child_modules = {c.get("function_name") for c in children if c.get("function_name")}
@@ -27,6 +32,7 @@ def verify_code(code: str, node: dict) -> tuple:
             "init",
             child_modules=child_modules,
             shared_root=shared,
+            algorithm_root=algorithm,
         )
         if not ok:
             return ok, msg
@@ -40,4 +46,4 @@ def verify_code(code: str, node: dict) -> tuple:
     if base != expected:
         return False, f"code_path basename {base} must match function_name {expected}"
 
-    return verify_generated_code(code, expected, "leaf", shared_root=shared)
+    return verify_generated_code(code, expected, "leaf", shared_root=shared, algorithm_root=algorithm)
