@@ -1,0 +1,147 @@
+---
+description: 根据用户指令生成/修改代码时的强制契约（骨架、单函数、import、tree）
+alwaysApply: true
+---
+
+# 用户指令 → 生成代码契约
+
+分两个阶段，不要混用：
+
+| 阶段 | 遵守范围 |
+|------|----------|
+| **生成 / 搭骨架** | 下文 §1–§5 **全部**（命名、单函数、import、目录骨架、tree） |
+| **优化** | **仅** §4–§5 项目架构与 tree 快照；追求时间/空间等性能；算法细则见 `codegen-algorithms`（**当前留白**） |
+
+与 `codegen-src`（本仓库编译器 `src/`）无关。
+
+## 1. 函数式结构 · 命名
+
+- **Leaf 文件** `src/.../name.py`：有且仅有一个顶层函数 `def name(...)`，**函数名 = 文件名（stem）**。
+- **接口文件** 每个包目录的 `__init__.py`：有且仅有一个顶层函数，**函数名 = 文件夹名**（包目录名）。
+- 禁止顶层 class、多个顶层函数、用 `run` 等泛化名代替模块名。
+
+## 2. 单函数文件
+
+- 每个 `.py` 文件**只能有一个**顶层函数（接口文件即该包的 init 函数）。
+- 私有逻辑写在函数体内嵌套 `def`，不要靠多文件拆分绕开 import 限制。
+
+## 3. Import（严格）
+
+| 文件类型 | 模块级允许 import |
+|----------|-------------------|
+| **leaf**（任意非 `__init__.py` 的 `.py`） | **仅** `src.shared.<模块名>`（`<模块名>` 为 `shared/` 下**直接** `.py` 文件 stem；禁止 `src.shared.子包.*`） |
+| **`src/shared/*.py`** | 仅标准库；职责：**库封装、类型辅助、日志** |
+| **接口 `__init__.py`** | **唯一**可 import 非 shared 的文件；非 shared **仅** `from .<直接子节点> import <同名>`（一层，子节点为同目录下的 `.py` 或子包）；另可 `from src.shared...` |
+| **禁止** | leaf 使用相对 import / import 子目录 / import 业务包 / 直接 import 标准库；`__init__` 使用 `from .a.b`、绝对路径 import 业务模块（`from src.pkg...`）；为去重跨包引用 |
+
+要点：**leaf 不能引用子目录**；**只有包接口 `__init__.py` 才能 import 非 shared 模块**，且只能通过一层 `.child`。
+
+即使导致代码重复，也不得用跨包 import 规避。
+
+推荐 import 形式：
+
+```python
+# leaf — 仅 shared 下的平铺模块
+from src.shared.ctx_util import ctx_util
+
+# 包接口 __init__.py（文件夹名 pkg）— 非 shared 仅一层子节点
+from .child_leaf import child_leaf
+from .child_pkg import child_pkg
+from src.shared.logging_util import logging_util
+```
+
+## 4. 项目骨架（每个生成项目必须具备）
+
+```
+<project>/
+  src/              # 全部业务与包接口（每包 __init__.py 为接口）
+    shared/         # 仅库 / 类型 / 日志（见上表）
+  io/               # 输入输出、配置数据、运行期读写
+  requirement/      # 依赖清单（如 requirements.txt 或等价说明）
+  tree/             # 分解树快照与派生元数据（见 §5）
+  run.py            # 入口，调用 src 根包接口
+```
+
+- 缺少 `src/`、`io/`、`requirement/`、`tree/`、`run.py` 或包级接口 → 视为不合格交付。
+- 新增模块时先对齐骨架，再写 leaf。
+
+## 5. Tree（分解树 · 生成与存储）
+
+`tree/` 是项目的一等公民，与 `src/` 并列；记录 growth / codegen 全过程的**节点树**，不是编译器外部缓存。
+
+### 5.1 Schema 来源
+
+- **节点**必须符合 code_generator 的 **`io/schema/node_schema.json`**（及其中 `io` 引用的 `io_spec_schema.json` / `io_field.json`）。
+- 字段语义见 `io/schema/node.txt`；类型注册表见 `io/schema/type_registry.json`。
+- 节点至少包含：`semantic`、`function_name`、`children`、`status`（`growing` | `done` | `failed`）、`io`；可含 `topology`、`code_path`、`tag`、`case` 等 pipeline 字段。
+
+### 5.2 存储布局（项目内）
+
+| 路径 | 含义 |
+|------|------|
+| `tree/latest.json` | **当前权威快照**（必须存在） |
+| `tree/history/{stamp}_{stage}.json` | 可选历史（与编译器 `tree_store.keep_history` 一致） |
+| `tree/io_registry.json` | 由树推导的 IO 类型注册表（`persist_io_registry` 写入） |
+
+### 5.3 `latest.json` 信封格式
+
+与编译器 `save_job_tree` 一致，顶层为对象，**必须**包含：
+
+- `updated`（ISO8601）、`stage`、`status`、`issues`（数组）
+- `job_id`、`goal`、`root_path`
+- `tree`：根 **node** 对象（递归 `children`），须通过 `node_schema.json` 校验
+
+生成器在 **seed / growth / code_done / pipeline_finish** 等阶段应更新 `tree/latest.json`；不得只在 `io/output/workplace` 外另存一份无 `tree/` 目录的副本。
+
+### 5.4 与 `src/` 的对应关系
+
+- `tree` 中每个节点的 `function_name` 对应 `src/<job_id>/.../<function_name>.py` 或包目录名。
+- `code_path` 在 codegen 后应落在 `<project>/src/...` 下；`tree` 与 `src` 目录结构可交叉校验。
+
+## 6. 优化阶段（性能）
+
+在骨架与 tree 已合格、进入**优化**指令时：
+
+**必须保持**
+
+- §4 目录树：`src/`、`io/`、`requirement/`、`tree/`、`run.py` 及既有包路径  
+- `tree/latest.json` 仍可解析且 `tree` 字段仍符合 node schema  
+- 每个包仍有 `__init__.py` 接口；**文件名 / 文件夹名 / 顶层函数名** 不变  
+- 不新增与骨架无关的顶层脚本或平行根目录  
+
+**允许**
+
+- 在**唯一顶层函数体内**（及嵌套 `def`）改写实现：更低时间复杂度、更少内存、批处理、缓存、向量化等  
+- 为性能增加 **shared** 内工具（仍仅标准库底层），供 leaf 通过 `src.shared` 使用  
+
+**优化目标（默认优先级）**
+
+1. 时间（延迟、吞吐）  
+2. 空间（峰值内存、分配次数）  
+3. 可观测性（日志/指标，经 shared）  
+
+**优化阶段不要求**重新套用 §1–§3 的细粒度 import 审计，但**不得**破坏 §4–§5 架构。
+
+## 生成时自检（交付前）
+
+- [ ] 每个 `.py` 仅一个顶层函数，且命名与文件/文件夹一致  
+- [ ] leaf 仅 import `src.shared` 平铺模块；无相对 import、无子目录、无业务包  
+- [ ] 非 shared 的 import 仅出现在各包 `__init__.py`，且为 `from .<直接子节点> import ...`  
+- [ ] 每个业务包有 `__init__.py` 接口函数  
+- [ ] 项目根存在 `src/`、`io/`、`requirement/`、`tree/`、`run.py`  
+- [ ] `tree/latest.json` 存在且 `tree` 字段符合 `node_schema.json`  
+
+## 优化时自检
+
+- [ ] 目录骨架、`tree/latest.json` 与接口文件仍在；模块/函数命名未漂移  
+- [ ] 性能改动有简要说明（改了什么、预期收益）  
+- [ ] 未擅自添加 `codegen-algorithms` 中尚未定义的算法库  
+
+## Do not
+
+- 生成 `def run()` 作为模块主入口（除非文件 stem 就是 `run` 且位于约定路径）。  
+- 在 leaf 中使用相对 import 或引用子目录（含 `src.shared` 子包）。  
+- 在 leaf 或业务 `.py` 中模块级 import 非 shared 模块（应改到包 `__init__.py`）。  
+- 跳过上述结构直接写零散脚本。  
+- 将分解树只写在编译器 `io/output` 而项目内无 `tree/`。  
+- **优化时**为性能合并/拆分文件、删除包接口、或把业务代码移出 `src/` 树。

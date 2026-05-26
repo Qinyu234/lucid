@@ -1,0 +1,60 @@
+{
+  "output_dir": "io/output",
+  "shared_dir": "io/output/shared",
+  "algorithm_dir": "io/output/algorithm",
+  "algorithm_index": "io/output/algorithm/index.json",
+  "memory_file": "io/output/memory/leaves.json",
+  "logs_dir": "io/output/logs",
+  "schema_dir": "io/input/schema",
+  "features": {
+    "slim_mode": true,
+    "memory_recall": false,
+    "embedding_split": false,
+    "algorithm_catalog": false,
+    "algorithm_registry_on_start": false,
+    "tree_keep_history": false,
+    "ollama_unload_after_request": true
+  },
+  "growth": {
+    "max_depth": 3,
+    "max_loop_iters": 30,
+    "max_expand_fail": 6,
+    "max_expand_retry": 6,
+    "max_frontier_per_iter": 8,
+    "naming_use_llm": false,
+    "similarity_threshold": 0.85,
+    "parent_overlap_max": 0.92,
+    "sibling_overlap_max": 0.95,
+    "attach_on_invalid_split": true,
+    "dedupe_siblings": true,
+    "split_validation": "light"
+  },
+  "codegen": {
+    "stub_on_fail": true,
+    "compile_check": true,
+    "require_all_branches": true,
+    "max_retry": 6,
+    "max_tree_passes": 10
+  },
+  "tree_store": {
+    "enabled": true,
+    "subdir": "tree",
+    "keep_history": true,
+    "max_history": 100
+  },
+  "memory": {
+    "retrieve_top_k": 10,
+    "rerank_top_k": 5,
+    "keyword_weight": 0.35,
+    "embedding_weight": 0.65,
+    "embedding_min_score": 0.4,
+    "rerank_min_score": -2.0,
+    "io_require_out_subset": true,
+    "io_require_in_overlap": true
+  },
+  "memory_reranker_model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "tests": {
+    "enabled": true,
+    "write_conftest": true
+  }
+}

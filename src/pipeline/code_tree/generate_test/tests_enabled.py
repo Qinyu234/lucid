@@ -1,4 +1,4 @@
-from src.config.load_app_config import load_app_config
+from src.shared.load_app_config import load_app_config
 
 
 def tests_enabled() -> bool:

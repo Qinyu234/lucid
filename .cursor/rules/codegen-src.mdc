@@ -1,51 +1,64 @@
 ---
-description: Code generator compiler sources (src/) module contract
+description: 本仓库编译器 src/ 维护契约（与用户 codegen-user-contract 同构）
 globs: src/**/*.py
 alwaysApply: false
 ---
 
-# Compiler Source Contract
+# Compiler Source Contract（code_generator 仓库 `src/`）
 
-Same module shape as generated code, with compiler-specific imports.
+与 **codegen-user-contract** 同构；编译器与用户生成项目共用同一套规则，仅下列差异：
 
-## Module shape
-- **Leaf** `src/.../name.py` → exactly one top-level `def name(...)`.
-- **Composite package** `src/.../pkg/__init__.py` → exactly one top-level `def pkg(...)`; orchestrate via `from .child import child`.
-- **Namespace package** → empty `__init__.py` (docstring only); import leaf modules directly.
+| 项 | 编译器 `src/` | 用户生成项目 |
+|----|---------------|--------------|
+| 根入口 | 仓库根 `run.py` → `src.src()` | `<job>/run.py` → `src.<job_id>()` |
+| 业务包 | `src/pipeline/`、`src/schema/` 等 | `src/<job_id>/` |
+| 第三方库 | `llm` 等 leaf 可通过 **shared 内封装** 再导出 | 仅 `requirement/` 声明 |
 
-## Imports (compiler)
-| Kind | Allowed |
-|------|---------|
-| leaf `.py` | stdlib, `from src.<pkg>.<leaf> import <leaf>` |
-| composite `__init__.py` | `from .<child> import <child>`, `from src.<pkg>.<leaf> import <leaf>` |
-| forbidden | cross-sibling hacks, multiple top-level functions/classes |
+## 1. 函数式结构 · 命名
 
-## Exemptions (infrastructure only)
-- `src/errors.py` — exception types
-- `src/import_rules.py` — AST verifier used by emitter
-- `src/schema/engine.py` — `ValidationResult` dataclass
+- Leaf `src/.../name.py` → 有且仅有一个顶层 `def name(...)`。
+- 包 `pkg/__init__.py` → 有且仅有一个顶层 `def pkg(...)`（函数名 = 文件夹名）。
+- 允许在**该唯一顶层函数体内**使用嵌套 `def`。
+- 禁止顶层 class（**例外**：`src/pipeline/errors/exceptions.py` 仅异常类型）。
 
-## Project layout
+## 2. 单函数文件
+
+每个 `.py` 仅一个顶层函数；逻辑不得通过多文件绕开 import 限制。
+
+## 3. Import（模块级，严格）
+
+| 文件 | 模块级允许 |
+|------|------------|
+| **leaf**（非 `__init__.py`，且不在 `src/shared/`） | 仅 `from src.shared.<直接模块>`（禁止 `src.shared` 子包、禁止相对 import） |
+| **`src/shared/*.py`** | 仅标准库 |
+| **`__init__.py`（接口）** | **唯一**可 import 非 shared：`from .<直接子节点> import <同名>` + `from src.shared...` |
+| **禁止** | leaf 引用子目录或业务包；`__init__` 用 `from .a.b` / `from src.other...` 拉业务模块 |
+
+跨包协作：由**包接口** `__init__.py` 编排；leaf 只经 `src.shared` 拿通用能力，不得模块级 import 兄弟或子目录。
+
+## 4. 仓库骨架
+
 ```
-io/input/          jobs in
-io/schema/         JSON schemas + type registry
-io/output/         generated workplace + shared + algorithm + logs
-config/            llm + app config
-src/               compiler (this rule)
-src/algorithm/     algorithm registry + layout bootstrap
-run.py             entry → src.src()
-tools/             verify_src_contract.py
+io/input/   io/schema/   io/output/   config/   requirement/
+src/
+  shared/          # 标准库封装、类型辅助、日志
+  pipeline/        # 主流程（含 growth、code_tree）
+  schema/          # job/node JSON schema
+  ...
+run.py
+tools/
 ```
 
-## Output layout
-```
-io/output/
-  workplace/     generated job packages
-  shared/        reusable leaf implementations
-  algorithm/     fixed-task algorithms (distribution+business pinned; index.json)
-  memory/        leaf recall index
-  logs/
-```
+校验：`python tools/verify_src_contract.py`
 
-## Private logic
-Prefer nested functions inside the single public function before adding new leaf files.
+## 5. 与用户生成契约对齐
+
+- 生成 job 产出须符合 **codegen-user-contract**（`src/` + `io/` + `requirement/` + `tree/` + `run.py`）。
+- `tree/latest.json` 由 `save_job_tree` 写入；`tree` 字段须符合 `io/schema/node_schema.json`。
+- 编译器 `ensure_job_scaffold` 负责写入用户项目骨架（含 `tree/` 目录）。
+
+## Do not
+
+- 在 leaf 模块级增加 `from src.shared...` / `import json`（应经 `src.shared` 或移入顶层函数体内）。
+- 在 `__init__.py` 模块级 `from .child.grandchild import ...`（只能一层 `.child`）。
+- 为去重跨包 import 业务 leaf。

@@ -1,29 +1,30 @@
 ---
-description: Code generator compiler rules (src pipeline + emission)
+description: Code generator 双层说明（编译器 vs 用户生成契约）
 alwaysApply: true
 ---
 
 # Code Generator System
 
-## Two layers (same module contract)
-- **`src/`** — compiler; follow `codegen-src` rule (`tools/verify_src_contract.py`).
-- **`io/output/`** — generated runtime; follow `codegen-output` rule.
+## 两层（不要混用规则）
 
-## Node (single source of truth)
-Each node records: `semantic`, `function_name`, `io.in`, `io.out`, `role`, `topology`.
+| 阶段 / 范围 | 规则文件 | 用途 |
+|-------------|----------|------|
+| **生成项目代码** | `codegen-user-contract` §1–§4 | 单函数、命名、import、骨架 |
+| **优化项目代码** | `codegen-user-contract` §5 + `codegen-algorithms`（留白） | 只锁文件夹架构；性能优先；算法待补 |
+| **本仓库编译器** `src/` | `codegen-src` + `verify_src_contract.py` | pipeline 维护 |
+| **pipeline 产出路径** | `codegen-output` | `io/output/workplace/` |
 
-## Emission
-- Composite → `render_init` template only (no LLM for `__init__.py`).
-- Leaf → LLM + AST verify; function name must equal `function_name`.
-- Leaf test → template `test_{function_name}.py` from typed io.
-- Shared copy → re-verify stdlib-only before `register_leaf`.
+## Node（pipeline 元数据）
 
-## Topology templates
-- SEQ: chain `ctx = child(ctx)` using named imports.
-- ROUTER: dispatch on `ctx["meta"]["case"]` to child function.
+`semantic`, `function_name`, `io.in`, `io.out`, `role`, `topology`
+
+## Emission 要点
+
+- Composite → `render_init` 模板（非 LLM 填 `__init__.py`）
+- Leaf → LLM + `verify_code`；函数名 = `function_name`
+- 禁止生成泛用 `def run()` 作为 leaf 主函数
 
 ## Do not
-- Emit generic `def run()` in generated code.
-- Skip `verify_code` on `__init__.py`.
-- Register shared modules without stdlib import check.
-- Add multi-function leaf modules under `src/` without nesting or splitting.
+
+- 用 `codegen-src` 的 import 表去生成用户项目（用户项目用 `src.shared` 表）。
+- 跳过 `verify_code` / 骨架检查就注册 leaf。

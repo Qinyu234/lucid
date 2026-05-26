@@ -1,5 +1,3 @@
-from src.import_rules import verify_generated_code
-
-
 def verify_algorithm_code(code: str, module_name: str) -> tuple:
-    return verify_generated_code(code, module_name, "algorithm")
+    from src.import_rules.verify_generated_code import verify_generated_code
+    return verify_generated_code(code, module_name, 'algorithm')

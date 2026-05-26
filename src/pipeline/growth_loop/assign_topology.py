@@ -1,10 +1,5 @@
-# SYSTEM: topology assignment after valid LLM split
-
-ROUTER_MIN_BRANCHES = 2
-MAX_CHILDREN = 4
-
-
 def assign_topology(steps: list) -> str:
+    router_min_branches = 2
     """
     Called only after split passed similarity validation.
     SEQ | PAR | ROUTER
@@ -34,7 +29,7 @@ def assign_topology(steps: list) -> str:
     tags = _distinct_case_tags(steps)
     unique = set(tags)
 
-    if len(unique) >= ROUTER_MIN_BRANCHES and len(tags) >= len(steps):
+    if len(unique) >= router_min_branches:
         return "ROUTER"
 
     if _has_parallel_tag(steps):

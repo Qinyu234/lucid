@@ -1,6 +1,12 @@
 {
     "jobs": [
         {
+            "id": "code_optimizer",
+            "goal": "对代码进行性能方面的优化，包括去重冗余代码等，最好准备各种调试功能",
+            "language": "python",
+            "root_path": "io/output/workplace/code_optimizer"
+        },
+        {
             "id": "ocr_game_logger",
             "goal": "基于OCR的屏幕识别，实现游戏自动数据记录",
             "language": "python",
@@ -11,6 +17,12 @@
             "goal": "游戏数据处理，提供数据可视化和统计功能",
             "language": "python",
             "root_path": "io/output/workplace/game_analyzer"
+        },
+        {
+            "id": "computer_builder",
+            "goal": "从最底层的CMOS布尔运算开始，逐渐一步步演化出现代计算机的构建过程，最终构建出一个可以运行简单程序的计算机",
+            "language": "python",
+            "root_path": "io/output/workplace/computer_builder"
         }
     ]
 }

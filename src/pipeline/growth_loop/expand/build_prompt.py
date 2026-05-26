@@ -1,6 +1,6 @@
 def build_prompt(node):
 
-    from src.schema.io.format_io_comment import format_io_comment
+    from src.shared.format_io_comment import format_io_comment
 
     io = node.get("io") or {}
     io_in, io_out = format_io_comment(io)
@@ -36,9 +36,11 @@ OUTPUT FORMAT (STRICT JSON ONLY):
 
 RULES:
 - ONLY return valid JSON, no markdown
-- steps: 1 to 4 items
+- steps: 2 to 4 items (prefer at least 2 for non-trivial tasks)
 - each io field: name (snake_case) + type (str|int|float|bool|bytes|list|dict|any)
-- SEQ: step[i].io.out keys/types must match step[i+1].io.in for shared keys
-- tag only for mutually exclusive branches (ROUTER) or parallel/par (PAR)
+- SEQ: step[i].io.out keys/types MUST match step[i+1].io.in for every shared key
+- first step io.in should overlap parent io.in; last step io.out should overlap parent io.out
+- ROUTER: set distinct tag on each mutually exclusive branch (at least 2 tags)
+- PAR: set tag "par" on parallel branches
 - DO NOT output code or file paths
 """

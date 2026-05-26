@@ -1,26 +1,5 @@
 {
   "default_api_url": "http://localhost:11434/api/generate",
-  "default_model": "qwen2.5-coder:3b",
-  "scenarios": {
-    "expand": {
-      "description": "decompose node into steps",
-      "model": "qwen2.5-coder:3b",
-      "timeout_sec": 600
-    },
-    "naming": {
-      "description": "semantic to function_name",
-      "model": "qwen2.5-coder:3b",
-      "timeout_sec": 600
-    },
-    "code": {
-      "description": "leaf run(ctx) implementation",
-      "model": "qwen2.5-coder:7b",
-      "timeout_sec": 3000
-    },
-    "memory": {
-      "description": "optional LLM",
-      "model": "qwen2.5-coder:3b",
-      "timeout_sec": 600
-    }
-  }
+  "default_model": "qwen2.5-coder",
+  "scenarios": {}
 }

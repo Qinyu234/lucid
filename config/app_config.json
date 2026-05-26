@@ -1,25 +1,40 @@
 {
-  "output_dir": "io/output",
-  "shared_dir": "io/output/shared",
-  "algorithm_dir": "io/output/algorithm",
-  "algorithm_index": "io/output/algorithm/index.json",
-  "memory_file": "io/output/memory/leaves.json",
-  "logs_dir": "io/output/logs",
+  "output_dir": "io\\output",
+  "shared_dir": "io\\output\\shared",
+  "algorithm_dir": "io\\output\\algorithm",
+  "algorithm_index": "io\\output\\algorithm\\index.json",
+  "memory_file": "io\\output\\memory\\leaves.json",
+  "logs_dir": "io\\output\\logs",
   "schema_dir": "io/schema",
+  "features": {
+    "slim_mode": true,
+    "memory_recall": false,
+    "embedding_split": false,
+    "algorithm_catalog": false,
+    "algorithm_registry_on_start": false,
+    "tree_keep_history": false,
+    "ollama_unload_after_request": true
+  },
   "growth": {
     "max_depth": 4,
-    "max_loop_iters": 20,
-    "max_expand_fail": 3,
+    "max_loop_iters": 50,
+    "max_expand_fail": 6,
+    "max_expand_retry": 6,
     "max_frontier_per_iter": 16,
     "naming_use_llm": false,
     "similarity_threshold": 0.85,
+    "parent_overlap_max": 0.92,
+    "sibling_overlap_max": 0.95,
     "attach_on_invalid_split": true,
-    "dedupe_siblings": true
+    "dedupe_siblings": true,
+    "split_validation": "light"
   },
   "codegen": {
     "stub_on_fail": true,
     "compile_check": true,
-    "require_all_branches": true
+    "require_all_branches": true,
+    "max_retry": 6,
+    "max_tree_passes": 10
   },
   "tree_store": {
     "enabled": true,
