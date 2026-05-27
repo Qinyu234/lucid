@@ -1,4 +1,4 @@
-def attach_children(node, proposal, topology: str, boundary: dict | None = None):
+def attach_children(node, proposal, assignment: dict, boundary: dict | None = None):
     from src.shared.io_tree.child_code_path_util import child_code_path_util
     from src.shared.validate.io_merge_router_util import io_merge_router_util
     from src.shared.validate.io_merge_seq_util import io_merge_seq_util
@@ -20,7 +20,10 @@ def attach_children(node, proposal, topology: str, boundary: dict | None = None)
 
     if not proposal:
         return
+    topology = str(assignment.get("topology") or "SEQ")
     node["topology"] = topology
+    node["template_id"] = assignment.get("template_id")
+    node["topology_tree"] = assignment.get("tree")
     node.setdefault("children", [])
     parent_path = (node.get("code_path") or "").rstrip("/\\")
     parent_depth = node.get("depth", 0)

@@ -36,7 +36,7 @@ def pipeline(job):
             return {"job_id": job_id, "status": "error", "errors": vr.errors, "tree": root}
         save_job_tree(root, job, "seed", status="growing", job_id=job_id)
         growth_loop(root, job_id=job_id, job=job)
-        resolve_code_paths(root, job)
+        resolve_code_paths(root)
         save_job_tree(root, job, "growth_done", job_id=job_id)
         persist_registry_util(root, job)
         code_tree(root, job_id=job_id, job=job)

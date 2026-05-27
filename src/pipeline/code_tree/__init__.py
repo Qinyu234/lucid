@@ -8,6 +8,7 @@ from .render_init_minimal import render_init_minimal
 from .render_leaf_stub import render_leaf_stub
 from .shared_ctx import shared_ctx
 from .verify_generated import verify_generated
+from .verify_workplace_bridge import verify_workplace_bridge
 from .write_file import write_file
 from .write_leaf_test_bridge import write_leaf_test_bridge
 
@@ -117,6 +118,7 @@ def code_tree(root, job_id=None, job=None):
     compile_check = cfg.get("compile_check", True)
     stub_on_fail = cfg.get("stub_on_fail", True)
     max_passes = int(cfg.get("max_tree_passes", 10))
+    verify_after_pass = bool(cfg.get("verify_after_pass", True))
     event_util(logger, "code_tree_start", max_passes=max_passes)
     conftest_setup(job, job_id=job_id)
     ordered = postorder(root)
@@ -127,6 +129,7 @@ def code_tree(root, job_id=None, job=None):
             event_util(logger, "code_tree_converged", passes=pass_num)
             break
         event_util(logger, "code_tree_pass", pass_num=pass_num, pending=len(pending))
+        wrote_any = False
         for node in pending:
             children = node.get("children", [])
             path = node.get("code_path") or ""
@@ -134,7 +137,7 @@ def code_tree(root, job_id=None, job=None):
                 if node.get("status") == "failed" and (not stub_on_fail):
                     node["code_ok"] = False
                     continue
-                emit_leaf(node)
+                wrote_any = bool(emit_leaf(node)) or wrote_any
                 continue
             child_ok = all((c.get("code_ok") is True for c in children))
             if not child_ok:
@@ -146,8 +149,21 @@ def code_tree(root, job_id=None, job=None):
                     function_name=node.get("function_name"),
                 )
                 continue
-            emit_composite(node)
+            wrote_any = bool(emit_composite(node)) or wrote_any
         pass_num += 1
+        if verify_after_pass and wrote_any and job and job.get("root_path"):
+            issues = verify_workplace_bridge(job["root_path"], job_id=job_id)
+            if issues:
+                event_util(
+                    logger,
+                    "workplace_contract_after_pass",
+                    level=logging.WARNING,
+                    pass_num=pass_num,
+                    issue_count=len(issues),
+                    issues=issues[:20],
+                )
+            else:
+                event_util(logger, "workplace_contract_after_pass", pass_num=pass_num, issue_count=0)
     still_pending = [n for n in ordered if needs_code(n)]
     if still_pending:
         event_util(

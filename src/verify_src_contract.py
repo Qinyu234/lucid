@@ -7,9 +7,7 @@ import sys
 from pathlib import Path
 
 _SKIP_FILES = frozenset({"verify_src_contract.py", "verify_workplace_contract.py"})
-_SKIP_PREFIXES = ("import_rules/verify_",)
 _TOP_LEVEL_EXEMPT = frozenset({"verify_src_contract", "verify_workplace_contract"})
-_INTERNAL_PACKAGES = frozenset({"import_rules"})
 _SHARED_CATEGORY_DIRS = frozenset({"lib", "logging", "validate", "io_tree"})
 
 
@@ -36,8 +34,6 @@ def _verify_top_level_exports(src_root: Path) -> list[str]:
         stem = py.stem
         if stem == "__init__" or stem in _TOP_LEVEL_EXEMPT:
             continue
-        if stem == "import_rules":
-            continue
         if stem not in imported:
             issues.append(
                 f"src/__init__.py: top-level module {stem!r} not imported "
@@ -49,8 +45,6 @@ def _verify_top_level_exports(src_root: Path) -> list[str]:
 def _verify_subpackage_exports(src_root: Path) -> list[str]:
     issues: list[str] = []
     for init_path in sorted(src_root.rglob("__init__.py")):
-        if "import_rules" in init_path.parts:
-            continue
         parent = init_path.parent
         rel_s = init_path.relative_to(src_root).as_posix()
         if parent == src_root / "shared" and rel_s == "shared/__init__.py":
@@ -65,8 +59,6 @@ def _verify_subpackage_exports(src_root: Path) -> list[str]:
             if not (child / "__init__.py").is_file():
                 continue
             if child.name not in imported:
-                if parent == src_root and child.name in _INTERNAL_PACKAGES:
-                    continue
                 issues.append(
                     f"{rel_s}: missing subpackage import .{child.name} "
                     f"(direct child package must be from .{child.name} import {child.name})"
@@ -89,16 +81,20 @@ def _direct_child_stems(init_dir: Path) -> set[str]:
 
 
 def _verify_init_file(tree: ast.Module, init_dir: Path, rel_s: str) -> list[str]:
-    from src.import_rules.verify_init_file_imports import verify_init_file_imports
+    from src.shared.validate.validate_init_file_imports_util import (
+        validate_init_file_imports_util,
+    )
 
-    ok, msg = verify_init_file_imports(tree, init_dir)
+    ok, msg = validate_init_file_imports_util(tree, init_dir)
     return [] if ok else [f"{rel_s}: {msg}"]
 
 
 def verify_src_contract(src_root: Path | None = None) -> list[str]:
-    from src.import_rules.verify_leaf_imports import verify_leaf_imports
-    from src.import_rules.verify_shared_imports import verify_shared_imports
-    from src.import_rules.verify_single_named_function import verify_single_named_function
+    from src.shared.validate.validate_leaf_imports_util import validate_leaf_imports_util
+    from src.shared.validate.validate_shared_imports_util import validate_shared_imports_util
+    from src.shared.validate.validate_single_named_function_util import (
+        validate_single_named_function_util,
+    )
 
     root = src_root or _repo_src()
     issues: list[str] = []
@@ -108,9 +104,7 @@ def verify_src_contract(src_root: Path | None = None) -> list[str]:
     for path in sorted(root.rglob("*.py")):
         rel = path.relative_to(root)
         rel_s = rel.as_posix()
-        if rel_s in _SKIP_FILES or any(rel_s.startswith(p) for p in _SKIP_PREFIXES):
-            continue
-        if rel.parts[0] == "import_rules":
+        if rel_s in _SKIP_FILES:
             continue
 
         try:
@@ -122,7 +116,7 @@ def verify_src_contract(src_root: Path | None = None) -> list[str]:
         if path.name == "__init__.py":
             issues.extend(_verify_init_file(tree, path.parent, rel_s))
             pkg = path.parent.name
-            ok, msg = verify_single_named_function(tree, pkg)
+            ok, msg = validate_single_named_function_util(tree, pkg)
             if not ok:
                 issues.append(f"{rel_s}: {msg}")
             continue
@@ -131,15 +125,15 @@ def verify_src_contract(src_root: Path | None = None) -> list[str]:
             if path.name == "__init__.py":
                 issues.extend(_verify_init_file(tree, path.parent, rel_s))
                 pkg = path.parent.name if len(rel.parts) > 2 else "shared"
-                ok, msg = verify_single_named_function(tree, pkg)
+                ok, msg = validate_single_named_function_util(tree, pkg)
                 if not ok:
                     issues.append(f"{rel_s}: {msg}")
                 continue
 
-            ok, msg = verify_shared_imports(tree)
+            ok, msg = validate_shared_imports_util(tree)
             if not ok:
                 issues.append(f"{rel_s}: {msg}")
-            ok, msg = verify_single_named_function(tree, path.stem)
+            ok, msg = validate_single_named_function_util(tree, path.stem)
             if not ok:
                 issues.append(f"{rel_s}: {msg}")
             continue
@@ -147,22 +141,24 @@ def verify_src_contract(src_root: Path | None = None) -> list[str]:
         if rel_s == "pipeline/errors/exceptions.py":
             continue
 
-        ok, msg = verify_single_named_function(tree, path.stem)
+        ok, msg = validate_single_named_function_util(tree, path.stem)
         if not ok:
             issues.append(f"{rel_s}: {msg}")
 
-        from src.import_rules.compiler_adapter_stems import is_compiler_adapter_stem
+        from src.shared.validate.validate_compiler_adapter_stem_util import (
+            validate_compiler_adapter_stem_util,
+        )
 
-        if is_compiler_adapter_stem(path.stem):
-            from src.import_rules.verify_adapter_file_imports import (
-                verify_adapter_file_imports,
+        if validate_compiler_adapter_stem_util(path.stem):
+            from src.shared.validate.validate_adapter_file_imports_util import (
+                validate_adapter_file_imports_util,
             )
 
-            ok, msg = verify_adapter_file_imports(tree, src_root=root)
+            ok, msg = validate_adapter_file_imports_util(tree, src_root=root)
             if not ok:
                 issues.append(f"{rel_s}: {msg}")
         else:
-            ok, msg = verify_leaf_imports(tree)
+            ok, msg = validate_leaf_imports_util(tree)
             if not ok:
                 issues.append(f"{rel_s}: {msg}")
 

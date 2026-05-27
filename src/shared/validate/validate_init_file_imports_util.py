@@ -1,9 +1,8 @@
-def verify_init_file_imports(tree, init_dir) -> tuple:
-    """Imports in interface __init__.py: only from .<direct_child> import <child>; no absolute imports."""
+def validate_init_file_imports_util(tree, init_dir) -> tuple:
     import ast
     from pathlib import Path
 
-    from src.import_rules.stdlib_roots import stdlib_roots
+    from src.shared.validate.validate_stdlib_roots_util import validate_stdlib_roots_util
 
     init_dir = Path(init_dir)
     allowed: set[str] = set()
@@ -15,7 +14,7 @@ def verify_init_file_imports(tree, init_dir) -> tuple:
         elif child.suffix == ".py" and child.name != "__init__.py":
             allowed.add(child.stem)
 
-    stdlib = stdlib_roots()
+    stdlib = validate_stdlib_roots_util()
 
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
@@ -24,7 +23,10 @@ def verify_init_file_imports(tree, init_dir) -> tuple:
             for alias in node.names:
                 top = (alias.name or "").split(".")[0]
                 if top not in stdlib:
-                    return False, f"interface __init__ forbids import {alias.name!r} (stdlib only inside functions)"
+                    return (
+                        False,
+                        f"interface __init__ forbids import {alias.name!r} (stdlib only inside functions)",
+                    )
             continue
 
         if not isinstance(node, ast.ImportFrom):

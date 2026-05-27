@@ -23,6 +23,10 @@ def resolve_code_paths(root: dict):
     project_root = (root.get('code_path') or '').rstrip('/\\')
     fn = root.get('function_name') or 'root'
     pr = project_root.rstrip("/").rstrip("\\")
+    # Be robust to previously-resolved snapshots (avoid nesting /src/.../src/...).
+    pr_norm = pr.replace("\\", "/")
+    if "/src/" in pr_norm:
+        pr = pr_norm.split("/src/")[0]
     root_base = (pr + "/src/" + fn).replace("\\", "/")
     walk(root, root_base)
     stack = [root]

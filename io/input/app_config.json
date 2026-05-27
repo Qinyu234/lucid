@@ -9,25 +9,53 @@
     "memory_recall": false,
     "embedding_split": false,
     "tree_keep_history": false,
-    "ollama_unload_after_request": true
+    "ollama_unload_after_request": false
   },
   "growth": {
-    "max_depth": 3,
+    "max_depth": 2,
     "max_loop_iters": 30,
     "max_expand_fail": 6,
     "max_expand_retry": 6,
     "max_frontier_per_iter": 8,
+    "min_children": 2,
+    "max_children": 4,
+    "max_children_root": 3,
+    "split_count_strategy": "estimate",
+    "template_by_count": {
+      "2": "par_2",
+      "3": "seq1_par_2",
+      "4": "seq_4",
+      "5": "seq_5",
+      "6": "seq_6"
+    },
     "naming_use_llm": false,
     "similarity_threshold": 0.85,
     "parent_overlap_max": 0.92,
     "sibling_overlap_max": 0.95,
-    "attach_on_invalid_split": true,
+    "attach_on_invalid_split": false,
     "dedupe_siblings": true,
-    "split_validation": "light"
+    "split_validation": "analysis",
+    "split_analysis": {
+      "embed_log": true,
+      "embed_json": false,
+      "min_plausibility": 0.25,
+      "min_topology_score": 0.15,
+      "reject_io_out_collision": true
+    }
   },
   "codegen": {
     "stub_on_fail": true,
     "compile_check": true,
+    "verify_after_pass": true,
+    "force_stub_on_patterns": true,
+    "stub_patterns": [
+      "\\binstall\\b",
+      "\\bverify\\b",
+      "\\binitialize\\b.*\\bocr\\b",
+      "\\bocr\\b.*\\blibrary\\b",
+      "\\bscreen capture\\b",
+      "\\bcapture\\b.*\\bscreen\\b"
+    ],
     "require_all_branches": true,
     "max_retry": 6,
     "max_tree_passes": 10

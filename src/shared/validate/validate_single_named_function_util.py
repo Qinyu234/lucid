@@ -1,4 +1,4 @@
-def verify_single_named_function(tree, expected_name):
+def validate_single_named_function_util(tree, expected_name):
     import ast
 
     funcs = [n for n in tree.body if isinstance(n, ast.FunctionDef)]

@@ -1,17 +1,18 @@
-def verify_shared_file_imports(tree) -> tuple:
-    """Shared module: entire file may only import stdlib, third-party, or src.shared.*."""
+def validate_shared_file_imports_util(tree) -> tuple:
     import ast
 
-    from src.import_rules.is_src_shared_module import is_src_shared_module
-    from src.import_rules.stdlib_roots import stdlib_roots
+    from src.shared.validate.validate_is_src_shared_module_util import (
+        validate_is_src_shared_module_util,
+    )
+    from src.shared.validate.validate_stdlib_roots_util import validate_stdlib_roots_util
 
-    stdlib = stdlib_roots()
+    stdlib = validate_stdlib_roots_util()
 
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
                 top = (alias.name or "").split(".")[0]
-                if top == "src" and not is_src_shared_module(alias.name):
+                if top == "src" and not validate_is_src_shared_module_util(alias.name):
                     return False, f"shared forbidden import: {alias.name!r}"
                 continue
         if not isinstance(node, ast.ImportFrom):
@@ -23,7 +24,7 @@ def verify_shared_file_imports(tree) -> tuple:
             continue
         top = mod.split(".")[0]
         if top == "src":
-            if not is_src_shared_module(mod):
+            if not validate_is_src_shared_module_util(mod):
                 return False, f"shared forbidden import from: {mod!r}"
             continue
         if top not in stdlib:

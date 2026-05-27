@@ -31,9 +31,14 @@ def _package_dirs_missing_init(src_root: Path) -> list[str]:
 def verify_workplace_contract(job_root: Path, job_id: str | None = None) -> list[str]:
     import ast
 
-    from src.import_rules.verify_generated_code import verify_generated_code
-    from src.import_rules.verify_init_file_imports import verify_init_file_imports
-    from src.import_rules.verify_user_shared_stem import verify_user_shared_stem
+    from src.shared.validate.validate_generated_code_util import validate_generated_code_util
+    from src.shared.validate.validate_init_file_imports_util import (
+        validate_init_file_imports_util,
+    )
+    from src.shared.validate.validate_user_shared_category_util import (
+        validate_user_shared_category_util,
+    )
+    from src.shared.validate.validate_user_shared_stem_util import validate_user_shared_stem_util
 
     job_root = Path(job_root)
     issues: list[str] = []
@@ -43,28 +48,26 @@ def verify_workplace_contract(job_root: Path, job_id: str | None = None) -> list
 
     shared_dir = src_root / "shared"
     if shared_dir.is_dir():
-        from src.import_rules.user_shared_allowlist import is_allowed_user_shared_category
-
         for py in sorted(shared_dir.rglob("*.py")):
             if py.name == "__init__.py":
                 continue
             rel = py.relative_to(shared_dir)
             if len(rel.parts) == 1:
-                ok, msg = verify_user_shared_stem(py.stem)
+                ok, msg = validate_user_shared_stem_util(py.stem)
                 if not ok:
                     issues.append(msg)
             elif len(rel.parts) == 2:
                 category, _ = rel.parts
-                if not is_allowed_user_shared_category(category):
+                if not validate_user_shared_category_util(category):
                     issues.append(f"shared category {category!r} not allowed")
-                ok, msg = verify_user_shared_stem(py.stem)
+                ok, msg = validate_user_shared_stem_util(py.stem)
                 if not ok:
                     issues.append(msg)
             else:
                 issues.append(f"shared module too deep: {py.relative_to(job_root)}")
                 continue
             code = py.read_text(encoding="utf-8")
-            vok, vmsg = verify_generated_code(code, py.stem, "shared")
+            vok, vmsg = validate_generated_code_util(code, py.stem, "shared")
             if not vok:
                 issues.append(f"{py}: {vmsg}")
 
@@ -85,13 +88,11 @@ def verify_workplace_contract(job_root: Path, job_id: str | None = None) -> list
                 elif c.suffix == ".py" and c.name != "__init__.py":
                     child_modules.add(c.stem)
             code = py.read_text(encoding="utf-8")
-            from src.import_rules.verify_init_file_imports import verify_init_file_imports
-
-            vok, vmsg = verify_init_file_imports(ast.parse(code), rel_parent)
+            vok, vmsg = validate_init_file_imports_util(ast.parse(code), rel_parent)
             if not vok:
                 issues.append(f"{py.relative_to(job_root)}: {vmsg}")
                 continue
-            vok, vmsg = verify_generated_code(
+            vok, vmsg = validate_generated_code_util(
                 code, rel_parent.name if rel_parent != src_root else "src", "init", child_modules=child_modules
             )
             if not vok:
@@ -112,7 +113,7 @@ def verify_workplace_contract(job_root: Path, job_id: str | None = None) -> list
                 issues.append(f"{rel}: {vmsg}")
             continue
 
-        vok, vmsg = verify_generated_code(code, py.stem, "leaf")
+        vok, vmsg = validate_generated_code_util(code, py.stem, "leaf")
         if not vok:
             issues.append(f"{rel}: {vmsg}")
 

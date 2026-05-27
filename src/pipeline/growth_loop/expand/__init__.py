@@ -4,10 +4,9 @@ from .invoke_llm import invoke_llm
 from .shared_ctx import shared_ctx
 
 
-def expand(node, max_retry=None, job_id=None):
+def expand(node, max_retry=None, job_id=None, target_steps=None):
     import time
 
-    max_steps = 4
     ctx = shared_ctx({"data": {}, "meta": {}, "state": {}, "error": None})
     io_empty_util = ctx["meta"]["io_empty_util"]
     get_logger_util = ctx["meta"]["get_logger_util"]
@@ -28,11 +27,18 @@ def expand(node, max_retry=None, job_id=None):
         io = io_normalize_util(raw.get("io") or raw)
         return {"semantic": str(semantic).strip(), "tag": tag, "io": io}
 
+    growth_cfg = app_config_util().get("growth", {})
+    # `middle_schema.json` caps steps at 4; keep prompts/validation aligned.
+    max_steps = min(4, int(growth_cfg.get("max_children", 6)))
     if max_retry is None:
-        max_retry = int(app_config_util().get("growth", {}).get("max_expand_retry", 6))
+        max_retry = int(growth_cfg.get("max_expand_retry", 6))
     logger = get_logger_util(job_id)
     for attempt in range(max_retry):
-        raw = invoke_llm("expand", build_prompt(node), job_id=job_id)
+        raw = invoke_llm(
+            "expand",
+            build_prompt(node, target_steps=target_steps, max_steps=max_steps),
+            job_id=job_id,
+        )
         if not raw.strip():
             logger.warning("expand empty response attempt=%s", attempt)
             if attempt + 1 < max_retry:

@@ -1,6 +1,7 @@
-def is_src_shared_module(module=None, leaf_direct=False):
-    from src.import_rules.shared_categories import ALL_SHARED_CATEGORIES
+def validate_is_src_shared_module_util(module=None, leaf_direct=False):
+    from src.shared.validate.validate_shared_categories_util import validate_shared_categories_util
 
+    categories = validate_shared_categories_util("all")
     prefix = "src.shared"
     if not module:
         return False
@@ -12,9 +13,8 @@ def is_src_shared_module(module=None, leaf_direct=False):
         return True
     suffix = module[len(prefix) + 1 :]
     parts = suffix.split(".")
-    if len(parts) == 2 and parts[0] in ALL_SHARED_CATEGORIES:
+    if len(parts) == 2 and parts[0] in categories:
         return True
-    # legacy flat modules in older generated workplaces (shared/<module>.py)
     if len(parts) == 1 and parts[0]:
         return True
     return False

@@ -1,4 +1,4 @@
-def verify_init_imports(tree, child_modules, shared_root="src.shared"):
+def validate_init_imports_util(tree, child_modules, shared_root="src.shared"):
     import ast
 
     del shared_root
@@ -32,7 +32,10 @@ def verify_init_imports(tree, child_modules, shared_root="src.shared"):
             for alias in node.names:
                 name = alias.name
                 if alias.asname:
-                    return False, f"__init__ forbids import alias: from .{child} import {name} as {alias.asname}"
+                    return (
+                        False,
+                        f"__init__ forbids import alias: from .{child} import {name} as {alias.asname}",
+                    )
                 if name != child:
                     return False, f"__init__ must use from .{child} import {child}, not {name}"
             continue

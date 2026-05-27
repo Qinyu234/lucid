@@ -1,0 +1,284 @@
+{
+  "version": 1,
+  "schema": "middle_schema.json",
+  "notes": "Curated expand-stage decomposition outputs used as regression tests (must satisfy src.shared.validate.expand_output_util).",
+  "cases": [
+    {
+      "id": "csv_to_db_seq",
+      "input": {
+        "semantic": "Parse CSV, remove empty rows, insert into database",
+        "io": { "in": [{"name": "file_path", "type": "str"}, {"name": "db_dsn", "type": "str"}], "out": [{"name": "inserted_count", "type": "int"}] }
+      },
+      "output": {
+        "io": { "in": [{"name": "file_path", "type": "str"}, {"name": "db_dsn", "type": "str"}], "out": [{"name": "inserted_count", "type": "int"}] },
+        "steps": [
+          { "semantic": "parse_csv_rows", "tag": null, "io": { "in": [{"name": "file_path", "type": "str"}], "out": [{"name": "rows", "type": "list"}] } },
+          { "semantic": "filter_nonempty_rows", "tag": null, "io": { "in": [{"name": "rows", "type": "list"}], "out": [{"name": "rows", "type": "list"}] } },
+          { "semantic": "insert_rows_to_db", "tag": null, "io": { "in": [{"name": "rows", "type": "list"}, {"name": "db_dsn", "type": "str"}], "out": [{"name": "inserted_count", "type": "int"}] } }
+        ]
+      }
+    },
+    {
+      "id": "url_to_title_seq",
+      "input": {
+        "semantic": "Fetch URL HTML and extract title text",
+        "io": { "in": [{"name": "url", "type": "str"}], "out": [{"name": "title", "type": "str"}] }
+      },
+      "output": {
+        "io": { "in": [{"name": "url", "type": "str"}], "out": [{"name": "title", "type": "str"}] },
+        "steps": [
+          { "semantic": "fetch_url_text", "tag": null, "io": { "in": [{"name": "url", "type": "str"}], "out": [{"name": "html", "type": "str"}] } },
+          { "semantic": "extract_html_title", "tag": null, "io": { "in": [{"name": "html", "type": "str"}], "out": [{"name": "title", "type": "str"}] } }
+        ]
+      }
+    },
+    {
+      "id": "profile_validate_normalize_seq",
+      "input": {
+        "semantic": "Validate and normalize user profile JSON",
+        "io": { "in": [{"name": "profile", "type": "dict"}], "out": [{"name": "profile", "type": "dict"}] }
+      },
+      "output": {
+        "io": { "in": [{"name": "profile", "type": "dict"}], "out": [{"name": "profile", "type": "dict"}] },
+        "steps": [
+          { "semantic": "validate_required_profile_fields", "tag": null, "io": { "in": [{"name": "profile", "type": "dict"}], "out": [{"name": "valid", "type": "bool"}] } },
+          { "semantic": "normalize_profile_fields", "tag": null, "io": { "in": [{"name": "profile", "type": "dict"}, {"name": "valid", "type": "bool"}], "out": [{"name": "profile", "type": "dict"}] } }
+        ]
+      }
+    },
+    {
+      "id": "dedupe_keep_newest_seq",
+      "input": {
+        "semantic": "Deduplicate items by id and keep newest",
+        "io": { "in": [{"name": "items", "type": "list"}], "out": [{"name": "items", "type": "list"}] }
+      },
+      "output": {
+        "io": { "in": [{"name": "items", "type": "list"}], "out": [{"name": "items", "type": "list"}] },
+        "steps": [
+          { "semantic": "index_items_by_id", "tag": null, "io": { "in": [{"name": "items", "type": "list"}], "out": [{"name": "by_id", "type": "dict"}] } },
+          { "semantic": "select_newest_per_id", "tag": null, "io": { "in": [{"name": "by_id", "type": "dict"}], "out": [{"name": "items", "type": "list"}] } }
+        ]
+      }
+    },
+    {
+      "id": "router_json_vs_text",
+      "input": {
+        "semantic": "Route by input type: JSON vs plain text",
+        "io": { "in": [{"name": "raw", "type": "str"}], "out": [{"name": "data", "type": "dict"}] }
+      },
+      "output": {
+        "io": { "in": [{"name": "raw", "type": "str"}], "out": [{"name": "data", "type": "dict"}] },
+        "steps": [
+          { "semantic": "parse_json_branch", "tag": "json", "io": { "in": [{"name": "raw", "type": "str"}], "out": [{"name": "data", "type": "dict"}] } },
+          { "semantic": "parse_text_branch", "tag": "text", "io": { "in": [{"name": "raw", "type": "str"}], "out": [{"name": "data", "type": "dict"}] } }
+        ]
+      }
+    },
+    {
+      "id": "par_stats_and_checksum",
+      "input": {
+        "semantic": "Parallel: compute basic statistics and checksum from bytes",
+        "io": { "in": [{"name": "bytes", "type": "bytes"}], "out": [{"name": "stats", "type": "dict"}, {"name": "checksum", "type": "str"}] }
+      },
+      "output": {
+        "io": { "in": [{"name": "bytes", "type": "bytes"}], "out": [{"name": "stats", "type": "dict"}, {"name": "checksum", "type": "str"}] },
+        "steps": [
+          { "semantic": "compute_basic_stats", "tag": "par", "io": { "in": [{"name": "bytes", "type": "bytes"}], "out": [{"name": "stats", "type": "dict"}] } },
+          { "semantic": "compute_sha256_checksum", "tag": "par", "io": { "in": [{"name": "bytes", "type": "bytes"}], "out": [{"name": "checksum", "type": "str"}] } }
+        ]
+      }
+    },
+    {
+      "id": "logfile_filter_aggregate_seq",
+      "input": {
+        "semantic": "Read log lines, filter errors, aggregate counts by code",
+        "io": { "in": [{"name": "log_path", "type": "str"}], "out": [{"name": "counts", "type": "dict"}] }
+      },
+      "output": {
+        "io": { "in": [{"name": "log_path", "type": "str"}], "out": [{"name": "counts", "type": "dict"}] },
+        "steps": [
+          { "semantic": "read_log_lines", "tag": null, "io": { "in": [{"name": "log_path", "type": "str"}], "out": [{"name": "lines", "type": "list"}] } },
+          { "semantic": "filter_error_lines", "tag": null, "io": { "in": [{"name": "lines", "type": "list"}], "out": [{"name": "error_lines", "type": "list"}] } },
+          { "semantic": "count_errors_by_code", "tag": null, "io": { "in": [{"name": "error_lines", "type": "list"}], "out": [{"name": "counts", "type": "dict"}] } }
+        ]
+      }
+    },
+    {
+      "id": "image_decode_resize_encode_seq",
+      "input": {
+        "semantic": "Decode image bytes, resize, encode to PNG",
+        "io": { "in": [{"name": "image_bytes", "type": "bytes"}], "out": [{"name": "png_bytes", "type": "bytes"}] }
+      },
+      "output": {
+        "io": { "in": [{"name": "image_bytes", "type": "bytes"}], "out": [{"name": "png_bytes", "type": "bytes"}] },
+        "steps": [
+          { "semantic": "decode_image_bytes", "tag": null, "io": { "in": [{"name": "image_bytes", "type": "bytes"}], "out": [{"name": "image", "type": "any"}] } },
+          { "semantic": "resize_image", "tag": null, "io": { "in": [{"name": "image", "type": "any"}], "out": [{"name": "image", "type": "any"}] } },
+          { "semantic": "encode_png_bytes", "tag": null, "io": { "in": [{"name": "image", "type": "any"}], "out": [{"name": "png_bytes", "type": "bytes"}] } }
+        ]
+      }
+    },
+    {
+      "id": "cache_lookup_or_compute_router",
+      "input": {
+        "semantic": "If cache hit return cached value else compute and cache",
+        "io": { "in": [{"name": "cache_key", "type": "str"}], "out": [{"name": "value", "type": "any"}] }
+      },
+      "output": {
+        "io": { "in": [{"name": "cache_key", "type": "str"}], "out": [{"name": "value", "type": "any"}] },
+        "steps": [
+          { "semantic": "return_cached_value", "tag": "hit", "io": { "in": [{"name": "cache_key", "type": "str"}], "out": [{"name": "value", "type": "any"}] } },
+          { "semantic": "compute_and_store_value", "tag": "miss", "io": { "in": [{"name": "cache_key", "type": "str"}], "out": [{"name": "value", "type": "any"}] } }
+        ]
+      }
+    },
+    {
+      "id": "text_tokenize_vectorize_seq",
+      "input": {
+        "semantic": "Tokenize text, build vocabulary, vectorize tokens",
+        "io": { "in": [{"name": "text", "type": "str"}], "out": [{"name": "vector", "type": "list"}] }
+      },
+      "output": {
+        "io": { "in": [{"name": "text", "type": "str"}], "out": [{"name": "vector", "type": "list"}] },
+        "steps": [
+          { "semantic": "tokenize_text", "tag": null, "io": { "in": [{"name": "text", "type": "str"}], "out": [{"name": "tokens", "type": "list"}] } },
+          { "semantic": "build_vocab", "tag": null, "io": { "in": [{"name": "tokens", "type": "list"}], "out": [{"name": "vocab", "type": "dict"}] } },
+          { "semantic": "vectorize_tokens", "tag": null, "io": { "in": [{"name": "tokens", "type": "list"}, {"name": "vocab", "type": "dict"}], "out": [{"name": "vector", "type": "list"}] } }
+        ]
+      }
+    },
+    {
+      "id": "json_schema_validate_router",
+      "input": {
+        "semantic": "Validate JSON input: accept if schema ok else return error packet",
+        "io": { "in": [{"name": "data", "type": "dict"}], "out": [{"name": "result", "type": "dict"}] }
+      },
+      "output": {
+        "io": { "in": [{"name": "data", "type": "dict"}], "out": [{"name": "result", "type": "dict"}] },
+        "steps": [
+          { "semantic": "accept_valid_payload", "tag": "ok", "io": { "in": [{"name": "data", "type": "dict"}], "out": [{"name": "result", "type": "dict"}] } },
+          { "semantic": "build_error_result", "tag": "error", "io": { "in": [{"name": "data", "type": "dict"}], "out": [{"name": "result", "type": "dict"}] } }
+        ]
+      }
+    },
+    {
+      "id": "par_extract_and_summarize",
+      "input": {
+        "semantic": "Parallel: extract keywords and compute summary statistics",
+        "io": { "in": [{"name": "documents", "type": "list"}], "out": [{"name": "keywords", "type": "list"}, {"name": "summary", "type": "dict"}] }
+      },
+      "output": {
+        "io": { "in": [{"name": "documents", "type": "list"}], "out": [{"name": "keywords", "type": "list"}, {"name": "summary", "type": "dict"}] },
+        "steps": [
+          { "semantic": "extract_keywords", "tag": "par", "io": { "in": [{"name": "documents", "type": "list"}], "out": [{"name": "keywords", "type": "list"}] } },
+          { "semantic": "compute_summary_stats", "tag": "par", "io": { "in": [{"name": "documents", "type": "list"}], "out": [{"name": "summary", "type": "dict"}] } }
+        ]
+      }
+    },
+    {
+      "id": "router_payment_method",
+      "input": {
+        "semantic": "Route by payment method: card vs bank transfer",
+        "io": { "in": [{"name": "payment", "type": "dict"}], "out": [{"name": "receipt", "type": "dict"}] }
+      },
+      "output": {
+        "io": { "in": [{"name": "payment", "type": "dict"}], "out": [{"name": "receipt", "type": "dict"}] },
+        "steps": [
+          { "semantic": "process_card_payment", "tag": "card", "io": { "in": [{"name": "payment", "type": "dict"}], "out": [{"name": "receipt", "type": "dict"}] } },
+          { "semantic": "process_bank_transfer", "tag": "bank", "io": { "in": [{"name": "payment", "type": "dict"}], "out": [{"name": "receipt", "type": "dict"}] } }
+        ]
+      }
+    },
+    {
+      "id": "seq_ingest_transform_export",
+      "input": {
+        "semantic": "Ingest records, transform fields, export as JSON lines",
+        "io": { "in": [{"name": "source_path", "type": "str"}], "out": [{"name": "output_path", "type": "str"}] }
+      },
+      "output": {
+        "io": { "in": [{"name": "source_path", "type": "str"}], "out": [{"name": "output_path", "type": "str"}] },
+        "steps": [
+          { "semantic": "load_records", "tag": null, "io": { "in": [{"name": "source_path", "type": "str"}], "out": [{"name": "records", "type": "list"}] } },
+          { "semantic": "transform_records", "tag": null, "io": { "in": [{"name": "records", "type": "list"}], "out": [{"name": "records", "type": "list"}] } },
+          { "semantic": "write_jsonl_file", "tag": null, "io": { "in": [{"name": "records", "type": "list"}], "out": [{"name": "output_path", "type": "str"}] } }
+        ]
+      }
+    },
+    {
+      "id": "auth_verify_issue_token_seq",
+      "input": {
+        "semantic": "Authenticate user credentials and issue access token",
+        "io": { "in": [{"name": "username", "type": "str"}, {"name": "password", "type": "str"}], "out": [{"name": "access_token", "type": "str"}] }
+      },
+      "output": {
+        "io": { "in": [{"name": "username", "type": "str"}, {"name": "password", "type": "str"}], "out": [{"name": "access_token", "type": "str"}] },
+        "steps": [
+          { "semantic": "load_user_record", "tag": null, "io": { "in": [{"name": "username", "type": "str"}], "out": [{"name": "user", "type": "dict"}] } },
+          { "semantic": "verify_password", "tag": null, "io": { "in": [{"name": "user", "type": "dict"}, {"name": "password", "type": "str"}], "out": [{"name": "ok", "type": "bool"}] } },
+          { "semantic": "issue_access_token", "tag": null, "io": { "in": [{"name": "user", "type": "dict"}, {"name": "ok", "type": "bool"}], "out": [{"name": "access_token", "type": "str"}] } }
+        ]
+      }
+    },
+    {
+      "id": "query_filter_sort_paginate_seq",
+      "input": {
+        "semantic": "Filter, sort, and paginate list results",
+        "io": { "in": [{"name": "query", "type": "dict"}], "out": [{"name": "page", "type": "dict"}] }
+      },
+      "output": {
+        "io": { "in": [{"name": "query", "type": "dict"}], "out": [{"name": "page", "type": "dict"}] },
+        "steps": [
+          { "semantic": "parse_query_params", "tag": null, "io": { "in": [{"name": "query", "type": "dict"}], "out": [{"name": "params", "type": "dict"}] } },
+          { "semantic": "load_matching_records", "tag": null, "io": { "in": [{"name": "params", "type": "dict"}], "out": [{"name": "records", "type": "list"}] } },
+          { "semantic": "build_page_response", "tag": null, "io": { "in": [{"name": "records", "type": "list"}, {"name": "params", "type": "dict"}], "out": [{"name": "page", "type": "dict"}] } }
+        ]
+      }
+    },
+    {
+      "id": "webhook_verify_and_dispatch_seq",
+      "input": {
+        "semantic": "Verify webhook signature and dispatch event handler",
+        "io": { "in": [{"name": "headers", "type": "dict"}, {"name": "body", "type": "bytes"}], "out": [{"name": "result", "type": "dict"}] }
+      },
+      "output": {
+        "io": { "in": [{"name": "headers", "type": "dict"}, {"name": "body", "type": "bytes"}], "out": [{"name": "result", "type": "dict"}] },
+        "steps": [
+          { "semantic": "extract_signature_fields", "tag": null, "io": { "in": [{"name": "headers", "type": "dict"}], "out": [{"name": "signature", "type": "str"}] } },
+          { "semantic": "verify_webhook_signature", "tag": null, "io": { "in": [{"name": "body", "type": "bytes"}, {"name": "signature", "type": "str"}], "out": [{"name": "verified", "type": "bool"}] } },
+          { "semantic": "dispatch_webhook_event", "tag": null, "io": { "in": [{"name": "body", "type": "bytes"}, {"name": "verified", "type": "bool"}], "out": [{"name": "result", "type": "dict"}] } }
+        ]
+      }
+    },
+    {
+      "id": "order_total_discount_tax_seq",
+      "input": {
+        "semantic": "Calculate order total with discounts and tax",
+        "io": { "in": [{"name": "items", "type": "list"}, {"name": "coupon", "type": "str"}], "out": [{"name": "total", "type": "float"}] }
+      },
+      "output": {
+        "io": { "in": [{"name": "items", "type": "list"}, {"name": "coupon", "type": "str"}], "out": [{"name": "total", "type": "float"}] },
+        "steps": [
+          { "semantic": "compute_subtotal", "tag": null, "io": { "in": [{"name": "items", "type": "list"}], "out": [{"name": "subtotal", "type": "float"}] } },
+          { "semantic": "apply_coupon_discount", "tag": null, "io": { "in": [{"name": "subtotal", "type": "float"}, {"name": "coupon", "type": "str"}], "out": [{"name": "discounted", "type": "float"}] } },
+          { "semantic": "add_tax_to_total", "tag": null, "io": { "in": [{"name": "discounted", "type": "float"}], "out": [{"name": "total", "type": "float"}] } }
+        ]
+      }
+    },
+    {
+      "id": "external_api_retry_backoff_seq",
+      "input": {
+        "semantic": "Call external API with retry and exponential backoff",
+        "io": { "in": [{"name": "request", "type": "dict"}], "out": [{"name": "response", "type": "dict"}] }
+      },
+      "output": {
+        "io": { "in": [{"name": "request", "type": "dict"}], "out": [{"name": "response", "type": "dict"}] },
+        "steps": [
+          { "semantic": "send_api_request", "tag": null, "io": { "in": [{"name": "request", "type": "dict"}], "out": [{"name": "raw_response", "type": "dict"}] } },
+          { "semantic": "evaluate_retry_policy", "tag": null, "io": { "in": [{"name": "raw_response", "type": "dict"}], "out": [{"name": "should_retry", "type": "bool"}] } },
+          { "semantic": "normalize_api_response", "tag": null, "io": { "in": [{"name": "raw_response", "type": "dict"}, {"name": "should_retry", "type": "bool"}], "out": [{"name": "response", "type": "dict"}] } }
+        ]
+      }
+    }
+  ]
+}
+

@@ -17,7 +17,14 @@ def render_init(node: dict) -> str:
 
     children = node.get("children", [])
     topology = node.get("topology") or "SEQ"
+    topology_tree = node.get("topology_tree")
+    template_id = node.get("template_id") or ""
     header = _file_header(node)
+    if template_id:
+        header = header.replace(
+            f"# topology: {topology}\n",
+            f"# topology: {topology}\n# template_id: {template_id}\n",
+        )
     pkg = node.get("function_name") or "package"
     if not children:
         return header + f"def {pkg}(ctx):\n    return ctx\n"
@@ -25,5 +32,5 @@ def render_init(node: dict) -> str:
     for child in children:
         lines.append(f"{_import_child(child['function_name'])}\n")
     lines.append(f"\ndef {pkg}(ctx):\n")
-    lines.extend((f"{line}\n" for line in emit_flow(children, topology)))
+    lines.extend((f"{line}\n" for line in emit_flow(children, topology, topology_tree)))
     return "".join(lines)
