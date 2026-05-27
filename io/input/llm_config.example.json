@@ -1,0 +1,26 @@
+{
+  "default_api_url": "http://localhost:11434/api/generate",
+  "default_model": "your-model-name",
+  "scenarios": {
+    "expand": {
+      "description": "decompose node into steps",
+      "model": "your-model-name",
+      "timeout_sec": 900
+    },
+    "naming": {
+      "description": "semantic to function_name",
+      "model": "your-model-name",
+      "timeout_sec": 900
+    },
+    "code": {
+      "description": "leaf run(ctx) implementation",
+      "model": "your-model-name",
+      "timeout_sec": 900
+    },
+    "memory": {
+      "description": "optional LLM",
+      "model": "your-model-name",
+      "timeout_sec": 600
+    }
+  }
+}

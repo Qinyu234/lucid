@@ -1,9 +1,9 @@
 def render_init_minimal(node: dict) -> str:
-    from src.shared.format_io_comment import format_io_comment
+    from src.shared.validate.io_format_comment_util import io_format_comment_util
     'Fallback composite skeleton when full render_init fails verify.'
     children = node.get('children', [])
     pkg = node.get('function_name') or 'package'
-    io_in, io_out = format_io_comment(node.get('io'))
+    io_in, io_out = io_format_comment_util(node.get('io'))
     topology = node.get('topology') or 'SEQ'
     lines = [f"# semantic: {node.get('semantic', '')}", f'# io.in: {io_in}', f'# io.out: {io_out}', f'# topology: {topology}', f'# skeleton: true', '']
     for child in children:

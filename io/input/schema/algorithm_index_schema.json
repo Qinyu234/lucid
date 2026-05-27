@@ -1,8 +1,0 @@
-{
-  "type": "object",
-  "required": ["algorithms"],
-  "properties": {
-    "algorithms": { "type": "object" },
-    "categories": { "type": "object" }
-  }
-}

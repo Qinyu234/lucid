@@ -1,8 +1,6 @@
 {
   "output_dir": "io/output",
   "shared_dir": "io/output/shared",
-  "algorithm_dir": "io/output/algorithm",
-  "algorithm_index": "io/output/algorithm/index.json",
   "memory_file": "io/output/memory/leaves.json",
   "logs_dir": "io/output/logs",
   "schema_dir": "io/input/schema",
@@ -10,8 +8,6 @@
     "slim_mode": true,
     "memory_recall": false,
     "embedding_split": false,
-    "algorithm_catalog": false,
-    "algorithm_registry_on_start": false,
     "tree_keep_history": false,
     "ollama_unload_after_request": true
   },

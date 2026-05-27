@@ -1,10 +1,8 @@
-from src.shared.get_logger import get_logger
-from src.shared.log_event import log_event
-
-
 def report(job: dict, result: dict) -> dict:
+    from src.shared.logging.get_logger_util import get_logger_util
+    from src.shared.logging.event_util import event_util
 
-    logger = get_logger(job.get("id"))
+    logger = get_logger_util(job.get("id"))
     job_id = job.get("id", "unknown")
     status = result.get("status", "unknown")
 
@@ -24,6 +22,6 @@ def report(job: dict, result: dict) -> dict:
         level = 30
     else:
         level = 20
-    log_event(logger, "job_report", level=level, **{k: v for k, v in summary.items() if v is not None})
+    event_util(logger, "job_report", level=level, **{k: v for k, v in summary.items() if v is not None})
 
     return summary

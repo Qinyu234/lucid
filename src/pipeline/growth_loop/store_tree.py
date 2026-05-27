@@ -8,11 +8,8 @@ def store_tree(
     extra: dict | None = None,
     job_id: str | None = None,
 ):
-    """Persist growth tree snapshot under job workspace: {root_path}/tree/latest.json."""
-    from src.pipeline.save_job_tree import save_job_tree as _save_job_tree
+    from src.shared.lib.store_tree_util import store_tree_util
 
-    if job is None:
-        return None
-    return _save_job_tree(
+    return store_tree_util(
         root, job, stage, status=status, issues=issues, extra=extra, job_id=job_id
     )

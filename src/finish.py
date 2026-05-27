@@ -1,10 +1,8 @@
-from src.shared.get_logger import get_logger
-from src.shared.log_event import log_event
-
-
 def finish(context: dict) -> dict:
+    from src.shared.logging.get_logger_util import get_logger_util
+    from src.shared.logging.event_util import event_util
 
-    logger = get_logger()
+    logger = get_logger_util()
     results = context.get("results", []) if context else []
 
     ok_count = sum(1 for r in results if r.get("result", {}).get("status") == "done")
@@ -20,7 +18,7 @@ def finish(context: dict) -> dict:
         "results": results,
     }
 
-    log_event(
+    event_util(
         logger,
         "runtime_summary",
         total=summary["total"],

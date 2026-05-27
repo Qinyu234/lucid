@@ -1,27 +1,27 @@
 def evaluate_split(parent_semantic: str, proposal: list) -> tuple:
-    import re
-
     max_children = 4
-    from src.shared.feature_enabled import feature_enabled
-    from src.shared.load_app_config import load_app_config
-    from src.pipeline.growth_loop.filter.embed_model import embed_model
-    from src.pipeline.growth_loop.filter.cosine_similarity import cosine_similarity
+    from src.shared.lib.feature_util import feature_util
+    from src.shared.lib.app_config_util import app_config_util
+    from src.shared.lib.re_util import re_util
+    from src.shared.lib.sentence_transformer_encode_util import sentence_transformer_encode_util
+    from src.shared.lib.cosine_similarity_util import cosine_similarity_util
     '\n    Decide whether LLM split is valid.\n\n    split_validation (growth config, or legacy embedding_split feature):\n      - off: keep LLM steps; drop only exact-duplicate sibling semantics\n      - light: token Jaccard overlap (no ML model); never discard entire proposal\n      - embedding: SentenceTransformer similarity (needs RAM)\n    '
 
     def _growth_cfg() -> dict:
-        return load_app_config().get('growth', {})
+        return app_config_util().get('growth', {})
 
     def _validation_mode() -> str:
         cfg = _growth_cfg()
         mode = str(cfg.get('split_validation', '') or '').strip().lower()
         if mode in ('off', 'light', 'embedding'):
             return mode
-        if feature_enabled('embedding_split'):
+        if feature_util('embedding_split'):
             return 'embedding'
         return 'light'
 
     def _token_set(text: str) -> set:
-        return set(re.findall('[a-zA-Z0-9_]+|[\\u4e00-\\u9fff]+', str(text).lower()))
+        re = re_util()
+        return set(re.findall(r"[a-zA-Z0-9_]+|[\u4e00-\u9fff]+", str(text).lower()))
 
     def _jaccard(a: str, b: str) -> float:
         ta, tb = (_token_set(a), _token_set(b))
@@ -44,12 +44,11 @@ def evaluate_split(parent_semantic: str, proposal: list) -> tuple:
         vectors = []
         result = []
         for p in items:
-            try:
-                vec = embed_model(p['semantic'])
-            except Exception:
+            vec = sentence_transformer_encode_util(p.get("semantic", ""))
+            if not vec:
                 result.append(p)
                 continue
-            if any((cosine_similarity(vec, v) > threshold for v in vectors)):
+            if any((cosine_similarity_util(vec, v) > threshold for v in vectors)):
                 continue
             vectors.append(vec)
             result.append(p)
@@ -95,19 +94,17 @@ def evaluate_split(parent_semantic: str, proposal: list) -> tuple:
             deduped = _dedupe_siblings_embed(items)
             return (True, 'ok', deduped if deduped else items[:max_children])
         threshold = _threshold()
-        try:
-            parent_vec = embed_model(str(parent_semantic))
-        except Exception:
+        parent_vec = sentence_transformer_encode_util(str(parent_semantic))
+        if not parent_vec:
             return (True, 'embed_unavailable', items[:max_children])
         scored = []
         for p in items:
-            try:
-                vec = embed_model(p['semantic'])
-            except Exception:
+            vec = sentence_transformer_encode_util(p.get("semantic", ""))
+            if not vec:
                 scored.append((p, 0.0))
                 continue
-            scored.append((p, cosine_similarity(vec, parent_vec)))
-        if all((sim > threshold for _, sim in scored)):
+            scored.append((p, cosine_similarity_util(vec, parent_vec)))
+        if scored and all((sim > threshold for _, sim in scored)):
             return (False, 'all_steps_similar_to_parent', [])
         distinct = [p for p, sim in scored if sim <= threshold]
         if not distinct:

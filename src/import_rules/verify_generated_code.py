@@ -1,4 +1,4 @@
-def verify_generated_code(code: str, expected_fn: str, kind: str, child_modules: set | None=None, shared_root: str='shared', algorithm_root: str='algorithm') -> tuple:
+def verify_generated_code(code: str, expected_fn: str, kind: str, child_modules: set | None=None, shared_root: str='shared') -> tuple:
     import ast
     from src.import_rules.verify_init_imports import verify_init_imports
     from src.import_rules.verify_leaf_imports import verify_leaf_imports
@@ -12,9 +12,9 @@ def verify_generated_code(code: str, expected_fn: str, kind: str, child_modules:
     if not ok:
         return (False, msg)
     if kind == 'leaf':
-        return verify_leaf_imports(tree, shared_root, algorithm_root)
+        return verify_leaf_imports(tree, shared_root)
     if kind == 'init':
-        return verify_init_imports(tree, child_modules or set(), shared_root, algorithm_root)
-    if kind in ('shared', 'algorithm'):
+        return verify_init_imports(tree, child_modules or set(), shared_root)
+    if kind == 'shared':
         return verify_shared_imports(tree)
     return (False, f'unknown kind: {kind}')

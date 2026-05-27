@@ -28,3 +28,4 @@ alwaysApply: true
 
 - 用 `codegen-src` 的 import 表去生成用户项目（用户项目用 `src.shared` 表）。
 - 跳过 `verify_code` / 骨架检查就注册 leaf。
+- 交付前：`python -m src.verify_workplace_contract <job_root> <job_id>`。

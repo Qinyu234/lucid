@@ -1,5 +1,7 @@
 def save_entries(entries: list):
-    import json
-    from src.pipeline.memory.memory_path import memory_path
-    with memory_path().open('w', encoding='utf-8') as f:
-        json.dump(entries, f, indent=2, ensure_ascii=False)
+    from src.shared.lib.app_config_util import app_config_util
+    from src.shared.lib.json_write_file_util import json_write_file_util
+
+    cfg = app_config_util()
+    path = str(cfg.get("memory_file", "io/output/memory/leaves.json"))
+    json_write_file_util(path, entries)

@@ -1,9 +1,9 @@
 def build_prompt(node):
 
-    from src.shared.format_io_comment import format_io_comment
+    from src.shared.validate.io_format_comment_util import io_format_comment_util
 
     io = node.get("io") or {}
-    io_in, io_out = format_io_comment(io)
+    io_in, io_out = io_format_comment_util(io)
 
     return f"""
 You are a strict task decomposition engine.

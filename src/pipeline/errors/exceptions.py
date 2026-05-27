@@ -1,7 +1,5 @@
 """Exception types for pipeline (exempt: multiple classes)."""
 
-from src.pipeline.errors.error_packet import error_packet
-
 
 class PipelineError(Exception):
     code = "PIPELINE_ERROR"
@@ -12,6 +10,8 @@ class PipelineError(Exception):
         self.detail = detail or {}
 
     def to_packet(self) -> dict:
+        from .error_packet import error_packet
+
         return error_packet(self.code, self.message, self.detail)
 
 
@@ -29,3 +29,7 @@ class LLMError(PipelineError):
 
 class IOError(PipelineError):
     code = "IO_ERROR"
+
+
+def exceptions():
+    return PipelineError

@@ -29,19 +29,21 @@ alwaysApply: false
 
 | 文件 | 模块级允许 |
 |------|------------|
-| **leaf**（非 `__init__.py`，且不在 `src/shared/`） | 仅 `from src.shared.<直接模块>`（禁止 `src.shared` 子包、禁止相对 import） |
-| **`src/shared/*.py`** | 仅标准库 |
-| **`__init__.py`（接口）** | **唯一**可 import 非 shared：`from .<直接子节点> import <同名>` + `from src.shared...` |
-| **禁止** | leaf 引用子目录或业务包；`__init__` 用 `from .a.b` / `from src.other...` 拉业务模块 |
+| **leaf**（非 `__init__.py`，且不在 `src/shared/`） | **全文件**仅 `from src.shared.<直接模块>`（禁止 stdlib、业务包、相对 import） |
+| **adapter**（编译器专用，见 `compiler_adapter_stems.py`） | 单函数、仅能被父包 `__init__.py` `from .<stem> import <stem>`；函数体内可转调非 shared；**禁止**出现在用户生成项目 |
+| **`src/shared/*.py`（用户生成项目）** | 仅标准库；职责见 **codegen-user-contract §3.1**（含 debug/profile/time/id/path/file/error 等已批准扩展） |
+| **`src/shared/*.py`（本仓库编译器）** | 仅标准库；可含 schema、配置、pipeline 等**编译器专用**模块，与用户 job 的 shared 分离 |
+| **`__init__.py`（接口）** | **仅**同目录直接子节点：`from .<子节点> import <子节点>`（leaf `.py` 或子包 `__init__.py`）；**禁止** `from src.shared...` / 绝对路径 |
+| **禁止** | leaf 引用子目录或业务包；`__init__` 用 `from .a.b` / `from src...` / `from src.shared...` |
 
-跨包协作：由**包接口** `__init__.py` 编排；leaf 只经 `src.shared` 拿通用能力，不得模块级 import 兄弟或子目录。
+跨包协作：由**包接口** `__init__.py` 在**模块级** `from .<子节点> import <子节点>` 编排；禁止在 `__init__.py` 任意位置写 `from src...`。编译器内非 shared 转调仅经 **adapter** 模块（非 leaf 契约）。用户生成项目 **leaf 全文件仅 shared**。
 
 ## 4. 仓库骨架
 
 ```
 io/input/   io/schema/   io/output/   config/   requirement/
 src/
-  shared/          # 标准库封装、类型辅助、日志
+  shared/          # 编译器专用（按前缀分文件）；用户 job 见 codegen-user-contract §3.1
   pipeline/        # 主流程（含 growth、code_tree）
   schema/          # job/node JSON schema
   ...
@@ -49,7 +51,18 @@ run.py
 tools/
 ```
 
-校验：`python tools/verify_src_contract.py`
+校验：`python -m src.verify_src_contract`；生成 job 工作区：`python -m src.verify_workplace_contract io/output/workplace/<job_id> <job_id>`
+
+### 编译器 `src/shared/` 模块分类（平铺，stem = 顶层函数名）
+
+| 前缀 | 职责 | 示例 |
+|------|------|------|
+| `lib_*_util` | 配置、JSON、路径、特性开关 | `lib_json_util`, `lib_app_config_util`, `lib_schema_util` |
+| `logging_*_util` | 日志目录、setup、logger、事件 | `logging_setup_util`, `logging_get_logger_util`, `logging_event_util` |
+| `validate_*_util` | IO/节点/schema 校验与格式化 | `validate_io_normalize_util`, `validate_schema_util`, `validate_io_link_util` |
+| `io_tree_*_util` | 分解树 IO 注册与持久化 | `io_tree_register_util`, `io_tree_persist_registry_util` |
+
+每个 `.py` 仍仅一个顶层函数；模块级仅标准库，跨模块引用写在函数体内 `from src.shared.<stem> import <stem>`。
 
 ## 5. 与用户生成契约对齐
 

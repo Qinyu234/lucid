@@ -1,222 +1,272 @@
-自己搭workflow，自己管理，toy project
+<div align="center">
+  <h1>Code Generator</h1>
+  <p>一个写着玩的本地代码生成实验<br/>
+     A local code generation experiment I built for fun</p>
+</div>
 
-📘 Code Generator System Spec v0.1（冻结版）
-0. 系统目标（Goal）
+<hr/>
 
-构建一个程序生成系统：
+<h2>Part 1：定义 | Definition</h2>
 
-将高层任务 → 递归拆分 → 图结构 → 可执行代码项目
+<p>
+这是一个水简历项目。<br/>
+This is basically something I can put into my resume (*^_^*).
+</p>
 
-核心要求：
+<p>
+还在不断改，没有稳定版本。整体状态大概是：<br/>
+Still under heavy changes, no stable version at all. Current state:
+</p>
 
-7B模型可稳定运行
-强约束结构生成
-可递归拆分（bounded recursion）
-数据流严格
-模块依赖严格
-状态显式
-可日志追踪
-1. 总体结构（Pipeline）
-TASK
-  ↓
-NODE GENERATION (LLM)
-  ↓
-STRUCTURE ASSIGNMENT (SYSTEM)
-  ↓
-RECURSIVE EXPANSION
-  ↓
-PRIMITIVE MATCHING
-  ↓
-CODE EMISSION
-  ↓
-RUNTIME EXECUTION
-  ↓
-LOGGING (ASYNC)
-2. 核心抽象（唯一数据结构）
-✔ Node（唯一基本单位）
-Node = {
-  id,
-  children,
-  input,
-  output,
-  state,
-  role
-}
-3. LLM权限范围（严格限制）
+<blockquote>
+能跑，但不太稳定，也不保证什么时候会推倒重来。<br/>
+It runs, but unstable, and may get rewritten anytime.
+</blockquote>
 
-LLM只能做：
+<hr/>
 
-✔ 允许
-提出最多4个子节点名称
-提供语义标签（非逻辑）
-描述模块功能（input/output语义）
-❌ 禁止
-不允许决定结构（SEQ / BRANCH / etc）
-不允许写 condition
-不允许定义 case
-不允许决定 import
-不允许定义 recursion规则
-4. SYSTEM权限范围
+<h2>Part 2：它是干嘛的 | What it does</h2>
 
-System负责：
+<p>
+简单来说就是：<br/>
+In short:
+</p>
 
-✔ Structure Assignment
+<blockquote>
+根据一些简单要求自动生成代码。<br/>
+Generate code from simple requirements.
+</blockquote>
 
-固定 topology：
+<p>
+本质上就是在复刻现在各种 AI coding tool 在做的事情，只不过是我自己在本地搭了一套。<br/>
+It's basically redoing what existing AI coding tools already do, but built locally by myself.
+</p>
 
-SEQ
-PAR
-BRANCH
-ROUTER
-✔ Primitive Matching
+<h3>Part 2.1：现在能用吗 | Can it actually be used?</h3>
 
-将 node group 映射为结构类型：
+<p>
+不太行。<br/>
+Not really.
+</p>
 
-NODE SET → TOPOLOGY
-✔ Case Collapse（重要）
+<p>最近的问题 | Current problems:</p>
 
-LLM输出语义：
+<ul>
+  <li>容易出现语义上的文件循环<br/>Semantic file loops happen</li>
+  <li>结构和人类思路相去甚远，看着很扭<br/>Structure looks very unnatural</li>
+  <li>我的破电脑太慢，反馈周期基本按天算<br/>My laptop is too slow that feedback loop takes 1+ day</li>
+</ul>
 
-attack
-heal
-fallback
+<p>
+如果只是想写代码：<br/>
+If you actually just want to write code:
+</p>
 
-System转换：
+<p>
+更推荐直接用现成工具。<br/>
+use existing tools instead.
+</p>
 
-CASE_0
-CASE_1
-CASE_2
-5. Topology规则（固定）
-✔ SEQ
-A → B → C
-✔ PAR
-A ↘
-B → M
-C ↗
-✔ BRANCH
-A → {B, C, D}
-✔ ROUTER
-A → CASE_ID → branch
-6. 递归规则（核心）
-✔ Expansion规则
-expand(node):
-    LLM proposes ≤4 children
-    system validates
-    system assigns topology
-    repeat
-✔ 强约束
-max_children = 4
-max_depth = N
-no free-form branching
-must terminate in primitive match
-7. Primitive Matching（结构收敛）
+<hr/>
 
-所有节点必须最终映射：
+<h2>Part 3：那为什么还在做 | Why still doing this</h2>
 
-SEQ
-PAR
-BRANCH
-ROUTER
+<p>
+理由其实很简单：<br/>
+Reasons are simple:
+</p>
 
-没有新增 primitive 权限。
+<ul>
+  <li>最近有点闲<br/>Free time</li>
+  <li>可以水简历<br/>Good for resume</li>
+  <li>项目式学习更有意思<br/>Project-based learning is more fun</li>
+</ul>
 
-8. Case系统（折叠机制，不是逻辑）
-✔ LLM输出（语义）
-error_detected
-success_state
-fallback
-✔ SYSTEM转换
-CASE_0
-CASE_1
-CASE_2
-✔ ROUTER绑定
-CASE_ID → branch
-❌ 禁止
-if
-score > threshold
-boolean expression
-LLM condition reasoning
-9. 数据流模型（Function Core）
+<p>
+所以更像是一个实验台，没有产品的想法。<br/>
+So it's more like an experiment setup, not a product.
+</p>
 
-所有节点统一：
+<hr/>
 
-dict → dict
-数据结构（必须统一）
-{
-  meta,
-  state,
-  data,
-  error
-}
-10. State系统（显式）
-✔ 类型
-Local state
-Flow state
-Persistent state (only explicit node)
-✔ 规则
-state必须声明
-state不能隐式存在
-state不能跨节点随意共享
-11. Import / Inheritance（严格依赖）
-✔ DAG规则
-A → B → C
-✔ 禁止
-cycle
-backward import
-dynamic structural import
-12. Logging系统（异步线程）
-✔ 架构
-execution
-  ↓
-event emit
-  ↓
-async queue
-  ↓
-logger thread
-  ↓
-storage
-✔ event结构
-{
-  node,
-  input_keys,
-  output_keys,
-  state_read,
-  state_write,
-  duration
-}
-✔ 禁止
-logging影响执行
-logging参与决策
-13. 关键设计哲学（核心约束）
-✔ 1. LLM = proposal engine
+<h2>Part 4：现在在做什么 | Current approach</h2>
 
-只提出：
+<p>
+核心思路是：<br/>
+Core idea:
+</p>
 
-“节点集合”
+<blockquote>
+用一套我自己定的规则去生成和检查代码。<br/>
+Use a set of self-defined rules to generate and validate code.
+</blockquote>
 
-✔ 2. SYSTEM = compiler
+<h3>4.1 结构规则 | Structure rules</h3>
 
-负责：
+<ul>
+  <li>函数 = 文件<br/>Function = file</li>
+  <li>文件名 = 函数名<br/>Filename = function name</li>
+  <li>每个文件夹必须有 init<br/>Each folder must have an init</li>
+  <li>init = 模块入口<br/>Init acts as module entry</li>
+  <li>import 被限制<br/>Import is restricted</li>
+</ul>
 
-结构 + 规则 + 验证
+<p>
+本质就是强行控制结构，同时缩小 LLM task。<br/>
+Forcing structure + reducing LLM task size.
+</p>
 
-✔ 3. Runtime = deterministic executor
+<h3>4.2 默认语言 | Default language</h3>
 
-负责：
+<pre><code>Python</code></pre>
 
-dataflow + state + logs
+<p>
+没有认真支持多语言，要改的话 init 要改，有些还改不了。<br/>
+No multi-language support. Init design is Python-specific.
+</p>
 
-14. 最终系统形态（收敛）
-LLM:
-    nodes (≤4)
+<h3>4.3 拆分问题 | Task decomposition</h3>
 
-SYSTEM:
-    topology assignment
-    case collapse
-    recursion control
+<p>
+核心问题：<br/>
+Main problem:
+</p>
 
-RUNTIME:
-    execution + state + logging
-15. 一句话总定义（冻结核心）
+<blockquote>
+怎么把任务拆合理。<br/>
+How to decompose tasks properly.
+</blockquote>
 
-This system is a constrained recursive graph compiler where LLM proposes nodes, system enforces structure and case collapse, and runtime executes deterministic dataflow with explicit state and logging.
+<p>当前做法 | Current method:</p>
+<ul>
+  <li>用模板拆分（sequence / parallel / router）<br/>
+      Template-based (sequence / parallel / router)</li>
+</ul>
+
+<p>问题 | Issues:</p>
+<ul>
+  <li>不稳定<br/>Unstable</li>
+  <li>函数名极长且不可读<br/>Function names become unreadable</li>
+</ul>
+
+<p>
+现在在考虑：<br/>
+Considering:
+</p>
+
+<ul>
+  <li>更大模型<br/>Use larger models</li>
+  <li>更复杂模板<br/>Improve template structure</li>
+</ul>
+
+<hr/>
+
+<h2>Part 4.5：失败思路 | Failed attempts</h2>
+
+<h3>memory / 复用已有代码</h3>
+
+<p>
+一个想法是：<br/>
+Idea:
+</p>
+
+<ul>
+  <li>存储已经生成的 leaf 函数<br/>Store generated leaf functions</li>
+  <li>作为 memory 供后续复用<br/>Use them as reusable memory</li>
+</ul>
+
+<p>
+听起来不错，但问题很多：<br/>
+but:
+</p>
+
+<blockquote>
+跑到第四个小时程序直接崩。<br/>
+Crashed after 4 hours runtime.
+</blockquote>
+
+<p>
+大概率是 context 或状态过长。<br/>
+Likely due to context explosion.
+</p>
+
+<p>
+目前结论：<br/>
+Conclusion:
+</p>
+
+<blockquote>
+理论可行，但现实跑不动。<br/>
+Theoretically valid, practically unusable.
+</blockquote>
+
+<hr/>
+
+<h2>Part 5：未来规划 | Future</h2>
+
+<p>
+结论：<br/>
+Conclusion:
+</p>
+
+<blockquote>
+短期不会变好用。<br/>
+Won't be good anytime soon.
+</blockquote>
+
+<p>可能方向 | Possible ideas:</p>
+<ul>
+  <li>抄现成方案<br/>Use existing solutions</li>
+  <li>合并重复代码<br/>Deduplicate code</li>
+  <li>支持多语言<br/>Support multiple languages</li>
+  <li>优化效率<br/>Improve efficiency</li>
+</ul>
+
+<h3>怎么优化 | How?</h3>
+
+<p>
+还没想清楚。<br/>
+Not clear yet.
+</p>
+
+<p>
+一个想法：<br/>
+One idea:
+</p>
+
+<ul>
+  <li>拆成节点+路径<br/>Split into nodes and paths</li>
+  <li>给路径拟合效率函数<br/>Fit efficiency functions</li>
+  <li>用 maxflow + gene优化方法分配<br/>Optimize with maxflow+gene methods</li>
+</ul>
+
+<p>
+但目前只是想法，而且电脑跑不动。<br/>
+Theoretical, also hardware struggles.
+</p>
+
+<hr/>
+
+<h2>📌 总结 | Summary</h2>
+
+<ul>
+  <li>能跑<br/>Runs</li>
+  <li>不稳定<br/>Unstable</li>
+  <li>有更好的替代方案<br/>Better tools exist</li>
+</ul>
+
+<p>
+这个项目的意义就是：<br/>
+This project exists to:
+</p>
+
+<blockquote>
+看看不用现成工具，我自己这套思路能走到哪一步。<br/>
+See how far I can push this idea.
+</blockquote>
+
+<hr/>
+
+<div align="center">
+  <p>Qinyu Zhang</p>
+</div>

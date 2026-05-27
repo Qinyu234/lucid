@@ -1,8 +1,4 @@
 def cosine_similarity(a, b):
-    import numpy as np
-    a = np.array(a)
-    b = np.array(b)
-    denom = np.linalg.norm(a) * np.linalg.norm(b)
-    if denom == 0:
-        return 0.0
-    return float(np.dot(a, b) / denom)
+    from src.shared.lib.cosine_similarity_util import cosine_similarity_util
+
+    return cosine_similarity_util(a, b)

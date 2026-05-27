@@ -1,12 +1,9 @@
 def shared_dir():
-    from pathlib import Path
+    from src.shared.lib.app_config_util import app_config_util
+    from src.shared.lib.path_write_text_util import path_write_text_util
 
-    from src.shared.load_app_config import load_app_config
-
-    cfg = load_app_config()
-    path = Path(cfg.get('shared_dir', 'io/output/shared'))
-    path.mkdir(parents=True, exist_ok=True)
-    init_py = path / '__init__.py'
-    if not init_py.exists():
-        init_py.write_text('', encoding='utf-8')
+    cfg = app_config_util()
+    path = str(cfg.get("shared_dir", "io/output/shared"))
+    init_py = path.rstrip("/").rstrip("\\") + "/__init__.py"
+    path_write_text_util(init_py, "")
     return path

@@ -9,9 +9,8 @@ alwaysApply: false
 
 ## 预期内容（占位，暂不执行）
 
-- 算法目录与命名约定  
-- 何时用 `algorithm/` 或写入 `src/shared`  
+- 未来 **merger** 阶段的算法选型、替换流程与评测标准  
+- 用户 job 的 `src/shared` 仅限库 / 校验 / 日志（§3.1），算法实现不得塞入 shared  
 - 相对基线的性能评测与回退条件  
-- 与 pipeline / memory 的衔接  
 
-在本文档充实之前，优化阶段**不要**臆造算法库或批量替换实现。
+编译器 **不再** 维护 `pipeline/algorithm/` 或 `io/output/algorithm/`；在本文档充实之前，优化阶段**不要**臆造算法库或批量替换实现。

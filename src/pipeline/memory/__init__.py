@@ -1,5 +1,5 @@
-# Memory subsystem for leaf reuse.
+from .register_leaf import register_leaf
 
 
-def memory():
-    return None
+def memory(ctx=None):
+    return ctx

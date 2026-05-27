@@ -29,33 +29,82 @@ alwaysApply: true
 
 | 文件类型 | 模块级允许 import |
 |----------|-------------------|
-| **leaf**（任意非 `__init__.py` 的 `.py`） | **仅** `src.shared.<模块名>`（`<模块名>` 为 `shared/` 下**直接** `.py` 文件 stem；禁止 `src.shared.子包.*`） |
-| **`src/shared/*.py`** | 仅标准库；职责：**库封装、类型辅助、日志** |
-| **接口 `__init__.py`** | **唯一**可 import 非 shared 的文件；非 shared **仅** `from .<直接子节点> import <同名>`（一层，子节点为同目录下的 `.py` 或子包）；另可 `from src.shared...` |
-| **禁止** | leaf 使用相对 import / import 子目录 / import 业务包 / 直接 import 标准库；`__init__` 使用 `from .a.b`、绝对路径 import 业务模块（`from src.pkg...`）；为去重跨包引用 |
+| **leaf**（任意非 `__init__.py` 的 `.py`） | **整个文件**（模块级与函数体内）**仅**允许 `src.shared.<模块名>`（`<模块名>` 为 `shared/` 下**直接** `.py` stem；禁止 `src.shared.子包.*`） |
+| **`src/shared/*.py`** | 仅标准库底层；职责**仅限**下文 §3.1（核心三类 + 已批准扩展） |
+| **接口 `__init__.py`** | **仅**同目录**直接子节点**（一层）：`from .<子节点> import <子节点>`；子节点为同级的 `*.py`（leaf）或子包目录（其接口为 `子包/__init__.py`） |
+| **禁止** | leaf 使用相对 import / import 子目录 / import 业务包 / 直接 import 标准库；`__init__` 使用 `from .a.b`、`from src...`、`from src.shared...`、绝对路径业务 import；为去重跨包引用 |
 
-要点：**leaf 不能引用子目录**；**只有包接口 `__init__.py` 才能 import 非 shared 模块**，且只能通过一层 `.child`。
+要点：
+
+- **leaf 不能引用子目录、业务包、标准库（含函数体内）**；一律经 `src.shared.<平铺模块>`。
+- **只有包接口 `__init__.py` 才能 import 非 shared 子节点**，且**只能** `from .<名> import <名>`（一层；名 = 同级 `.py` stem 或子包目录名）。
+- **`__init__.py` 不得**出现任何 `from src...` / `from src.shared...`（含函数体内）。编排子节点在**模块级** `from .child import child` 完成；子节点若为 leaf，其内部仍只能使用 `src.shared`。
 
 即使导致代码重复，也不得用跨包 import 规避。
 
 推荐 import 形式：
 
 ```python
-# leaf — 仅 shared 下的平铺模块
-from src.shared.ctx_util import ctx_util
-
-# 包接口 __init__.py（文件夹名 pkg）— 非 shared 仅一层子节点
-from .child_leaf import child_leaf
-from .child_pkg import child_pkg
+# leaf — 仅 shared 下、且属于 §3.1 三类的平铺模块
 from src.shared.logging_util import logging_util
+from src.shared.types_util import types_util
+
+# src/__init__.py — 只能引用 src/ 下直接子节点
+from .code_optimizer import code_optimizer   # 子包 code_optimizer/__init__.py
+from .shared import shared                   # 子包 shared/__init__.py
+
+# pkg/__init__.py（文件夹名 pkg）
+from .child_leaf import child_leaf           # 同级 child_leaf.py
+from .child_pkg import child_pkg             # 同级子包 child_pkg/__init__.py
 ```
+
+`run.py` 为项目入口，可 `from src.<job_id> import <job_id>`；**不**适用上表对 `__init__.py` 的限制。
+
+### 3.1 `src/shared/` 职责（允许范围）
+
+`shared/` 为**平铺**模块目录（禁止子包）；每个 `.py` 有且仅有一个顶层函数，函数名 = 文件 stem。模块级**只能** import 标准库。
+
+#### 核心三类
+
+| 类别 | 用途 | 命名建议 | 示例 |
+|------|------|----------|------|
+| **库** | 标准库或 `requirement/` 第三方库的薄封装；不含业务语义 | `lib_<name>_util` | `lib_json_util` |
+| **数据格式校验** | 校验 `ctx["data"]` / IO 类型、形状、必填；错误结构 | `validate_<topic>_util`、`error_util` | `validate_types_util`、`error_util` |
+| **日志** | 日志器、结构化日志、级别与输出 | `logging_util`、`log_<topic>_util` | `logging_util` |
+
+#### 已批准扩展（与日志/校验/库并列，仍禁止业务逻辑）
+
+| 类别 | 用途 | 命名 | 约束 |
+|------|------|------|------|
+| **调试 / 性能探针** | 调试开关、计时、计数、采样（**不是**持久化日志） | `debug_util`、`profile_util` | 状态写入 `ctx["meta"]` / `ctx["state"]`，不写业务结论 |
+| **时间与标识**（归入**库**用法） | ISO 时间戳、UUID 等无状态工具 | `lib_time_util`、`lib_id_util` | 仅封装 `datetime` / `uuid` 等 |
+| **路径与 IO 读写** | 解析/拼接路径；读写 **`<project>/io/`** 下文件 | `io_path_util`、`io_file_util` | **禁止**读写或维护 `tree/`；禁止 job 外路径 |
+
+`error_util` 与 `validate_*` 同属**数据格式校验**；可合并实现，但允许独立模块。旧 scaffold 的 `types_util` / `time_util` / `path_util` 等仍可通过 allowlist 校验。
+
+**禁止放入 `shared/`**
+
+- 业务逻辑、领域算法、去重/优化等 job 专属实现  
+- 分解树 / pipeline / 配置加载 / LLM 调用  
+- 跨 leaf 编排、import 业务子包  
+- `tree/` 的读写或快照维护（`file_util` 仅面向 `io/`）
+
+**默认 scaffold**（`ensure_job_scaffold`）预置：`logging_util`、`validate_types_util`、`error_util`、`debug_util`、`profile_util`、`lib_time_util`、`lib_id_util`、`io_path_util`、`io_file_util`；`ctx_util` 见 §3.2。
+
+**优化阶段**新增 shared 模块仍须落入上表，且仅标准库底层。
+
+### 3.2 未默认 scaffold 的可选模块
+
+| 模块 | 说明 |
+|------|------|
+| `ctx_util` | 统一 `ctx` 四段缺省键；无业务规则时可由 leaf 首行内联，或在指令中要求 scaffold 写入 |
 
 ## 4. 项目骨架（每个生成项目必须具备）
 
 ```
 <project>/
   src/              # 全部业务与包接口（每包 __init__.py 为接口）
-    shared/         # 仅库 / 类型 / 日志（见上表）
+    shared/         # 仅 §3.1 允许职责（平铺 *.py）
   io/               # 输入输出、配置数据、运行期读写
   requirement/      # 依赖清单（如 requirements.txt 或等价说明）
   tree/             # 分解树快照与派生元数据（见 §5）
@@ -112,7 +161,7 @@ from src.shared.logging_util import logging_util
 **允许**
 
 - 在**唯一顶层函数体内**（及嵌套 `def`）改写实现：更低时间复杂度、更少内存、批处理、缓存、向量化等  
-- 为性能增加 **shared** 内工具（仍仅标准库底层），供 leaf 通过 `src.shared` 使用  
+- 为性能增加 **shared** 内工具（仍仅 §3.1 三类 + 标准库底层），供 leaf 通过 `src.shared` 使用  
 
 **优化目标（默认优先级）**
 
@@ -125,8 +174,8 @@ from src.shared.logging_util import logging_util
 ## 生成时自检（交付前）
 
 - [ ] 每个 `.py` 仅一个顶层函数，且命名与文件/文件夹一致  
-- [ ] leaf 仅 import `src.shared` 平铺模块；无相对 import、无子目录、无业务包  
-- [ ] 非 shared 的 import 仅出现在各包 `__init__.py`，且为 `from .<直接子节点> import ...`  
+- [ ] leaf 仅 import `src.shared` 平铺模块，且被 import 模块属于 §3.1 三类之一  
+- [ ] 各包 `__init__.py` 仅 `from .<直接子节点> import <同名>`，无 `src.shared` / 绝对路径 import  
 - [ ] 每个业务包有 `__init__.py` 接口函数  
 - [ ] 项目根存在 `src/`、`io/`、`requirement/`、`tree/`、`run.py`  
 - [ ] `tree/latest.json` 存在且 `tree` 字段符合 `node_schema.json`  
@@ -141,6 +190,7 @@ from src.shared.logging_util import logging_util
 
 - 生成 `def run()` 作为模块主入口（除非文件 stem 就是 `run` 且位于约定路径）。  
 - 在 leaf 中使用相对 import 或引用子目录（含 `src.shared` 子包）。  
+- 在 `shared/` 中写入业务逻辑、pipeline、或读写 `tree/` 的模块。  
 - 在 leaf 或业务 `.py` 中模块级 import 非 shared 模块（应改到包 `__init__.py`）。  
 - 跳过上述结构直接写零散脚本。  
 - 将分解树只写在编译器 `io/output` 而项目内无 `tree/`。  

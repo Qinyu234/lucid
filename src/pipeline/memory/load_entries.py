@@ -1,9 +1,11 @@
 def load_entries() -> list:
-    import json
-    from src.pipeline.memory.memory_path import memory_path
-    path = memory_path()
-    if not path.exists():
+    from src.shared.lib.app_config_util import app_config_util
+    from src.shared.lib.json_read_file_util import json_read_file_util
+    from src.shared.lib.path_exists_util import path_exists_util
+
+    cfg = app_config_util()
+    path = str(cfg.get("memory_file", "io/output/memory/leaves.json"))
+    if not path_exists_util(path):
         return []
-    with path.open('r', encoding='utf-8') as f:
-        data = json.load(f)
+    data = json_read_file_util(path, default=[])
     return data if isinstance(data, list) else []

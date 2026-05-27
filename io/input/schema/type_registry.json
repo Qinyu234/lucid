@@ -2518,82 +2518,29 @@
       "type": "str",
       "produced_by": [
         {
-          "module": "determine_the_debugging_context",
-          "side": "out"
-        },
-        {
-          "module": "identify_the_key_name_from",
-          "side": "out"
-        },
-        {
-          "module": "extract_key_name_from_the",
-          "side": "out"
-        },
-        {
-          "module": "validate_and_return_the_key",
-          "side": "out"
-        },
-        {
-          "module": "determine_if_the_key_name_is",
-          "side": "out"
-        },
-        {
-          "module": "select_debugging_tools_based_on",
+          "module": "read_environment_variables_from_the",
           "side": "out"
         }
       ],
       "consumed_by": [
         {
-          "module": "validate_and_return_the_key",
+          "module": "check_for_environment_variables_and",
           "side": "in"
         },
         {
-          "module": "select_appropriate_debugging_tools_based",
+          "module": "read_environment_variables_from_the",
           "side": "in"
         },
         {
-          "module": "determine_if_the_key_name_is",
-          "side": "in"
-        },
-        {
-          "module": "select_debugging_tools_based_on",
-          "side": "in"
-        },
-        {
-          "module": "return_debug_tools",
+          "module": "filter_environment_variables_by_name",
           "side": "in"
         }
       ],
       "used_by": [
         {
-          "module": "set_up_debugging_tools",
-          "import": "from .determine_the_debugging_context import determine_the_debugging_context",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/__init__.py"
-        },
-        {
-          "module": "determine_the_debugging_context",
-          "import": "from .identify_the_key_name_from import identify_the_key_name_from",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/determine_the_debugging_context/__init__.py"
-        },
-        {
-          "module": "determine_the_debugging_context",
-          "import": "from .extract_key_name_from_the import extract_key_name_from_the",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/determine_the_debugging_context/__init__.py"
-        },
-        {
-          "module": "determine_the_debugging_context",
-          "import": "from .validate_and_return_the_key import validate_and_return_the_key",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/determine_the_debugging_context/__init__.py"
-        },
-        {
-          "module": "select_appropriate_debugging_tools_based",
-          "import": "from .determine_if_the_key_name_is import determine_if_the_key_name_is",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/select_appropriate_debugging_tools_based/__init__.py"
-        },
-        {
-          "module": "select_appropriate_debugging_tools_based",
-          "import": "from .select_debugging_tools_based_on import select_debugging_tools_based_on",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/select_appropriate_debugging_tools_based/__init__.py"
+          "module": "check_for_environment_variables_and",
+          "import": "from .read_environment_variables_from_the import read_environment_variables_from_the",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/check_for_environment_variables_and/__init__.py"
         }
       ]
     },
@@ -3765,15 +3712,51 @@
       ]
     },
     "none": {
-      "type": "any",
-      "produced_by": [],
+      "type": "none",
+      "produced_by": [
+        {
+          "module": "set_up_debugging_tools_configuration",
+          "side": "out"
+        },
+        {
+          "module": "save_the_configured_debugging_settings",
+          "side": "out"
+        }
+      ],
       "consumed_by": [
         {
-          "module": "define_the_structure_of_game",
+          "module": "initialize_an_empty_list_to",
+          "side": "in"
+        },
+        {
+          "module": "create_a_new_list_to",
+          "side": "in"
+        },
+        {
+          "module": "integrate_performance_monitoring_tools_for",
+          "side": "in"
+        },
+        {
+          "module": "identify_the_need_for_performance",
+          "side": "in"
+        },
+        {
+          "module": "assess_the_current_environment_s",
           "side": "in"
         }
       ],
-      "used_by": []
+      "used_by": [
+        {
+          "module": "set_up_environment_variables_and",
+          "import": "from .set_up_debugging_tools_configuration import set_up_debugging_tools_configuration",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/__init__.py"
+        },
+        {
+          "module": "set_up_debugging_tools_configuration",
+          "import": "from .save_the_configured_debugging_settings import save_the_configured_debugging_settings",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/set_up_debugging_tools_configuration/__init__.py"
+        }
+      ]
     },
     "visualization_and_statistics": {
       "type": "str",
@@ -5067,7 +5050,7 @@
         {
           "module": "collect_code_and_dependencies_for",
           "import": "from .fetch_and_resolve_dependencies_for import fetch_and_resolve_dependencies_for",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/collect_code_and_dependencies_for/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/collect_code_and_dependencies_for/__init__.py"
         }
       ]
     },
@@ -7814,24 +7797,46 @@
       ]
     },
     "lines": {
-      "type": "list[str]",
+      "type": "list",
       "produced_by": [
         {
-          "module": "split_code_into_lines_and",
+          "module": "read_the_current_file_and",
+          "side": "out"
+        },
+        {
+          "module": "split_file_content_into_lines",
+          "side": "out"
+        },
+        {
+          "module": "find_duplicate_code_blocks_by",
           "side": "out"
         }
       ],
       "consumed_by": [
         {
-          "module": "filter_out_lines_that_are",
+          "module": "identify_unique_code_blocks_based",
+          "side": "in"
+        },
+        {
+          "module": "remove_duplicate_code_blocks_from",
           "side": "in"
         }
       ],
       "used_by": [
         {
-          "module": "remove_empty_lines_between_non",
-          "import": "from .split_code_into_lines_and import split_code_into_lines_and",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/remove_empty_lines_between_non/__init__.py"
+          "module": "iterate_through_the_source_files",
+          "import": "from .read_the_current_file_and import read_the_current_file_and",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/iterate_through_the_source_files/__init__.py"
+        },
+        {
+          "module": "return_the_list_of_duplicate",
+          "import": "from .split_file_content_into_lines import split_file_content_into_lines",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/return_the_list_of_duplicate/__init__.py"
+        },
+        {
+          "module": "return_the_list_of_duplicate",
+          "import": "from .find_duplicate_code_blocks_by import find_duplicate_code_blocks_by",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/return_the_list_of_duplicate/__init__.py"
         }
       ]
     },
@@ -8345,21 +8350,39 @@
       "type": "bool",
       "produced_by": [
         {
-          "module": "execute_verification_logic",
+          "module": "set_up_environment_variables_and",
+          "side": "out"
+        },
+        {
+          "module": "verify_setup_with_current_configurations",
+          "side": "out"
+        },
+        {
+          "module": "compare_current_setup_with_reference",
           "side": "out"
         }
       ],
       "consumed_by": [
         {
-          "module": "update_verification_passed_status",
+          "module": "log_verification_result",
           "side": "in"
         }
       ],
       "used_by": [
         {
-          "module": "initialize_verification_process",
-          "import": "from .execute_verification_logic import execute_verification_logic",
-          "location": "io/output/workplace/computer_builder/assemble_logic_gates_into_basic/verify_the_correctness_of_assembled/initialize_verification_process/__init__.py"
+          "module": "code_optimizer",
+          "import": "from .set_up_environment_variables_and import set_up_environment_variables_and",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/__init__.py"
+        },
+        {
+          "module": "set_up_environment_variables_and",
+          "import": "from .verify_setup_with_current_configurations import verify_setup_with_current_configurations",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/__init__.py"
+        },
+        {
+          "module": "verify_setup_with_current_configurations",
+          "import": "from .compare_current_setup_with_reference import compare_current_setup_with_reference",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/verify_setup_with_current_configurations/__init__.py"
         }
       ]
     },
@@ -8997,7 +9020,7 @@
         {
           "module": "remove_empty_lines_between_non",
           "import": "from .filter_out_lines_that_are import filter_out_lines_that_are",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/remove_empty_lines_between_non/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/remove_empty_lines_between_non/__init__.py"
         }
       ]
     },
@@ -20862,22 +20885,22 @@
         {
           "module": "code_optimizer",
           "import": "from .set_up_debugging_tools import set_up_debugging_tools",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/__init__.py"
         },
         {
           "module": "set_up_debugging_tools",
           "import": "from .select_appropriate_debugging_tools_based import select_appropriate_debugging_tools_based",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/__init__.py"
         },
         {
           "module": "select_appropriate_debugging_tools_based",
           "import": "from .select_debugging_tools_based_on import select_debugging_tools_based_on",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/select_appropriate_debugging_tools_based/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/select_appropriate_debugging_tools_based/__init__.py"
         },
         {
           "module": "select_appropriate_debugging_tools_based",
           "import": "from .return_debug_tools import return_debug_tools",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/select_appropriate_debugging_tools_based/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/select_appropriate_debugging_tools_based/__init__.py"
         }
       ]
     },
@@ -20951,37 +20974,37 @@
         {
           "module": "code_optimizer",
           "import": "from .collect_code_and_dependencies_for import collect_code_and_dependencies_for",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/__init__.py"
         },
         {
           "module": "collect_code_and_dependencies_for",
           "import": "from .collect_code_and_dependencies_for import collect_code_and_dependencies_for",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/__init__.py"
         },
         {
           "module": "collect_code_and_dependencies_for",
           "import": "from .retrieve_source_code_snippets_based import retrieve_source_code_snippets_based",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/collect_code_and_dependencies_for/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/collect_code_and_dependencies_for/__init__.py"
         },
         {
           "module": "collect_code_and_dependencies_for",
           "import": "from .combine_code_snippets_and_resolved import combine_code_snippets_and_resolved",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/collect_code_and_dependencies_for/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/collect_code_and_dependencies_for/__init__.py"
         },
         {
           "module": "optimize_code_by_addressing_identified",
           "import": "from .identify_the_most_impactful_bottlenecks import identify_the_most_impactful_bottlenecks",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/optimize_code_by_addressing_identified/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/optimize_code_by_addressing_identified/__init__.py"
         },
         {
           "module": "optimize_code_by_addressing_identified",
           "import": "from .analyze_each_identified_bottleneck_to import analyze_each_identified_bottleneck_to",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/optimize_code_by_addressing_identified/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/optimize_code_by_addressing_identified/__init__.py"
         },
         {
           "module": "optimize_code_by_addressing_identified",
           "import": "from .test_the_optimized_code_snippets import test_the_optimized_code_snippets",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/optimize_code_by_addressing_identified/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/optimize_code_by_addressing_identified/__init__.py"
         }
       ]
     },
@@ -21019,12 +21042,12 @@
         {
           "module": "identify_potential_areas_for_performance",
           "import": "from .identify_critical_functions_in_the import identify_critical_functions_in_the",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/identify_potential_areas_for_performance/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/identify_potential_areas_for_performance/__init__.py"
         },
         {
           "module": "identify_potential_areas_for_performance",
           "import": "from .identify_functions_with_high_execution import identify_functions_with_high_execution",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/identify_potential_areas_for_performance/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/identify_potential_areas_for_performance/__init__.py"
         }
       ]
     },
@@ -21054,12 +21077,12 @@
         {
           "module": "collect_code_and_dependencies_for",
           "import": "from .identify_potential_areas_for_performance import identify_potential_areas_for_performance",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/__init__.py"
         },
         {
           "module": "identify_potential_areas_for_performance",
           "import": "from .propose_performance_optimization_strategies import propose_performance_optimization_strategies",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/identify_potential_areas_for_performance/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/identify_potential_areas_for_performance/__init__.py"
         }
       ]
     },
@@ -21081,7 +21104,7 @@
         {
           "module": "identify_potential_areas_for_performance",
           "import": "from .identify_critical_functions_in_the import identify_critical_functions_in_the",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/identify_potential_areas_for_performance/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/identify_potential_areas_for_performance/__init__.py"
         }
       ]
     },
@@ -21103,7 +21126,7 @@
         {
           "module": "identify_potential_areas_for_performance",
           "import": "from .analyze_execution_time_of_each import analyze_execution_time_of_each",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/identify_potential_areas_for_performance/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/identify_potential_areas_for_performance/__init__.py"
         }
       ]
     },
@@ -21125,7 +21148,7 @@
         {
           "module": "identify_potential_areas_for_performance",
           "import": "from .identify_functions_with_high_execution import identify_functions_with_high_execution",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/identify_potential_areas_for_performance/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/identify_potential_areas_for_performance/__init__.py"
         }
       ]
     },
@@ -21159,12 +21182,12 @@
         {
           "module": "collect_code_and_dependencies_for",
           "import": "from .analyze_code_for_potential_bottlenecks import analyze_code_for_potential_bottlenecks",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/__init__.py"
         },
         {
           "module": "analyze_code_for_potential_bottlenecks",
           "import": "from .parse_and_identify_suspicious_lines import parse_and_identify_suspicious_lines",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/analyze_code_for_potential_bottlenecks/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/analyze_code_for_potential_bottlenecks/__init__.py"
         }
       ]
     },
@@ -21194,17 +21217,17 @@
         {
           "module": "collect_code_and_dependencies_for",
           "import": "from .analyze_code_for_potential_bottlenecks import analyze_code_for_potential_bottlenecks",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/__init__.py"
         },
         {
           "module": "analyze_code_for_potential_bottlenecks",
           "import": "from .analyze_suspicious_lines_for_potential import analyze_suspicious_lines_for_potential",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/analyze_code_for_potential_bottlenecks/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/analyze_code_for_potential_bottlenecks/__init__.py"
         },
         {
           "module": "analyze_code_for_potential_bottlenecks",
           "import": "from .filter_and_group_potential_bottlenecks import filter_and_group_potential_bottlenecks",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/analyze_code_for_potential_bottlenecks/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/analyze_code_for_potential_bottlenecks/__init__.py"
         }
       ]
     },
@@ -21249,17 +21272,17 @@
         {
           "module": "collect_code_and_dependencies_for",
           "import": "from .optimize_code_by_addressing_identified import optimize_code_by_addressing_identified",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/__init__.py"
         },
         {
           "module": "optimize_code_by_addressing_identified",
           "import": "from .analyze_each_identified_bottleneck_to import analyze_each_identified_bottleneck_to",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/optimize_code_by_addressing_identified/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/optimize_code_by_addressing_identified/__init__.py"
         },
         {
           "module": "optimize_code_by_addressing_identified",
           "import": "from .review_the_results_to_determine import review_the_results_to_determine",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/optimize_code_by_addressing_identified/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/optimize_code_by_addressing_identified/__init__.py"
         }
       ]
     },
@@ -21281,7 +21304,7 @@
         {
           "module": "optimize_code_by_addressing_identified",
           "import": "from .identify_the_most_impactful_bottlenecks import identify_the_most_impactful_bottlenecks",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/optimize_code_by_addressing_identified/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/optimize_code_by_addressing_identified/__init__.py"
         }
       ]
     },
@@ -21303,7 +21326,7 @@
         {
           "module": "optimize_code_by_addressing_identified",
           "import": "from .test_the_optimized_code_snippets import test_the_optimized_code_snippets",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/optimize_code_by_addressing_identified/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/optimize_code_by_addressing_identified/__init__.py"
         }
       ]
     },
@@ -21369,42 +21392,42 @@
         {
           "module": "code_optimizer",
           "import": "from .identify_duplicate_and_redundant_code import identify_duplicate_and_redundant_code",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/__init__.py"
         },
         {
           "module": "identify_duplicate_and_redundant_code",
           "import": "from .compare_each_snippet_to_find import compare_each_snippet_to_find",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/__init__.py"
         },
         {
           "module": "compare_each_snippet_to_find",
           "import": "from .iterate_over_each_snippet_again import iterate_over_each_snippet_again",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/compare_each_snippet_to_find/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/compare_each_snippet_to_find/__init__.py"
         },
         {
           "module": "identify_duplicate_and_redundant_code",
           "import": "from .identify_redundant_code_snippets import identify_redundant_code_snippets",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/__init__.py"
         },
         {
           "module": "identify_redundant_code_snippets",
           "import": "from .initialize_variables import initialize_variables",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets/__init__.py"
         },
         {
           "module": "identify_redundant_code_snippets",
           "import": "from .identify_potential_duplicate_code import identify_potential_duplicate_code",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets/__init__.py"
         },
         {
           "module": "identify_redundant_code_snippets",
           "import": "from .remove_duplicate_code import remove_duplicate_code",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets/__init__.py"
         },
         {
           "module": "identify_redundant_code_snippets",
           "import": "from .review_and_output_results import review_and_output_results",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets/__init__.py"
         }
       ]
     },
@@ -21434,17 +21457,17 @@
         {
           "module": "code_optimizer",
           "import": "from .identify_duplicate_and_redundant_code import identify_duplicate_and_redundant_code",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/__init__.py"
         },
         {
           "module": "identify_duplicate_and_redundant_code",
           "import": "from .filter_out_already_identified_duplicates import filter_out_already_identified_duplicates",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/__init__.py"
         },
         {
           "module": "filter_out_already_identified_duplicates",
           "import": "from .find_common_keys_between_duplicate_code import find_common_keys_between_duplicate_code",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/filter_out_already_identified_duplicates/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/filter_out_already_identified_duplicates/__init__.py"
         }
       ]
     },
@@ -21522,42 +21545,42 @@
         {
           "module": "identify_duplicate_and_redundant_code",
           "import": "from .identify_potential_code_snippets_for import identify_potential_code_snippets_for",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/__init__.py"
         },
         {
           "module": "identify_potential_code_snippets_for",
           "import": "from .initialize_an_empty_list_for import initialize_an_empty_list_for",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_potential_code_snippets_for/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_potential_code_snippets_for/__init__.py"
         },
         {
           "module": "identify_duplicate_and_redundant_code",
           "import": "from .identify_redundant_code_snippets import identify_redundant_code_snippets",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/__init__.py"
         },
         {
           "module": "identify_redundant_code_snippets",
           "import": "from .initialize_variables import initialize_variables",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets/__init__.py"
         },
         {
           "module": "identify_redundant_code_snippets",
           "import": "from .identify_potential_duplicate_code import identify_potential_duplicate_code",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets/__init__.py"
         },
         {
           "module": "identify_redundant_code_snippets",
           "import": "from .remove_duplicate_code import remove_duplicate_code",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets/__init__.py"
         },
         {
           "module": "identify_redundant_code_snippets",
           "import": "from .review_and_output_results import review_and_output_results",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets/__init__.py"
         },
         {
           "module": "filter_out_already_identified_duplicates",
           "import": "from .identify_keys_in_duplicate_code import identify_keys_in_duplicate_code",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/filter_out_already_identified_duplicates/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/filter_out_already_identified_duplicates/__init__.py"
         }
       ]
     },
@@ -21602,12 +21625,12 @@
         {
           "module": "compare_each_snippet_to_find",
           "import": "from .initialize_an_empty_set_to import initialize_an_empty_set_to",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/compare_each_snippet_to_find/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/compare_each_snippet_to_find/__init__.py"
         },
         {
           "module": "compare_each_snippet_to_find",
           "import": "from .if_the_current_snippet_is import if_the_current_snippet_is",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/compare_each_snippet_to_find/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/compare_each_snippet_to_find/__init__.py"
         }
       ]
     },
@@ -21632,17 +21655,17 @@
         {
           "module": "compare_each_snippet_to_find",
           "import": "from .initialize_an_empty_set_to import initialize_an_empty_set_to",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/compare_each_snippet_to_find/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/compare_each_snippet_to_find/__init__.py"
         },
         {
           "module": "compare_each_snippet_to_find",
           "import": "from .iterate_over_each_snippet_in import iterate_over_each_snippet_in",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/compare_each_snippet_to_find/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/compare_each_snippet_to_find/__init__.py"
         },
         {
           "module": "compare_each_snippet_to_find",
           "import": "from .if_the_current_snippet_is import if_the_current_snippet_is",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/compare_each_snippet_to_find/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/compare_each_snippet_to_find/__init__.py"
         }
       ]
     },
@@ -21668,12 +21691,12 @@
         {
           "module": "filter_out_already_identified_duplicates",
           "import": "from .identify_keys_in_duplicate_code import identify_keys_in_duplicate_code",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/filter_out_already_identified_duplicates/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/filter_out_already_identified_duplicates/__init__.py"
         },
         {
           "module": "filter_out_already_identified_duplicates",
           "import": "from .identify_keys_in_potential_snippets import identify_keys_in_potential_snippets",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/filter_out_already_identified_duplicates/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/filter_out_already_identified_duplicates/__init__.py"
         }
       ]
     },
@@ -21695,7 +21718,7 @@
         {
           "module": "filter_out_already_identified_duplicates",
           "import": "from .identify_keys_in_potential_snippets import identify_keys_in_potential_snippets",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/filter_out_already_identified_duplicates/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/filter_out_already_identified_duplicates/__init__.py"
         }
       ]
     },
@@ -21717,7 +21740,7 @@
         {
           "module": "filter_out_already_identified_duplicates",
           "import": "from .find_common_keys_between_duplicate_code import find_common_keys_between_duplicate_code",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/filter_out_already_identified_duplicates/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/filter_out_already_identified_duplicates/__init__.py"
         }
       ]
     },
@@ -21734,7 +21757,7 @@
         {
           "module": "filter_out_already_identified_duplicates",
           "import": "from .filter_out_redundant_code_with_common import filter_out_redundant_code_with_common",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/filter_out_already_identified_duplicates/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/filter_out_already_identified_duplicates/__init__.py"
         }
       ]
     },
@@ -21772,17 +21795,17 @@
         {
           "module": "code_optimizer",
           "import": "from .optimize_code_by_removing_duplicates import optimize_code_by_removing_duplicates",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/__init__.py"
         },
         {
           "module": "optimize_code_by_removing_duplicates",
           "import": "from .replace_duplicates_with_references_to import replace_duplicates_with_references_to",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/__init__.py"
         },
         {
           "module": "replace_duplicates_with_references_to",
           "import": "from .replace_lines_with_references_to import replace_lines_with_references_to",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/replace_duplicates_with_references_to/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/replace_duplicates_with_references_to/__init__.py"
         }
       ]
     },
@@ -21832,22 +21855,22 @@
         {
           "module": "optimize_code_by_removing_duplicates",
           "import": "from .identify_duplicate_lines_of_code import identify_duplicate_lines_of_code",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/__init__.py"
         },
         {
           "module": "identify_duplicate_lines_of_code",
           "import": "from .read_all_lines_of_code import read_all_lines_of_code",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/identify_duplicate_lines_of_code/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/identify_duplicate_lines_of_code/__init__.py"
         },
         {
           "module": "replace_duplicates_with_references_to",
           "import": "from .identify_unique_lines_in_the import identify_unique_lines_in_the",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/replace_duplicates_with_references_to/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/replace_duplicates_with_references_to/__init__.py"
         },
         {
           "module": "replace_duplicates_with_references_to",
           "import": "from .map_each_line_to_an import map_each_line_to_an",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/replace_duplicates_with_references_to/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/replace_duplicates_with_references_to/__init__.py"
         }
       ]
     },
@@ -21868,12 +21891,12 @@
         {
           "module": "optimize_code_by_removing_duplicates",
           "import": "from .identify_duplicate_lines_of_code import identify_duplicate_lines_of_code",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/__init__.py"
         },
         {
           "module": "identify_duplicate_lines_of_code",
           "import": "from .iterate_over_each_line_of import iterate_over_each_line_of",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/identify_duplicate_lines_of_code/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/identify_duplicate_lines_of_code/__init__.py"
         }
       ]
     },
@@ -21907,17 +21930,17 @@
         {
           "module": "identify_duplicate_lines_of_code",
           "import": "from .initialize_a_set_to_track import initialize_a_set_to_track",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/identify_duplicate_lines_of_code/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/identify_duplicate_lines_of_code/__init__.py"
         },
         {
           "module": "identify_duplicate_lines_of_code",
           "import": "from .iterate_over_each_line_of import iterate_over_each_line_of",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/identify_duplicate_lines_of_code/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/identify_duplicate_lines_of_code/__init__.py"
         },
         {
           "module": "identify_duplicate_lines_of_code",
           "import": "from .check_if_the_current_line import check_if_the_current_line",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/identify_duplicate_lines_of_code/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/identify_duplicate_lines_of_code/__init__.py"
         }
       ]
     },
@@ -21945,7 +21968,7 @@
         {
           "module": "identify_duplicate_lines_of_code",
           "import": "from .check_if_the_current_line import check_if_the_current_line",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/identify_duplicate_lines_of_code/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/identify_duplicate_lines_of_code/__init__.py"
         }
       ]
     },
@@ -21967,7 +21990,7 @@
         {
           "module": "replace_duplicates_with_references_to",
           "import": "from .identify_unique_lines_in_the import identify_unique_lines_in_the",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/replace_duplicates_with_references_to/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/replace_duplicates_with_references_to/__init__.py"
         }
       ]
     },
@@ -21989,7 +22012,7 @@
         {
           "module": "replace_duplicates_with_references_to",
           "import": "from .map_each_line_to_an import map_each_line_to_an",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/replace_duplicates_with_references_to/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/replace_duplicates_with_references_to/__init__.py"
         }
       ]
     },
@@ -22014,17 +22037,17 @@
         {
           "module": "replace_duplicates_with_references_to",
           "import": "from .optimize_the_code_structure import optimize_the_code_structure",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/replace_duplicates_with_references_to/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/replace_duplicates_with_references_to/__init__.py"
         },
         {
           "module": "optimize_code_by_removing_duplicates",
           "import": "from .remove_empty_lines_between_non import remove_empty_lines_between_non",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/__init__.py"
         },
         {
           "module": "remove_empty_lines_between_non",
           "import": "from .join_the_filtered_lines_back import join_the_filtered_lines_back",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/remove_empty_lines_between_non/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/remove_empty_lines_between_non/__init__.py"
         }
       ]
     },
@@ -22058,7 +22081,7 @@
         {
           "module": "determine_the_debugging_context",
           "import": "from .identify_the_key_name_from import identify_the_key_name_from",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/determine_the_debugging_context/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/determine_the_debugging_context/__init__.py"
         }
       ]
     },
@@ -22088,12 +22111,1170 @@
         {
           "module": "select_appropriate_debugging_tools_based",
           "import": "from .determine_if_the_key_name_is import determine_if_the_key_name_is",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/select_appropriate_debugging_tools_based/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/select_appropriate_debugging_tools_based/__init__.py"
         },
         {
           "module": "select_appropriate_debugging_tools_based",
           "import": "from .select_debugging_tools_based_on import select_debugging_tools_based_on",
-          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/select_appropriate_debugging_tools_based/__init__.py"
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/select_appropriate_debugging_tools_based/__init__.py"
+        }
+      ]
+    },
+    "duplicate_code_blocks": {
+      "type": "list",
+      "produced_by": [
+        {
+          "module": "identify_and_analyze_duplicate_or",
+          "side": "out"
+        },
+        {
+          "module": "initialize_an_empty_list_to",
+          "side": "out"
+        },
+        {
+          "module": "create_a_new_list_to",
+          "side": "out"
+        },
+        {
+          "module": "initialize_the_list_as_an",
+          "side": "out"
+        },
+        {
+          "module": "iterate_through_the_source_files",
+          "side": "out"
+        },
+        {
+          "module": "initialize_a_set_to_track",
+          "side": "out"
+        },
+        {
+          "module": "return_the_list_of_duplicate",
+          "side": "out"
+        },
+        {
+          "module": "find_duplicate_code_blocks_by",
+          "side": "out"
+        },
+        {
+          "module": "remove_duplicate_code_blocks_from",
+          "side": "out"
+        },
+        {
+          "module": "identify_and_remove_duplicate_code",
+          "side": "out"
+        },
+        {
+          "module": "identify_duplicate_code_blocks",
+          "side": "out"
+        },
+        {
+          "module": "remove_duplicate_code_blocks",
+          "side": "out"
+        },
+        {
+          "module": "finalize_duplicate_code_blocks_list",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [
+        {
+          "module": "initialize_the_list_as_an",
+          "side": "in"
+        },
+        {
+          "module": "remove_identified_duplicate_or_redundant",
+          "side": "in"
+        },
+        {
+          "module": "identify_and_remove_duplicate_code",
+          "side": "in"
+        },
+        {
+          "module": "identify_duplicate_code_blocks",
+          "side": "in"
+        },
+        {
+          "module": "remove_duplicate_code_blocks",
+          "side": "in"
+        },
+        {
+          "module": "finalize_duplicate_code_blocks_list",
+          "side": "in"
+        },
+        {
+          "module": "remove_identified_duplicates",
+          "side": "in"
+        },
+        {
+          "module": "initialize_a_set_for_tracking",
+          "side": "in"
+        }
+      ],
+      "used_by": [
+        {
+          "module": "code_optimizer",
+          "import": "from .identify_and_analyze_duplicate_or import identify_and_analyze_duplicate_or",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/__init__.py"
+        },
+        {
+          "module": "identify_and_analyze_duplicate_or",
+          "import": "from .initialize_an_empty_list_to import initialize_an_empty_list_to",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/__init__.py"
+        },
+        {
+          "module": "initialize_an_empty_list_to",
+          "import": "from .create_a_new_list_to import create_a_new_list_to",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/initialize_an_empty_list_to/__init__.py"
+        },
+        {
+          "module": "initialize_an_empty_list_to",
+          "import": "from .initialize_the_list_as_an import initialize_the_list_as_an",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/initialize_an_empty_list_to/__init__.py"
+        },
+        {
+          "module": "identify_and_analyze_duplicate_or",
+          "import": "from .iterate_through_the_source_files import iterate_through_the_source_files",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/__init__.py"
+        },
+        {
+          "module": "iterate_through_the_source_files",
+          "import": "from .initialize_a_set_to_track import initialize_a_set_to_track",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/iterate_through_the_source_files/__init__.py"
+        },
+        {
+          "module": "identify_and_analyze_duplicate_or",
+          "import": "from .return_the_list_of_duplicate import return_the_list_of_duplicate",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/__init__.py"
+        },
+        {
+          "module": "return_the_list_of_duplicate",
+          "import": "from .find_duplicate_code_blocks_by import find_duplicate_code_blocks_by",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/return_the_list_of_duplicate/__init__.py"
+        },
+        {
+          "module": "return_the_list_of_duplicate",
+          "import": "from .remove_duplicate_code_blocks_from import remove_duplicate_code_blocks_from",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/return_the_list_of_duplicate/__init__.py"
+        },
+        {
+          "module": "remove_identified_duplicate_or_redundant",
+          "import": "from .identify_and_remove_duplicate_code import identify_and_remove_duplicate_code",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/__init__.py"
+        },
+        {
+          "module": "identify_and_remove_duplicate_code",
+          "import": "from .identify_duplicate_code_blocks import identify_duplicate_code_blocks",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/identify_and_remove_duplicate_code/__init__.py"
+        },
+        {
+          "module": "identify_and_remove_duplicate_code",
+          "import": "from .remove_duplicate_code_blocks import remove_duplicate_code_blocks",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/identify_and_remove_duplicate_code/__init__.py"
+        },
+        {
+          "module": "identify_and_remove_duplicate_code",
+          "import": "from .finalize_duplicate_code_blocks_list import finalize_duplicate_code_blocks_list",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/identify_and_remove_duplicate_code/__init__.py"
+        }
+      ]
+    },
+    "source_files": {
+      "type": "list",
+      "produced_by": [
+        {
+          "module": "initialize_a_set_to_track",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [
+        {
+          "module": "collect_all_unique_lines_of",
+          "side": "in"
+        },
+        {
+          "module": "read_all_files_and_extract",
+          "side": "in"
+        },
+        {
+          "module": "iterate_through_the_source_files",
+          "side": "in"
+        },
+        {
+          "module": "iterate_through_each_source_file",
+          "side": "in"
+        }
+      ],
+      "used_by": [
+        {
+          "module": "iterate_through_the_source_files",
+          "import": "from .initialize_a_set_to_track import initialize_a_set_to_track",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/iterate_through_the_source_files/__init__.py"
+        }
+      ]
+    },
+    "unique_lines": {
+      "type": "set",
+      "produced_by": [
+        {
+          "module": "collect_all_unique_lines_of",
+          "side": "out"
+        },
+        {
+          "module": "combine_all_unique_lines_into",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [],
+      "used_by": [
+        {
+          "module": "identify_and_analyze_duplicate_or",
+          "import": "from .collect_all_unique_lines_of import collect_all_unique_lines_of",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/__init__.py"
+        },
+        {
+          "module": "collect_all_unique_lines_of",
+          "import": "from .combine_all_unique_lines_into import combine_all_unique_lines_into",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/collect_all_unique_lines_of/__init__.py"
+        }
+      ]
+    },
+    "unique_lines_extracted": {
+      "type": "set",
+      "produced_by": [
+        {
+          "module": "read_all_files_and_extract",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [
+        {
+          "module": "combine_all_unique_lines_into",
+          "side": "in"
+        }
+      ],
+      "used_by": [
+        {
+          "module": "collect_all_unique_lines_of",
+          "import": "from .read_all_files_and_extract import read_all_files_and_extract",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/collect_all_unique_lines_of/__init__.py"
+        }
+      ]
+    },
+    "processed_blocks": {
+      "type": "any",
+      "produced_by": [
+        {
+          "module": "initialize_a_set_to_track",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [],
+      "used_by": [
+        {
+          "module": "iterate_through_the_source_files",
+          "import": "from .initialize_a_set_to_track import initialize_a_set_to_track",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/iterate_through_the_source_files/__init__.py"
+        }
+      ]
+    },
+    "current_file": {
+      "type": "any",
+      "produced_by": [
+        {
+          "module": "iterate_through_each_source_file",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [
+        {
+          "module": "read_the_current_file_and",
+          "side": "in"
+        }
+      ],
+      "used_by": [
+        {
+          "module": "iterate_through_the_source_files",
+          "import": "from .iterate_through_each_source_file import iterate_through_each_source_file",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/iterate_through_the_source_files/__init__.py"
+        }
+      ]
+    },
+    "block_hashes": {
+      "type": "any",
+      "produced_by": [
+        {
+          "module": "initialize_a_list_to_track",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [],
+      "used_by": [
+        {
+          "module": "iterate_through_the_source_files",
+          "import": "from .initialize_a_list_to_track import initialize_a_list_to_track",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/iterate_through_the_source_files/__init__.py"
+        }
+      ]
+    },
+    "file_content": {
+      "type": "str",
+      "produced_by": [],
+      "consumed_by": [
+        {
+          "module": "return_the_list_of_duplicate",
+          "side": "in"
+        },
+        {
+          "module": "split_file_content_into_lines",
+          "side": "in"
+        }
+      ],
+      "used_by": []
+    },
+    "unique_blocks": {
+      "type": "dict",
+      "produced_by": [
+        {
+          "module": "identify_unique_code_blocks_based",
+          "side": "out"
+        },
+        {
+          "module": "find_duplicate_code_blocks_by",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [
+        {
+          "module": "find_duplicate_code_blocks_by",
+          "side": "in"
+        },
+        {
+          "module": "remove_duplicate_code_blocks_from",
+          "side": "in"
+        }
+      ],
+      "used_by": [
+        {
+          "module": "return_the_list_of_duplicate",
+          "import": "from .identify_unique_code_blocks_based import identify_unique_code_blocks_based",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/return_the_list_of_duplicate/__init__.py"
+        },
+        {
+          "module": "return_the_list_of_duplicate",
+          "import": "from .find_duplicate_code_blocks_by import find_duplicate_code_blocks_by",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/return_the_list_of_duplicate/__init__.py"
+        }
+      ]
+    },
+    "cleaned_code_blocks": {
+      "type": "list",
+      "produced_by": [
+        {
+          "module": "remove_identified_duplicate_or_redundant",
+          "side": "out"
+        },
+        {
+          "module": "remove_identified_duplicates",
+          "side": "out"
+        },
+        {
+          "module": "iterate_over_unique_code_blocks",
+          "side": "out"
+        },
+        {
+          "module": "filter_out_duplicate_code_blocks",
+          "side": "out"
+        },
+        {
+          "module": "return_cleaned_code_blocks",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [
+        {
+          "module": "return_cleaned_code_blocks",
+          "side": "in"
+        }
+      ],
+      "used_by": [
+        {
+          "module": "code_optimizer",
+          "import": "from .remove_identified_duplicate_or_redundant import remove_identified_duplicate_or_redundant",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/__init__.py"
+        },
+        {
+          "module": "remove_identified_duplicate_or_redundant",
+          "import": "from .remove_identified_duplicates import remove_identified_duplicates",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/__init__.py"
+        },
+        {
+          "module": "remove_identified_duplicates",
+          "import": "from .iterate_over_unique_code_blocks import iterate_over_unique_code_blocks",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/remove_identified_duplicates/__init__.py"
+        },
+        {
+          "module": "remove_identified_duplicates",
+          "import": "from .filter_out_duplicate_code_blocks import filter_out_duplicate_code_blocks",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/remove_identified_duplicates/__init__.py"
+        },
+        {
+          "module": "remove_identified_duplicates",
+          "import": "from .return_cleaned_code_blocks import return_cleaned_code_blocks",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/remove_identified_duplicates/__init__.py"
+        }
+      ]
+    },
+    "duplicates_listed": {
+      "type": "list",
+      "produced_by": [
+        {
+          "module": "identify_and_remove_duplicate_code",
+          "side": "out"
+        },
+        {
+          "module": "identify_duplicate_code_blocks",
+          "side": "out"
+        },
+        {
+          "module": "remove_duplicate_code_blocks",
+          "side": "out"
+        },
+        {
+          "module": "finalize_duplicate_code_blocks_list",
+          "side": "out"
+        },
+        {
+          "module": "initialize_a_set_for_tracking",
+          "side": "out"
+        },
+        {
+          "module": "iterate_over_unique_code_blocks",
+          "side": "out"
+        },
+        {
+          "module": "filter_out_duplicate_code_blocks",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [
+        {
+          "module": "remove_duplicate_code_blocks",
+          "side": "in"
+        },
+        {
+          "module": "finalize_duplicate_code_blocks_list",
+          "side": "in"
+        },
+        {
+          "module": "remove_identified_duplicates",
+          "side": "in"
+        },
+        {
+          "module": "initialize_a_set_for_tracking",
+          "side": "in"
+        },
+        {
+          "module": "iterate_over_unique_code_blocks",
+          "side": "in"
+        },
+        {
+          "module": "filter_out_duplicate_code_blocks",
+          "side": "in"
+        },
+        {
+          "module": "return_cleaned_code_blocks",
+          "side": "in"
+        }
+      ],
+      "used_by": [
+        {
+          "module": "remove_identified_duplicate_or_redundant",
+          "import": "from .identify_and_remove_duplicate_code import identify_and_remove_duplicate_code",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/__init__.py"
+        },
+        {
+          "module": "identify_and_remove_duplicate_code",
+          "import": "from .identify_duplicate_code_blocks import identify_duplicate_code_blocks",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/identify_and_remove_duplicate_code/__init__.py"
+        },
+        {
+          "module": "identify_and_remove_duplicate_code",
+          "import": "from .remove_duplicate_code_blocks import remove_duplicate_code_blocks",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/identify_and_remove_duplicate_code/__init__.py"
+        },
+        {
+          "module": "identify_and_remove_duplicate_code",
+          "import": "from .finalize_duplicate_code_blocks_list import finalize_duplicate_code_blocks_list",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/identify_and_remove_duplicate_code/__init__.py"
+        },
+        {
+          "module": "remove_identified_duplicates",
+          "import": "from .initialize_a_set_for_tracking import initialize_a_set_for_tracking",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/remove_identified_duplicates/__init__.py"
+        },
+        {
+          "module": "remove_identified_duplicates",
+          "import": "from .iterate_over_unique_code_blocks import iterate_over_unique_code_blocks",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/remove_identified_duplicates/__init__.py"
+        },
+        {
+          "module": "remove_identified_duplicates",
+          "import": "from .filter_out_duplicate_code_blocks import filter_out_duplicate_code_blocks",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/remove_identified_duplicates/__init__.py"
+        }
+      ]
+    },
+    "unique_code_blocks": {
+      "type": "set",
+      "produced_by": [
+        {
+          "module": "initialize_a_set_for_tracking",
+          "side": "out"
+        },
+        {
+          "module": "iterate_over_unique_code_blocks",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [
+        {
+          "module": "iterate_over_unique_code_blocks",
+          "side": "in"
+        },
+        {
+          "module": "filter_out_duplicate_code_blocks",
+          "side": "in"
+        }
+      ],
+      "used_by": [
+        {
+          "module": "remove_identified_duplicates",
+          "import": "from .initialize_a_set_for_tracking import initialize_a_set_for_tracking",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/remove_identified_duplicates/__init__.py"
+        },
+        {
+          "module": "remove_identified_duplicates",
+          "import": "from .iterate_over_unique_code_blocks import iterate_over_unique_code_blocks",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/remove_identified_duplicates/__init__.py"
+        }
+      ]
+    },
+    "debugging_tools": {
+      "type": "dict",
+      "produced_by": [
+        {
+          "module": "integrate_performance_monitoring_tools_for",
+          "side": "out"
+        },
+        {
+          "module": "integrate_selected_performance_monitoring_tools",
+          "side": "out"
+        },
+        {
+          "module": "initialize_debugging_tools_dictionary",
+          "side": "out"
+        },
+        {
+          "module": "determine_the_type_of_debugging",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [
+        {
+          "module": "document_and_communicate_the_integration",
+          "side": "in"
+        },
+        {
+          "module": "determine_the_type_of_debugging",
+          "side": "in"
+        },
+        {
+          "module": "select_the_appropriate_performance_monitoring",
+          "side": "in"
+        },
+        {
+          "module": "set_up_environment_variables_and",
+          "side": "in"
+        }
+      ],
+      "used_by": [
+        {
+          "module": "code_optimizer",
+          "import": "from .integrate_performance_monitoring_tools_for import integrate_performance_monitoring_tools_for",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/__init__.py"
+        },
+        {
+          "module": "integrate_performance_monitoring_tools_for",
+          "import": "from .integrate_selected_performance_monitoring_tools import integrate_selected_performance_monitoring_tools",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/__init__.py"
+        },
+        {
+          "module": "integrate_selected_performance_monitoring_tools",
+          "import": "from .initialize_debugging_tools_dictionary import initialize_debugging_tools_dictionary",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/integrate_selected_performance_monitoring_tools/__init__.py"
+        },
+        {
+          "module": "document_and_communicate_the_integration",
+          "import": "from .determine_the_type_of_debugging import determine_the_type_of_debugging",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/document_and_communicate_the_integration/__init__.py"
+        }
+      ]
+    },
+    "need_for_monitoring": {
+      "type": "bool",
+      "produced_by": [
+        {
+          "module": "identify_the_need_for_performance",
+          "side": "out"
+        },
+        {
+          "module": "analyze_the_results_to_determine",
+          "side": "out"
+        },
+        {
+          "module": "check_if_monitoring_is_needed",
+          "side": "out"
+        },
+        {
+          "module": "determine_appropriate_tools_based_on",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [
+        {
+          "module": "select_appropriate_performance_monitoring_tools",
+          "side": "in"
+        },
+        {
+          "module": "check_if_monitoring_is_needed",
+          "side": "in"
+        },
+        {
+          "module": "determine_appropriate_tools_based_on",
+          "side": "in"
+        },
+        {
+          "module": "select_tools_from_predefined_list",
+          "side": "in"
+        },
+        {
+          "module": "integrate_selected_performance_monitoring_tools",
+          "side": "in"
+        },
+        {
+          "module": "check_if_performance_monitoring_is",
+          "side": "in"
+        }
+      ],
+      "used_by": [
+        {
+          "module": "integrate_performance_monitoring_tools_for",
+          "import": "from .identify_the_need_for_performance import identify_the_need_for_performance",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/__init__.py"
+        },
+        {
+          "module": "identify_the_need_for_performance",
+          "import": "from .analyze_the_results_to_determine import analyze_the_results_to_determine",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/identify_the_need_for_performance/__init__.py"
+        },
+        {
+          "module": "select_appropriate_performance_monitoring_tools",
+          "import": "from .check_if_monitoring_is_needed import check_if_monitoring_is_needed",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/select_appropriate_performance_monitoring_tools/__init__.py"
+        },
+        {
+          "module": "select_appropriate_performance_monitoring_tools",
+          "import": "from .determine_appropriate_tools_based_on import determine_appropriate_tools_based_on",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/select_appropriate_performance_monitoring_tools/__init__.py"
+        }
+      ]
+    },
+    "performance_assessment_result": {
+      "type": "str",
+      "produced_by": [
+        {
+          "module": "assess_the_current_environment_s",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [
+        {
+          "module": "analyze_the_results_to_determine",
+          "side": "in"
+        }
+      ],
+      "used_by": [
+        {
+          "module": "identify_the_need_for_performance",
+          "import": "from .assess_the_current_environment_s import assess_the_current_environment_s",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/identify_the_need_for_performance/__init__.py"
+        }
+      ]
+    },
+    "selected_tools": {
+      "type": "list",
+      "produced_by": [
+        {
+          "module": "select_appropriate_performance_monitoring_tools",
+          "side": "out"
+        },
+        {
+          "module": "determine_appropriate_tools_based_on",
+          "side": "out"
+        },
+        {
+          "module": "select_tools_from_predefined_list",
+          "side": "out"
+        },
+        {
+          "module": "output_selected_tools",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [
+        {
+          "module": "integrate_selected_performance_monitoring_tools",
+          "side": "in"
+        },
+        {
+          "module": "iterate_over_selected_performance_monitoring",
+          "side": "in"
+        },
+        {
+          "module": "select_appropriate_tool_for_each",
+          "side": "in"
+        }
+      ],
+      "used_by": [
+        {
+          "module": "integrate_performance_monitoring_tools_for",
+          "import": "from .select_appropriate_performance_monitoring_tools import select_appropriate_performance_monitoring_tools",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/__init__.py"
+        },
+        {
+          "module": "select_appropriate_performance_monitoring_tools",
+          "import": "from .determine_appropriate_tools_based_on import determine_appropriate_tools_based_on",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/select_appropriate_performance_monitoring_tools/__init__.py"
+        },
+        {
+          "module": "select_appropriate_performance_monitoring_tools",
+          "import": "from .select_tools_from_predefined_list import select_tools_from_predefined_list",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/select_appropriate_performance_monitoring_tools/__init__.py"
+        },
+        {
+          "module": "select_appropriate_performance_monitoring_tools",
+          "import": "from .output_selected_tools import output_selected_tools",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/select_appropriate_performance_monitoring_tools/__init__.py"
+        }
+      ]
+    },
+    "monitoring_needed": {
+      "type": "any",
+      "produced_by": [
+        {
+          "module": "check_if_performance_monitoring_is",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [
+        {
+          "module": "select_appropriate_tool_for_each",
+          "side": "in"
+        }
+      ],
+      "used_by": [
+        {
+          "module": "integrate_selected_performance_monitoring_tools",
+          "import": "from .check_if_performance_monitoring_is import check_if_performance_monitoring_is",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/integrate_selected_performance_monitoring_tools/__init__.py"
+        }
+      ]
+    },
+    "tool_choice": {
+      "type": "any",
+      "produced_by": [
+        {
+          "module": "select_appropriate_tool_for_each",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [],
+      "used_by": [
+        {
+          "module": "integrate_selected_performance_monitoring_tools",
+          "import": "from .select_appropriate_tool_for_each import select_appropriate_tool_for_each",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/integrate_selected_performance_monitoring_tools/__init__.py"
+        }
+      ]
+    },
+    "tool_type": {
+      "type": "str",
+      "produced_by": [
+        {
+          "module": "determine_the_type_of_debugging",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [
+        {
+          "module": "select_the_appropriate_performance_monitoring",
+          "side": "in"
+        }
+      ],
+      "used_by": [
+        {
+          "module": "document_and_communicate_the_integration",
+          "import": "from .determine_the_type_of_debugging import determine_the_type_of_debugging",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/document_and_communicate_the_integration/__init__.py"
+        }
+      ]
+    },
+    "performance_monitoring_tools": {
+      "type": "list",
+      "produced_by": [
+        {
+          "module": "select_the_appropriate_performance_monitoring",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [
+        {
+          "module": "document_the_integration_of_performance",
+          "side": "in"
+        }
+      ],
+      "used_by": [
+        {
+          "module": "document_and_communicate_the_integration",
+          "import": "from .select_the_appropriate_performance_monitoring import select_the_appropriate_performance_monitoring",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/document_and_communicate_the_integration/__init__.py"
+        }
+      ]
+    },
+    "environment_variables": {
+      "type": "list",
+      "produced_by": [
+        {
+          "module": "check_for_environment_variables_and",
+          "side": "out"
+        },
+        {
+          "module": "read_environment_variables_from_the",
+          "side": "out"
+        },
+        {
+          "module": "filter_environment_variables_by_name",
+          "side": "out"
+        },
+        {
+          "module": "check_if_the_environment_variable",
+          "side": "out"
+        },
+        {
+          "module": "extract_environment_variable_values_to",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [
+        {
+          "module": "check_if_the_environment_variable",
+          "side": "in"
+        },
+        {
+          "module": "extract_environment_variable_values_to",
+          "side": "in"
+        }
+      ],
+      "used_by": [
+        {
+          "module": "set_up_environment_variables_and",
+          "import": "from .check_for_environment_variables_and import check_for_environment_variables_and",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/__init__.py"
+        },
+        {
+          "module": "check_for_environment_variables_and",
+          "import": "from .read_environment_variables_from_the import read_environment_variables_from_the",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/check_for_environment_variables_and/__init__.py"
+        },
+        {
+          "module": "check_for_environment_variables_and",
+          "import": "from .filter_environment_variables_by_name import filter_environment_variables_by_name",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/check_for_environment_variables_and/__init__.py"
+        },
+        {
+          "module": "check_for_environment_variables_and",
+          "import": "from .check_if_the_environment_variable import check_if_the_environment_variable",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/check_for_environment_variables_and/__init__.py"
+        },
+        {
+          "module": "check_for_environment_variables_and",
+          "import": "from .extract_environment_variable_values_to import extract_environment_variable_values_to",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/check_for_environment_variables_and/__init__.py"
+        }
+      ]
+    },
+    "environment_variables_list": {
+      "type": "list",
+      "produced_by": [],
+      "consumed_by": [
+        {
+          "module": "retrieve_debugging_tools_configuration_from",
+          "side": "in"
+        }
+      ],
+      "used_by": []
+    },
+    "debugging_configurations_dict": {
+      "type": "dict",
+      "produced_by": [
+        {
+          "module": "retrieve_debugging_tools_configuration_from",
+          "side": "out"
+        },
+        {
+          "module": "retrieve_debugging_configurations_based_on",
+          "side": "out"
+        },
+        {
+          "module": "finalize_debugging_configuration_retrieval",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [],
+      "used_by": [
+        {
+          "module": "set_up_environment_variables_and",
+          "import": "from .retrieve_debugging_tools_configuration_from import retrieve_debugging_tools_configuration_from",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/__init__.py"
+        },
+        {
+          "module": "retrieve_debugging_tools_configuration_from",
+          "import": "from .retrieve_debugging_configurations_based_on import retrieve_debugging_configurations_based_on",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/retrieve_debugging_tools_configuration_from/__init__.py"
+        },
+        {
+          "module": "retrieve_debugging_tools_configuration_from",
+          "import": "from .finalize_debugging_configuration_retrieval import finalize_debugging_configuration_retrieval",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/retrieve_debugging_tools_configuration_from/__init__.py"
+        }
+      ]
+    },
+    "config_keys_list": {
+      "type": "list",
+      "produced_by": [
+        {
+          "module": "extract_debugging_tools_configuration_from",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [
+        {
+          "module": "filter_and_sort_keys_for",
+          "side": "in"
+        }
+      ],
+      "used_by": [
+        {
+          "module": "retrieve_debugging_tools_configuration_from",
+          "import": "from .extract_debugging_tools_configuration_from import extract_debugging_tools_configuration_from",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/retrieve_debugging_tools_configuration_from/__init__.py"
+        }
+      ]
+    },
+    "debugging_config_keys_list": {
+      "type": "list",
+      "produced_by": [
+        {
+          "module": "filter_and_sort_keys_for",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [
+        {
+          "module": "retrieve_debugging_configurations_based_on",
+          "side": "in"
+        }
+      ],
+      "used_by": [
+        {
+          "module": "retrieve_debugging_tools_configuration_from",
+          "import": "from .filter_and_sort_keys_for import filter_and_sort_keys_for",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/retrieve_debugging_tools_configuration_from/__init__.py"
+        }
+      ]
+    },
+    "debugging_configurations": {
+      "type": "dict",
+      "produced_by": [
+        {
+          "module": "retrieve_default_debugging_configuration_settings",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [
+        {
+          "module": "set_up_debugging_tools_configuration",
+          "side": "in"
+        },
+        {
+          "module": "merge_provided_configurations_with_default",
+          "side": "in"
+        }
+      ],
+      "used_by": [
+        {
+          "module": "set_up_debugging_tools_configuration",
+          "import": "from .retrieve_default_debugging_configuration_settings import retrieve_default_debugging_configuration_settings",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/set_up_debugging_tools_configuration/__init__.py"
+        }
+      ]
+    },
+    "default_debugging_configurations": {
+      "type": "dict",
+      "produced_by": [
+        {
+          "module": "retrieve_default_debugging_configuration_settings",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [
+        {
+          "module": "merge_provided_configurations_with_default",
+          "side": "in"
+        }
+      ],
+      "used_by": [
+        {
+          "module": "set_up_debugging_tools_configuration",
+          "import": "from .retrieve_default_debugging_configuration_settings import retrieve_default_debugging_configuration_settings",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/set_up_debugging_tools_configuration/__init__.py"
+        }
+      ]
+    },
+    "merged_debugging_configurations": {
+      "type": "dict",
+      "produced_by": [
+        {
+          "module": "merge_provided_configurations_with_default",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [
+        {
+          "module": "validate_and_sanitize_the_merged",
+          "side": "in"
+        }
+      ],
+      "used_by": [
+        {
+          "module": "set_up_debugging_tools_configuration",
+          "import": "from .merge_provided_configurations_with_default import merge_provided_configurations_with_default",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/set_up_debugging_tools_configuration/__init__.py"
+        }
+      ]
+    },
+    "validated_debugging_configurations": {
+      "type": "dict",
+      "produced_by": [
+        {
+          "module": "validate_and_sanitize_the_merged",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [
+        {
+          "module": "save_the_configured_debugging_settings",
+          "side": "in"
+        }
+      ],
+      "used_by": [
+        {
+          "module": "set_up_debugging_tools_configuration",
+          "import": "from .validate_and_sanitize_the_merged import validate_and_sanitize_the_merged",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/set_up_debugging_tools_configuration/__init__.py"
+        }
+      ]
+    },
+    "setup_config": {
+      "type": "dict",
+      "produced_by": [
+        {
+          "module": "retrieve_current_setup_configuration_from",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [
+        {
+          "module": "verify_setup_with_current_configurations",
+          "side": "in"
+        },
+        {
+          "module": "retrieve_current_setup_configuration_from",
+          "side": "in"
+        },
+        {
+          "module": "load_reference_setup_configuration_from",
+          "side": "in"
+        }
+      ],
+      "used_by": [
+        {
+          "module": "verify_setup_with_current_configurations",
+          "import": "from .retrieve_current_setup_configuration_from import retrieve_current_setup_configuration_from",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/verify_setup_with_current_configurations/__init__.py"
+        }
+      ]
+    },
+    "current_setup": {
+      "type": "dict",
+      "produced_by": [
+        {
+          "module": "retrieve_current_setup_configuration_from",
+          "side": "out"
+        },
+        {
+          "module": "load_reference_setup_configuration_from",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [
+        {
+          "module": "compare_current_setup_with_reference",
+          "side": "in"
+        }
+      ],
+      "used_by": [
+        {
+          "module": "verify_setup_with_current_configurations",
+          "import": "from .retrieve_current_setup_configuration_from import retrieve_current_setup_configuration_from",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/verify_setup_with_current_configurations/__init__.py"
+        },
+        {
+          "module": "verify_setup_with_current_configurations",
+          "import": "from .load_reference_setup_configuration_from import load_reference_setup_configuration_from",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/verify_setup_with_current_configurations/__init__.py"
+        }
+      ]
+    },
+    "reference_setup": {
+      "type": "dict",
+      "produced_by": [
+        {
+          "module": "load_reference_setup_configuration_from",
+          "side": "out"
+        }
+      ],
+      "consumed_by": [
+        {
+          "module": "compare_current_setup_with_reference",
+          "side": "in"
+        }
+      ],
+      "used_by": [
+        {
+          "module": "verify_setup_with_current_configurations",
+          "import": "from .load_reference_setup_configuration_from import load_reference_setup_configuration_from",
+          "location": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/verify_setup_with_current_configurations/__init__.py"
         }
       ]
     }
@@ -22363,7 +23544,7 @@
       },
       "parent": "identify_potential_code_snippets_for",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_potential_code_snippets_for/initialize_an_empty_list_for"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_potential_code_snippets_for/initialize_an_empty_list_for"
     },
     "iterate_over_each_processed_ocr": {
       "semantic": "Iterate over each processed OCR result in the input list.",
@@ -22813,19 +23994,24 @@
       "code_path": "io/output/workplace/ocr_game_logger/extract_ocr_results/normalize_ocr_results_by_converting/store_the_modified_results_in"
     },
     "initialize_an_empty_list_to": {
-      "semantic": "Initialize an empty list to store byte data",
+      "semantic": "Initialize an empty list to store duplicate code blocks",
       "io": {
-        "in": [],
+        "in": [
+          {
+            "name": "none",
+            "type": "any"
+          }
+        ],
         "out": [
           {
-            "name": "byte_list",
-            "type": "list[bytes]"
+            "name": "duplicate_code_blocks",
+            "type": "list"
           }
         ]
       },
-      "parent": "read_each_byte_in_lines",
-      "topology": null,
-      "code_path": "io/output/workplace/ocr_game_logger/read_screen_data_from_ocr/process_each_line_with_ocr/read_each_byte_in_lines/initialize_an_empty_list_to"
+      "parent": "identify_and_analyze_duplicate_or",
+      "topology": "SEQ",
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/initialize_an_empty_list_to"
     },
     "iterate_over_each_filtered_ocr": {
       "semantic": "Iterate over each filtered OCR result.",
@@ -32702,7 +33888,7 @@
       },
       "parent": "identify_duplicate_lines_of_code",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/identify_duplicate_lines_of_code/check_if_the_current_line"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/identify_duplicate_lines_of_code/check_if_the_current_line"
     },
     "if_the_line_is_not": {
       "semantic": "If the line is not empty, add it to the filtered lines list.",
@@ -36767,7 +37953,7 @@
       },
       "parent": "compare_each_snippet_to_find",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/compare_each_snippet_to_find/initialize_an_empty_set_to"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/compare_each_snippet_to_find/initialize_an_empty_set_to"
     },
     "iterate_over_each_gate_in": {
       "semantic": "Iterate over each gate in the input list",
@@ -48781,16 +49967,11 @@
       "semantic": "对代码进行性能方面的优化，包括去重冗余代码等，最好准备各种调试功能",
       "io": {
         "in": [],
-        "out": [
-          {
-            "name": "debug_tools",
-            "type": "dict"
-          }
-        ]
+        "out": []
       },
       "parent": null,
       "topology": "SEQ",
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer"
     },
     "collect_code_and_dependencies_for": {
       "semantic": "Collect code and dependencies for identified targets",
@@ -48810,7 +49991,7 @@
       },
       "parent": "collect_code_and_dependencies_for",
       "topology": "PAR",
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/collect_code_and_dependencies_for"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/collect_code_and_dependencies_for"
     },
     "identify_potential_areas_for_performance": {
       "semantic": "Identify potential areas for performance optimization",
@@ -48830,7 +50011,7 @@
       },
       "parent": "collect_code_and_dependencies_for",
       "topology": "SEQ",
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/identify_potential_areas_for_performance"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/identify_potential_areas_for_performance"
     },
     "identify_critical_functions_in_the": {
       "semantic": "Identify critical functions in the project",
@@ -48854,7 +50035,7 @@
       },
       "parent": "identify_potential_areas_for_performance",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/identify_potential_areas_for_performance/identify_critical_functions_in_the"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/identify_potential_areas_for_performance/identify_critical_functions_in_the"
     },
     "analyze_execution_time_of_each": {
       "semantic": "Analyze execution time of each critical function",
@@ -48878,7 +50059,7 @@
       },
       "parent": "identify_potential_areas_for_performance",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/identify_potential_areas_for_performance/analyze_execution_time_of_each"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/identify_potential_areas_for_performance/analyze_execution_time_of_each"
     },
     "identify_functions_with_high_execution": {
       "semantic": "Identify functions with high execution times",
@@ -48902,7 +50083,7 @@
       },
       "parent": "identify_potential_areas_for_performance",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/identify_potential_areas_for_performance/identify_functions_with_high_execution"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/identify_potential_areas_for_performance/identify_functions_with_high_execution"
     },
     "propose_performance_optimization_strategies": {
       "semantic": "Propose performance optimization strategies",
@@ -48926,7 +50107,7 @@
       },
       "parent": "identify_potential_areas_for_performance",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/identify_potential_areas_for_performance/propose_performance_optimization_strategies"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/identify_potential_areas_for_performance/propose_performance_optimization_strategies"
     },
     "initialize_variables_for_code_collection": {
       "semantic": "Initialize variables for code collection and dependency fetching",
@@ -48936,7 +50117,7 @@
       },
       "parent": "collect_code_and_dependencies_for",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/collect_code_and_dependencies_for/initialize_variables_for_code_collection"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/collect_code_and_dependencies_for/initialize_variables_for_code_collection"
     },
     "retrieve_source_code_snippets_based": {
       "semantic": "Retrieve source code snippets based on identified performance targets",
@@ -48956,7 +50137,7 @@
       },
       "parent": "collect_code_and_dependencies_for",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/collect_code_and_dependencies_for/retrieve_source_code_snippets_based"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/collect_code_and_dependencies_for/retrieve_source_code_snippets_based"
     },
     "fetch_and_resolve_dependencies_for": {
       "semantic": "Fetch and resolve dependencies for identified code snippets",
@@ -48976,7 +50157,7 @@
       },
       "parent": "collect_code_and_dependencies_for",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/collect_code_and_dependencies_for/fetch_and_resolve_dependencies_for"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/collect_code_and_dependencies_for/fetch_and_resolve_dependencies_for"
     },
     "combine_code_snippets_and_resolved": {
       "semantic": "Combine code snippets and resolved dependencies",
@@ -49000,7 +50181,7 @@
       },
       "parent": "collect_code_and_dependencies_for",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/collect_code_and_dependencies_for/combine_code_snippets_and_resolved"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/collect_code_and_dependencies_for/combine_code_snippets_and_resolved"
     },
     "analyze_code_for_potential_bottlenecks": {
       "semantic": "Analyze code for potential bottlenecks",
@@ -49024,7 +50205,7 @@
       },
       "parent": "collect_code_and_dependencies_for",
       "topology": "SEQ",
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/analyze_code_for_potential_bottlenecks"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/analyze_code_for_potential_bottlenecks"
     },
     "parse_and_identify_suspicious_lines": {
       "semantic": "Parse and identify suspicious lines in the code snippets",
@@ -49044,7 +50225,7 @@
       },
       "parent": "analyze_code_for_potential_bottlenecks",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/analyze_code_for_potential_bottlenecks/parse_and_identify_suspicious_lines"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/analyze_code_for_potential_bottlenecks/parse_and_identify_suspicious_lines"
     },
     "analyze_suspicious_lines_for_potential": {
       "semantic": "Analyze suspicious lines for potential bottlenecks",
@@ -49064,7 +50245,7 @@
       },
       "parent": "analyze_code_for_potential_bottlenecks",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/analyze_code_for_potential_bottlenecks/analyze_suspicious_lines_for_potential"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/analyze_code_for_potential_bottlenecks/analyze_suspicious_lines_for_potential"
     },
     "filter_and_group_potential_bottlenecks": {
       "semantic": "Filter and group potential bottlenecks by type",
@@ -49084,7 +50265,7 @@
       },
       "parent": "analyze_code_for_potential_bottlenecks",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/analyze_code_for_potential_bottlenecks/filter_and_group_potential_bottlenecks"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/analyze_code_for_potential_bottlenecks/filter_and_group_potential_bottlenecks"
     },
     "optimize_code_by_addressing_identified": {
       "semantic": "Optimize code by addressing identified bottlenecks",
@@ -49108,7 +50289,7 @@
       },
       "parent": "collect_code_and_dependencies_for",
       "topology": "SEQ",
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/optimize_code_by_addressing_identified"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/optimize_code_by_addressing_identified"
     },
     "identify_the_most_impactful_bottlenecks": {
       "semantic": "Identify the most impactful bottlenecks based on potential bottleneck descriptions.",
@@ -49132,7 +50313,7 @@
       },
       "parent": "optimize_code_by_addressing_identified",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/optimize_code_by_addressing_identified/identify_the_most_impactful_bottlenecks"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/optimize_code_by_addressing_identified/identify_the_most_impactful_bottlenecks"
     },
     "analyze_each_identified_bottleneck_to": {
       "semantic": "Analyze each identified bottleneck to suggest optimization strategies.",
@@ -49160,7 +50341,7 @@
       },
       "parent": "optimize_code_by_addressing_identified",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/optimize_code_by_addressing_identified/analyze_each_identified_bottleneck_to"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/optimize_code_by_addressing_identified/analyze_each_identified_bottleneck_to"
     },
     "test_the_optimized_code_snippets": {
       "semantic": "Test the optimized code snippets to ensure they perform as expected.",
@@ -49188,7 +50369,7 @@
       },
       "parent": "optimize_code_by_addressing_identified",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/optimize_code_by_addressing_identified/test_the_optimized_code_snippets"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/optimize_code_by_addressing_identified/test_the_optimized_code_snippets"
     },
     "review_the_results_to_determine": {
       "semantic": "Review the results to determine if further optimizations are needed.",
@@ -49212,7 +50393,7 @@
       },
       "parent": "optimize_code_by_addressing_identified",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/optimize_code_by_addressing_identified/review_the_results_to_determine"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/collect_code_and_dependencies_for/optimize_code_by_addressing_identified/review_the_results_to_determine"
     },
     "identify_duplicate_and_redundant_code": {
       "semantic": "Identify duplicate and redundant code snippets",
@@ -49231,7 +50412,7 @@
       },
       "parent": "code_optimizer",
       "topology": "SEQ",
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code"
     },
     "identify_potential_code_snippets_for": {
       "semantic": "Identify potential code snippets for duplication",
@@ -49251,7 +50432,7 @@
       },
       "parent": "identify_duplicate_and_redundant_code",
       "topology": "PAR",
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_potential_code_snippets_for"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_potential_code_snippets_for"
     },
     "iterate_over_each_code_snippet": {
       "semantic": "Iterate over each code snippet in the input list",
@@ -49266,7 +50447,7 @@
       },
       "parent": "identify_potential_code_snippets_for",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_potential_code_snippets_for/iterate_over_each_code_snippet"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_potential_code_snippets_for/iterate_over_each_code_snippet"
     },
     "check_if_the_current_code": {
       "semantic": "Check if the current code snippet is duplicated",
@@ -49281,7 +50462,7 @@
       },
       "parent": "identify_potential_code_snippets_for",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_potential_code_snippets_for/check_if_the_current_code"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_potential_code_snippets_for/check_if_the_current_code"
     },
     "if_duplicated_add_to_potential": {
       "semantic": "If duplicated, add to potential snippets list; otherwise skip",
@@ -49300,7 +50481,7 @@
       },
       "parent": "identify_potential_code_snippets_for",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_potential_code_snippets_for/if_duplicated_add_to_potential"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_potential_code_snippets_for/if_duplicated_add_to_potential"
     },
     "compare_each_snippet_to_find": {
       "semantic": "Compare each snippet to find duplicates",
@@ -49320,7 +50501,7 @@
       },
       "parent": "identify_duplicate_and_redundant_code",
       "topology": "SEQ",
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/compare_each_snippet_to_find"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/compare_each_snippet_to_find"
     },
     "iterate_over_each_snippet_in": {
       "semantic": "Iterate over each snippet in the list of potential snippets",
@@ -49340,7 +50521,7 @@
       },
       "parent": "compare_each_snippet_to_find",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/compare_each_snippet_to_find/iterate_over_each_snippet_in"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/compare_each_snippet_to_find/iterate_over_each_snippet_in"
     },
     "if_the_current_snippet_is": {
       "semantic": "If the current snippet is not in the set of unique snippets, add it",
@@ -49359,7 +50540,7 @@
       },
       "parent": "compare_each_snippet_to_find",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/compare_each_snippet_to_find/if_the_current_snippet_is"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/compare_each_snippet_to_find/if_the_current_snippet_is"
     },
     "iterate_over_each_snippet_again": {
       "semantic": "Iterate over each snippet again to find duplicates",
@@ -49379,7 +50560,7 @@
       },
       "parent": "compare_each_snippet_to_find",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/compare_each_snippet_to_find/iterate_over_each_snippet_again"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/compare_each_snippet_to_find/iterate_over_each_snippet_again"
     },
     "identify_redundant_code_snippets": {
       "semantic": "Identify redundant code snippets",
@@ -49403,7 +50584,7 @@
       },
       "parent": "identify_duplicate_and_redundant_code",
       "topology": "SEQ",
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets"
     },
     "initialize_variables": {
       "semantic": "Initialize variables",
@@ -49427,7 +50608,7 @@
       },
       "parent": "identify_redundant_code_snippets",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets/initialize_variables"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets/initialize_variables"
     },
     "identify_potential_duplicate_code": {
       "semantic": "Identify potential duplicate code",
@@ -49455,7 +50636,7 @@
       },
       "parent": "identify_redundant_code_snippets",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets/identify_potential_duplicate_code"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets/identify_potential_duplicate_code"
     },
     "remove_duplicate_code": {
       "semantic": "Remove duplicate code",
@@ -49483,7 +50664,7 @@
       },
       "parent": "identify_redundant_code_snippets",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets/remove_duplicate_code"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets/remove_duplicate_code"
     },
     "review_and_output_results": {
       "semantic": "Review and output results",
@@ -49511,7 +50692,7 @@
       },
       "parent": "identify_redundant_code_snippets",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets/review_and_output_results"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/identify_redundant_code_snippets/review_and_output_results"
     },
     "filter_out_already_identified_duplicates": {
       "semantic": "Filter out already identified duplicates",
@@ -49535,7 +50716,7 @@
       },
       "parent": "identify_duplicate_and_redundant_code",
       "topology": "SEQ",
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/filter_out_already_identified_duplicates"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/filter_out_already_identified_duplicates"
     },
     "identify_keys_in_duplicate_code": {
       "semantic": "Identify keys in duplicate_code",
@@ -49559,7 +50740,7 @@
       },
       "parent": "filter_out_already_identified_duplicates",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/filter_out_already_identified_duplicates/identify_keys_in_duplicate_code"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/filter_out_already_identified_duplicates/identify_keys_in_duplicate_code"
     },
     "identify_keys_in_potential_snippets": {
       "semantic": "Identify keys in potential_snippets",
@@ -49583,7 +50764,7 @@
       },
       "parent": "filter_out_already_identified_duplicates",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/filter_out_already_identified_duplicates/identify_keys_in_potential_snippets"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/filter_out_already_identified_duplicates/identify_keys_in_potential_snippets"
     },
     "find_common_keys_between_duplicate_code": {
       "semantic": "Find common keys between duplicate_code and potential_snippets",
@@ -49611,7 +50792,7 @@
       },
       "parent": "filter_out_already_identified_duplicates",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/filter_out_already_identified_duplicates/find_common_keys_between_duplicate_code"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/filter_out_already_identified_duplicates/find_common_keys_between_duplicate_code"
     },
     "filter_out_redundant_code_with_common": {
       "semantic": "Filter out redundant_code with common keys",
@@ -49635,7 +50816,7 @@
       },
       "parent": "filter_out_already_identified_duplicates",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/filter_out_already_identified_duplicates/filter_out_redundant_code_with_common"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/identify_duplicate_and_redundant_code/filter_out_already_identified_duplicates/filter_out_redundant_code_with_common"
     },
     "optimize_code_by_removing_duplicates": {
       "semantic": "Optimize code by removing duplicates and redundancies",
@@ -49650,7 +50831,7 @@
       },
       "parent": "code_optimizer",
       "topology": "SEQ",
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates"
     },
     "identify_duplicate_lines_of_code": {
       "semantic": "Identify duplicate lines of code",
@@ -49669,7 +50850,7 @@
       },
       "parent": "optimize_code_by_removing_duplicates",
       "topology": "PAR",
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/identify_duplicate_lines_of_code"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/identify_duplicate_lines_of_code"
     },
     "read_all_lines_of_code": {
       "semantic": "Read all lines of code from the source file",
@@ -49684,22 +50865,30 @@
       },
       "parent": "identify_duplicate_lines_of_code",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/identify_duplicate_lines_of_code/read_all_lines_of_code"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/identify_duplicate_lines_of_code/read_all_lines_of_code"
     },
     "initialize_a_set_to_track": {
-      "semantic": "Initialize a set to track unique lines",
+      "semantic": "Initialize a set to track processed blocks and an empty list for duplicates",
       "io": {
         "in": [],
         "out": [
           {
-            "name": "unique_lines_set",
-            "type": "set"
+            "name": "duplicate_code_blocks",
+            "type": "any"
+          },
+          {
+            "name": "processed_blocks",
+            "type": "any"
+          },
+          {
+            "name": "source_files",
+            "type": "any"
           }
         ]
       },
-      "parent": "identify_duplicate_lines_of_code",
+      "parent": "iterate_through_the_source_files",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/identify_duplicate_lines_of_code/initialize_a_set_to_track"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/iterate_through_the_source_files/initialize_a_set_to_track"
     },
     "iterate_over_each_line_of": {
       "semantic": "Iterate over each line of code and check for duplicates",
@@ -49727,7 +50916,7 @@
       },
       "parent": "identify_duplicate_lines_of_code",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/identify_duplicate_lines_of_code/iterate_over_each_line_of"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/identify_duplicate_lines_of_code/iterate_over_each_line_of"
     },
     "replace_duplicates_with_references_to": {
       "semantic": "Replace duplicates with references to existing code blocks",
@@ -49747,7 +50936,7 @@
       },
       "parent": "optimize_code_by_removing_duplicates",
       "topology": "SEQ",
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/replace_duplicates_with_references_to"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/replace_duplicates_with_references_to"
     },
     "identify_unique_lines_in_the": {
       "semantic": "Identify unique lines in the code",
@@ -49771,7 +50960,7 @@
       },
       "parent": "replace_duplicates_with_references_to",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/replace_duplicates_with_references_to/identify_unique_lines_in_the"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/replace_duplicates_with_references_to/identify_unique_lines_in_the"
     },
     "map_each_line_to_an": {
       "semantic": "Map each line to an existing code block",
@@ -49799,7 +50988,7 @@
       },
       "parent": "replace_duplicates_with_references_to",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/replace_duplicates_with_references_to/map_each_line_to_an"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/replace_duplicates_with_references_to/map_each_line_to_an"
     },
     "replace_lines_with_references_to": {
       "semantic": "Replace lines with references to existing code blocks",
@@ -49823,7 +51012,7 @@
       },
       "parent": "replace_duplicates_with_references_to",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/replace_duplicates_with_references_to/replace_lines_with_references_to"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/replace_duplicates_with_references_to/replace_lines_with_references_to"
     },
     "optimize_the_code_structure": {
       "semantic": "Optimize the code structure",
@@ -49843,7 +51032,7 @@
       },
       "parent": "replace_duplicates_with_references_to",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/replace_duplicates_with_references_to/optimize_the_code_structure"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/replace_duplicates_with_references_to/optimize_the_code_structure"
     },
     "remove_empty_lines_between_non": {
       "semantic": "Remove empty lines between non-empty lines of code",
@@ -49863,7 +51052,7 @@
       },
       "parent": "optimize_code_by_removing_duplicates",
       "topology": "SEQ",
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/remove_empty_lines_between_non"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/remove_empty_lines_between_non"
     },
     "split_code_into_lines_and": {
       "semantic": "Split code into lines and filter out empty ones",
@@ -49883,7 +51072,7 @@
       },
       "parent": "remove_empty_lines_between_non",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/remove_empty_lines_between_non/split_code_into_lines_and"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/remove_empty_lines_between_non/split_code_into_lines_and"
     },
     "filter_out_lines_that_are": {
       "semantic": "Filter out lines that are empty or contain only whitespace",
@@ -49903,7 +51092,7 @@
       },
       "parent": "remove_empty_lines_between_non",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/remove_empty_lines_between_non/filter_out_lines_that_are"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/remove_empty_lines_between_non/filter_out_lines_that_are"
     },
     "join_the_filtered_lines_back": {
       "semantic": "Join the filtered lines back into a single string",
@@ -49923,7 +51112,7 @@
       },
       "parent": "remove_empty_lines_between_non",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/remove_empty_lines_between_non/join_the_filtered_lines_back"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/optimize_code_by_removing_duplicates/remove_empty_lines_between_non/join_the_filtered_lines_back"
     },
     "set_up_debugging_tools": {
       "semantic": "Set up debugging tools",
@@ -49943,7 +51132,7 @@
       },
       "parent": "code_optimizer",
       "topology": "SEQ",
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools"
     },
     "determine_the_debugging_context": {
       "semantic": "Determine the debugging context",
@@ -49963,7 +51152,7 @@
       },
       "parent": "set_up_debugging_tools",
       "topology": "SEQ",
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/determine_the_debugging_context"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/determine_the_debugging_context"
     },
     "identify_the_key_name_from": {
       "semantic": "Identify the key name from the debugging context",
@@ -49987,7 +51176,7 @@
       },
       "parent": "determine_the_debugging_context",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/determine_the_debugging_context/identify_the_key_name_from"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/determine_the_debugging_context/identify_the_key_name_from"
     },
     "extract_key_name_from_the": {
       "semantic": "Extract key name from the debugging context",
@@ -50007,7 +51196,7 @@
       },
       "parent": "determine_the_debugging_context",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/determine_the_debugging_context/extract_key_name_from_the"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/determine_the_debugging_context/extract_key_name_from_the"
     },
     "validate_and_return_the_key": {
       "semantic": "Validate and return the key name",
@@ -50027,7 +51216,7 @@
       },
       "parent": "determine_the_debugging_context",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/determine_the_debugging_context/validate_and_return_the_key"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/determine_the_debugging_context/validate_and_return_the_key"
     },
     "select_appropriate_debugging_tools_based": {
       "semantic": "Select appropriate debugging tools based on context",
@@ -50047,7 +51236,7 @@
       },
       "parent": "set_up_debugging_tools",
       "topology": "SEQ",
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/select_appropriate_debugging_tools_based"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/select_appropriate_debugging_tools_based"
     },
     "determine_if_the_key_name_is": {
       "semantic": "Determine if the key_name is an integer or string",
@@ -50071,7 +51260,7 @@
       },
       "parent": "select_appropriate_debugging_tools_based",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/select_appropriate_debugging_tools_based/determine_if_the_key_name_is"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/select_appropriate_debugging_tools_based/determine_if_the_key_name_is"
     },
     "select_debugging_tools_based_on": {
       "semantic": "Select debugging tools based on key_type",
@@ -50103,7 +51292,7 @@
       },
       "parent": "select_appropriate_debugging_tools_based",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/select_appropriate_debugging_tools_based/select_debugging_tools_based_on"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/select_appropriate_debugging_tools_based/select_debugging_tools_based_on"
     },
     "return_debug_tools": {
       "semantic": "Return debug_tools",
@@ -50127,8 +51316,1359 @@
       },
       "parent": "select_appropriate_debugging_tools_based",
       "topology": null,
-      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/select_appropriate_debugging_tools_based/return_debug_tools"
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/src/code_optimizer/set_up_debugging_tools/select_appropriate_debugging_tools_based/return_debug_tools"
+    },
+    "identify_and_analyze_duplicate_or": {
+      "semantic": "Identify and analyze duplicate or redundant code",
+      "io": {
+        "in": [],
+        "out": [
+          {
+            "name": "duplicate_code_blocks",
+            "type": "list"
+          }
+        ]
+      },
+      "parent": "code_optimizer",
+      "topology": "SEQ",
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or"
+    },
+    "create_a_new_list_to": {
+      "semantic": "Create a new list to store duplicate code blocks",
+      "io": {
+        "in": [
+          {
+            "name": "none",
+            "type": "any"
+          }
+        ],
+        "out": [
+          {
+            "name": "duplicate_code_blocks",
+            "type": "list"
+          }
+        ]
+      },
+      "parent": "initialize_an_empty_list_to",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/initialize_an_empty_list_to/create_a_new_list_to"
+    },
+    "initialize_the_list_as_an": {
+      "semantic": "Initialize the list as an empty list",
+      "io": {
+        "in": [
+          {
+            "name": "duplicate_code_blocks",
+            "type": "list"
+          }
+        ],
+        "out": [
+          {
+            "name": "duplicate_code_blocks",
+            "type": "list"
+          }
+        ]
+      },
+      "parent": "initialize_an_empty_list_to",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/initialize_an_empty_list_to/initialize_the_list_as_an"
+    },
+    "collect_all_unique_lines_of": {
+      "semantic": "Collect all unique lines of code into a set for comparison",
+      "io": {
+        "in": [
+          {
+            "name": "source_files",
+            "type": "list"
+          }
+        ],
+        "out": [
+          {
+            "name": "unique_lines",
+            "type": "set"
+          }
+        ]
+      },
+      "parent": "identify_and_analyze_duplicate_or",
+      "topology": "SEQ",
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/collect_all_unique_lines_of"
+    },
+    "read_all_files_and_extract": {
+      "semantic": "Read all files and extract unique lines",
+      "io": {
+        "in": [
+          {
+            "name": "source_files",
+            "type": "list"
+          }
+        ],
+        "out": [
+          {
+            "name": "unique_lines_extracted",
+            "type": "set"
+          }
+        ]
+      },
+      "parent": "collect_all_unique_lines_of",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/collect_all_unique_lines_of/read_all_files_and_extract"
+    },
+    "combine_all_unique_lines_into": {
+      "semantic": "Combine all unique lines into a single set",
+      "io": {
+        "in": [
+          {
+            "name": "unique_lines_extracted",
+            "type": "set"
+          }
+        ],
+        "out": [
+          {
+            "name": "unique_lines",
+            "type": "set"
+          }
+        ]
+      },
+      "parent": "collect_all_unique_lines_of",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/collect_all_unique_lines_of/combine_all_unique_lines_into"
+    },
+    "iterate_through_the_source_files": {
+      "semantic": "Iterate through the source files to identify duplicate blocks",
+      "io": {
+        "in": [
+          {
+            "name": "source_files",
+            "type": "any"
+          }
+        ],
+        "out": [
+          {
+            "name": "duplicate_code_blocks",
+            "type": "any"
+          }
+        ]
+      },
+      "parent": "identify_and_analyze_duplicate_or",
+      "topology": "SEQ",
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/iterate_through_the_source_files"
+    },
+    "iterate_through_each_source_file": {
+      "semantic": "Iterate through each source file",
+      "io": {
+        "in": [
+          {
+            "name": "source_files",
+            "type": "any"
+          }
+        ],
+        "out": [
+          {
+            "name": "current_file",
+            "type": "any"
+          }
+        ]
+      },
+      "parent": "iterate_through_the_source_files",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/iterate_through_the_source_files/iterate_through_each_source_file"
+    },
+    "read_the_current_file_and": {
+      "semantic": "Read the current file and split into lines",
+      "io": {
+        "in": [
+          {
+            "name": "current_file",
+            "type": "any"
+          }
+        ],
+        "out": [
+          {
+            "name": "lines",
+            "type": "any"
+          }
+        ]
+      },
+      "parent": "iterate_through_the_source_files",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/iterate_through_the_source_files/read_the_current_file_and"
+    },
+    "initialize_a_list_to_track": {
+      "semantic": "Initialize a list to track unique block hashes",
+      "io": {
+        "in": [],
+        "out": [
+          {
+            "name": "block_hashes",
+            "type": "any"
+          }
+        ]
+      },
+      "parent": "iterate_through_the_source_files",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/iterate_through_the_source_files/initialize_a_list_to_track"
+    },
+    "return_the_list_of_duplicate": {
+      "semantic": "Return the list of duplicate code blocks",
+      "io": {
+        "in": [
+          {
+            "name": "file_content",
+            "type": "str"
+          }
+        ],
+        "out": [
+          {
+            "name": "duplicate_code_blocks",
+            "type": "list"
+          }
+        ]
+      },
+      "parent": "identify_and_analyze_duplicate_or",
+      "topology": "SEQ",
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/return_the_list_of_duplicate"
+    },
+    "split_file_content_into_lines": {
+      "semantic": "Split file content into lines for analysis",
+      "io": {
+        "in": [
+          {
+            "name": "file_content",
+            "type": "str"
+          }
+        ],
+        "out": [
+          {
+            "name": "lines",
+            "type": "list"
+          }
+        ]
+      },
+      "parent": "return_the_list_of_duplicate",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/return_the_list_of_duplicate/split_file_content_into_lines"
+    },
+    "identify_unique_code_blocks_based": {
+      "semantic": "Identify unique code blocks based on content",
+      "io": {
+        "in": [
+          {
+            "name": "lines",
+            "type": "list"
+          }
+        ],
+        "out": [
+          {
+            "name": "unique_blocks",
+            "type": "dict"
+          }
+        ]
+      },
+      "parent": "return_the_list_of_duplicate",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/return_the_list_of_duplicate/identify_unique_code_blocks_based"
+    },
+    "find_duplicate_code_blocks_by": {
+      "semantic": "Find duplicate code blocks by comparing unique blocks",
+      "io": {
+        "in": [
+          {
+            "name": "unique_blocks",
+            "type": "dict"
+          }
+        ],
+        "out": [
+          {
+            "name": "duplicate_code_blocks",
+            "type": "list"
+          },
+          {
+            "name": "lines",
+            "type": "list"
+          },
+          {
+            "name": "unique_blocks",
+            "type": "dict"
+          }
+        ]
+      },
+      "parent": "return_the_list_of_duplicate",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/return_the_list_of_duplicate/find_duplicate_code_blocks_by"
+    },
+    "remove_duplicate_code_blocks_from": {
+      "semantic": "Remove duplicate code blocks from the list",
+      "io": {
+        "in": [
+          {
+            "name": "lines",
+            "type": "list"
+          },
+          {
+            "name": "unique_blocks",
+            "type": "dict"
+          }
+        ],
+        "out": [
+          {
+            "name": "duplicate_code_blocks",
+            "type": "list"
+          }
+        ]
+      },
+      "parent": "return_the_list_of_duplicate",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/identify_and_analyze_duplicate_or/return_the_list_of_duplicate/remove_duplicate_code_blocks_from"
+    },
+    "remove_identified_duplicate_or_redundant": {
+      "semantic": "Remove identified duplicate or redundant code blocks",
+      "io": {
+        "in": [
+          {
+            "name": "duplicate_code_blocks",
+            "type": "list"
+          }
+        ],
+        "out": [
+          {
+            "name": "cleaned_code_blocks",
+            "type": "list"
+          }
+        ]
+      },
+      "parent": "code_optimizer",
+      "topology": "SEQ",
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant"
+    },
+    "identify_and_remove_duplicate_code": {
+      "semantic": "Identify and remove duplicate code blocks",
+      "io": {
+        "in": [
+          {
+            "name": "duplicate_code_blocks",
+            "type": "list"
+          }
+        ],
+        "out": [
+          {
+            "name": "duplicate_code_blocks",
+            "type": "list"
+          },
+          {
+            "name": "duplicates_listed",
+            "type": "list"
+          }
+        ]
+      },
+      "parent": "remove_identified_duplicate_or_redundant",
+      "topology": "SEQ",
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/identify_and_remove_duplicate_code"
+    },
+    "identify_duplicate_code_blocks": {
+      "semantic": "Identify duplicate code blocks",
+      "io": {
+        "in": [
+          {
+            "name": "duplicate_code_blocks",
+            "type": "list"
+          }
+        ],
+        "out": [
+          {
+            "name": "duplicate_code_blocks",
+            "type": "list"
+          },
+          {
+            "name": "duplicates_listed",
+            "type": "list"
+          }
+        ]
+      },
+      "parent": "identify_and_remove_duplicate_code",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/identify_and_remove_duplicate_code/identify_duplicate_code_blocks"
+    },
+    "remove_duplicate_code_blocks": {
+      "semantic": "Remove duplicate code blocks",
+      "io": {
+        "in": [
+          {
+            "name": "duplicate_code_blocks",
+            "type": "list"
+          },
+          {
+            "name": "duplicates_listed",
+            "type": "list"
+          }
+        ],
+        "out": [
+          {
+            "name": "duplicate_code_blocks",
+            "type": "list"
+          },
+          {
+            "name": "duplicates_listed",
+            "type": "list"
+          }
+        ]
+      },
+      "parent": "identify_and_remove_duplicate_code",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/identify_and_remove_duplicate_code/remove_duplicate_code_blocks"
+    },
+    "finalize_duplicate_code_blocks_list": {
+      "semantic": "Finalize duplicate code blocks list",
+      "io": {
+        "in": [
+          {
+            "name": "duplicate_code_blocks",
+            "type": "list"
+          },
+          {
+            "name": "duplicates_listed",
+            "type": "list"
+          }
+        ],
+        "out": [
+          {
+            "name": "duplicate_code_blocks",
+            "type": "list"
+          },
+          {
+            "name": "duplicates_listed",
+            "type": "list"
+          }
+        ]
+      },
+      "parent": "identify_and_remove_duplicate_code",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/identify_and_remove_duplicate_code/finalize_duplicate_code_blocks_list"
+    },
+    "remove_identified_duplicates": {
+      "semantic": "Remove identified duplicates",
+      "io": {
+        "in": [
+          {
+            "name": "duplicate_code_blocks",
+            "type": "list"
+          },
+          {
+            "name": "duplicates_listed",
+            "type": "list"
+          }
+        ],
+        "out": [
+          {
+            "name": "cleaned_code_blocks",
+            "type": "list"
+          }
+        ]
+      },
+      "parent": "remove_identified_duplicate_or_redundant",
+      "topology": "SEQ",
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/remove_identified_duplicates"
+    },
+    "initialize_a_set_for_tracking": {
+      "semantic": "Initialize a set for tracking unique code blocks",
+      "io": {
+        "in": [
+          {
+            "name": "duplicate_code_blocks",
+            "type": "list"
+          },
+          {
+            "name": "duplicates_listed",
+            "type": "list"
+          }
+        ],
+        "out": [
+          {
+            "name": "duplicates_listed",
+            "type": "list"
+          },
+          {
+            "name": "unique_code_blocks",
+            "type": "set"
+          }
+        ]
+      },
+      "parent": "remove_identified_duplicates",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/remove_identified_duplicates/initialize_a_set_for_tracking"
+    },
+    "iterate_over_unique_code_blocks": {
+      "semantic": "Iterate over unique code blocks",
+      "io": {
+        "in": [
+          {
+            "name": "duplicates_listed",
+            "type": "list"
+          },
+          {
+            "name": "unique_code_blocks",
+            "type": "set"
+          }
+        ],
+        "out": [
+          {
+            "name": "cleaned_code_blocks",
+            "type": "list"
+          },
+          {
+            "name": "duplicates_listed",
+            "type": "list"
+          },
+          {
+            "name": "unique_code_blocks",
+            "type": "set"
+          }
+        ]
+      },
+      "parent": "remove_identified_duplicates",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/remove_identified_duplicates/iterate_over_unique_code_blocks"
+    },
+    "filter_out_duplicate_code_blocks": {
+      "semantic": "Filter out duplicate code blocks based on duplicates_listed",
+      "io": {
+        "in": [
+          {
+            "name": "duplicates_listed",
+            "type": "list"
+          },
+          {
+            "name": "unique_code_blocks",
+            "type": "set"
+          }
+        ],
+        "out": [
+          {
+            "name": "cleaned_code_blocks",
+            "type": "list"
+          },
+          {
+            "name": "duplicates_listed",
+            "type": "list"
+          }
+        ]
+      },
+      "parent": "remove_identified_duplicates",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/remove_identified_duplicates/filter_out_duplicate_code_blocks"
+    },
+    "return_cleaned_code_blocks": {
+      "semantic": "Return cleaned code blocks",
+      "io": {
+        "in": [
+          {
+            "name": "cleaned_code_blocks",
+            "type": "list"
+          },
+          {
+            "name": "duplicates_listed",
+            "type": "list"
+          }
+        ],
+        "out": [
+          {
+            "name": "cleaned_code_blocks",
+            "type": "list"
+          }
+        ]
+      },
+      "parent": "remove_identified_duplicates",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/remove_identified_duplicate_or_redundant/remove_identified_duplicates/return_cleaned_code_blocks"
+    },
+    "integrate_performance_monitoring_tools_for": {
+      "semantic": "Integrate performance monitoring tools for debugging",
+      "io": {
+        "in": [
+          {
+            "name": "none",
+            "type": "any"
+          }
+        ],
+        "out": [
+          {
+            "name": "debugging_tools",
+            "type": "dict"
+          }
+        ]
+      },
+      "parent": "code_optimizer",
+      "topology": "SEQ",
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for"
+    },
+    "identify_the_need_for_performance": {
+      "semantic": "Identify the need for performance monitoring tools",
+      "io": {
+        "in": [
+          {
+            "name": "none",
+            "type": "any"
+          }
+        ],
+        "out": [
+          {
+            "name": "need_for_monitoring",
+            "type": "bool"
+          }
+        ]
+      },
+      "parent": "integrate_performance_monitoring_tools_for",
+      "topology": "SEQ",
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/identify_the_need_for_performance"
+    },
+    "assess_the_current_environment_s": {
+      "semantic": "Assess the current environment's performance",
+      "io": {
+        "in": [
+          {
+            "name": "none",
+            "type": "any"
+          }
+        ],
+        "out": [
+          {
+            "name": "performance_assessment_result",
+            "type": "str"
+          }
+        ]
+      },
+      "parent": "identify_the_need_for_performance",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/identify_the_need_for_performance/assess_the_current_environment_s"
+    },
+    "analyze_the_results_to_determine": {
+      "semantic": "Analyze the results to determine if performance monitoring is needed",
+      "io": {
+        "in": [
+          {
+            "name": "performance_assessment_result",
+            "type": "str"
+          }
+        ],
+        "out": [
+          {
+            "name": "need_for_monitoring",
+            "type": "bool"
+          }
+        ]
+      },
+      "parent": "identify_the_need_for_performance",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/identify_the_need_for_performance/analyze_the_results_to_determine"
+    },
+    "select_appropriate_performance_monitoring_tools": {
+      "semantic": "Select appropriate performance monitoring tools",
+      "io": {
+        "in": [
+          {
+            "name": "need_for_monitoring",
+            "type": "bool"
+          }
+        ],
+        "out": [
+          {
+            "name": "selected_tools",
+            "type": "list"
+          }
+        ]
+      },
+      "parent": "integrate_performance_monitoring_tools_for",
+      "topology": "SEQ",
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/select_appropriate_performance_monitoring_tools"
+    },
+    "check_if_monitoring_is_needed": {
+      "semantic": "Check if monitoring is needed",
+      "io": {
+        "in": [
+          {
+            "name": "need_for_monitoring",
+            "type": "bool"
+          }
+        ],
+        "out": [
+          {
+            "name": "need_for_monitoring",
+            "type": "bool"
+          }
+        ]
+      },
+      "parent": "select_appropriate_performance_monitoring_tools",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/select_appropriate_performance_monitoring_tools/check_if_monitoring_is_needed"
+    },
+    "determine_appropriate_tools_based_on": {
+      "semantic": "Determine appropriate tools based on need",
+      "io": {
+        "in": [
+          {
+            "name": "need_for_monitoring",
+            "type": "bool"
+          }
+        ],
+        "out": [
+          {
+            "name": "need_for_monitoring",
+            "type": "bool"
+          },
+          {
+            "name": "selected_tools",
+            "type": "list"
+          }
+        ]
+      },
+      "parent": "select_appropriate_performance_monitoring_tools",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/select_appropriate_performance_monitoring_tools/determine_appropriate_tools_based_on"
+    },
+    "select_tools_from_predefined_list": {
+      "semantic": "Select tools from predefined list",
+      "io": {
+        "in": [
+          {
+            "name": "need_for_monitoring",
+            "type": "bool"
+          }
+        ],
+        "out": [
+          {
+            "name": "selected_tools",
+            "type": "list"
+          }
+        ]
+      },
+      "parent": "select_appropriate_performance_monitoring_tools",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/select_appropriate_performance_monitoring_tools/select_tools_from_predefined_list"
+    },
+    "output_selected_tools": {
+      "semantic": "Output selected tools",
+      "io": {
+        "in": [],
+        "out": [
+          {
+            "name": "selected_tools",
+            "type": "list"
+          }
+        ]
+      },
+      "parent": "select_appropriate_performance_monitoring_tools",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/select_appropriate_performance_monitoring_tools/output_selected_tools"
+    },
+    "integrate_selected_performance_monitoring_tools": {
+      "semantic": "Integrate selected performance monitoring tools into the debugging process",
+      "io": {
+        "in": [
+          {
+            "name": "need_for_monitoring",
+            "type": "any"
+          },
+          {
+            "name": "selected_tools",
+            "type": "any"
+          }
+        ],
+        "out": [
+          {
+            "name": "debugging_tools",
+            "type": "any"
+          }
+        ]
+      },
+      "parent": "integrate_performance_monitoring_tools_for",
+      "topology": "PAR",
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/integrate_selected_performance_monitoring_tools"
+    },
+    "check_if_performance_monitoring_is": {
+      "semantic": "Check if performance monitoring is needed",
+      "io": {
+        "in": [
+          {
+            "name": "need_for_monitoring",
+            "type": "any"
+          }
+        ],
+        "out": [
+          {
+            "name": "monitoring_needed",
+            "type": "any"
+          }
+        ]
+      },
+      "parent": "integrate_selected_performance_monitoring_tools",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/integrate_selected_performance_monitoring_tools/check_if_performance_monitoring_is"
+    },
+    "initialize_debugging_tools_dictionary": {
+      "semantic": "Initialize debugging tools dictionary",
+      "io": {
+        "in": [],
+        "out": [
+          {
+            "name": "debugging_tools",
+            "type": "any"
+          }
+        ]
+      },
+      "parent": "integrate_selected_performance_monitoring_tools",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/integrate_selected_performance_monitoring_tools/initialize_debugging_tools_dictionary"
+    },
+    "iterate_over_selected_performance_monitoring": {
+      "semantic": "Iterate over selected performance monitoring tools",
+      "io": {
+        "in": [
+          {
+            "name": "selected_tools",
+            "type": "any"
+          }
+        ],
+        "out": []
+      },
+      "parent": "integrate_selected_performance_monitoring_tools",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/integrate_selected_performance_monitoring_tools/iterate_over_selected_performance_monitoring"
+    },
+    "select_appropriate_tool_for_each": {
+      "semantic": "Select appropriate tool for each performance metric",
+      "io": {
+        "in": [
+          {
+            "name": "monitoring_needed",
+            "type": "any"
+          },
+          {
+            "name": "selected_tools",
+            "type": "any"
+          }
+        ],
+        "out": [
+          {
+            "name": "tool_choice",
+            "type": "any"
+          }
+        ]
+      },
+      "parent": "integrate_selected_performance_monitoring_tools",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/integrate_selected_performance_monitoring_tools/select_appropriate_tool_for_each"
+    },
+    "document_and_communicate_the_integration": {
+      "semantic": "Document and communicate the integration of performance monitoring tools",
+      "io": {
+        "in": [
+          {
+            "name": "debugging_tools",
+            "type": "dict"
+          }
+        ],
+        "out": []
+      },
+      "parent": "integrate_performance_monitoring_tools_for",
+      "topology": "SEQ",
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/document_and_communicate_the_integration"
+    },
+    "determine_the_type_of_debugging": {
+      "semantic": "Determine the type of debugging tools provided",
+      "io": {
+        "in": [
+          {
+            "name": "debugging_tools",
+            "type": "dict"
+          }
+        ],
+        "out": [
+          {
+            "name": "debugging_tools",
+            "type": "dict"
+          },
+          {
+            "name": "tool_type",
+            "type": "str"
+          }
+        ]
+      },
+      "parent": "document_and_communicate_the_integration",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/document_and_communicate_the_integration/determine_the_type_of_debugging"
+    },
+    "select_the_appropriate_performance_monitoring": {
+      "semantic": "Select the appropriate performance monitoring tools",
+      "io": {
+        "in": [
+          {
+            "name": "debugging_tools",
+            "type": "dict"
+          },
+          {
+            "name": "tool_type",
+            "type": "str"
+          }
+        ],
+        "out": [
+          {
+            "name": "performance_monitoring_tools",
+            "type": "list"
+          }
+        ]
+      },
+      "parent": "document_and_communicate_the_integration",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/document_and_communicate_the_integration/select_the_appropriate_performance_monitoring"
+    },
+    "document_the_integration_of_performance": {
+      "semantic": "Document the integration of performance monitoring tools",
+      "io": {
+        "in": [
+          {
+            "name": "performance_monitoring_tools",
+            "type": "list"
+          }
+        ],
+        "out": []
+      },
+      "parent": "document_and_communicate_the_integration",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/document_and_communicate_the_integration/document_the_integration_of_performance"
+    },
+    "communicate_the_integration_of_performance": {
+      "semantic": "Communicate the integration of performance monitoring tools",
+      "io": {
+        "in": [],
+        "out": []
+      },
+      "parent": "document_and_communicate_the_integration",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/integrate_performance_monitoring_tools_for/document_and_communicate_the_integration/communicate_the_integration_of_performance"
+    },
+    "set_up_environment_variables_and": {
+      "semantic": "Set up environment variables and configurations for debugging",
+      "io": {
+        "in": [
+          {
+            "name": "debugging_tools",
+            "type": "dict"
+          }
+        ],
+        "out": [
+          {
+            "name": "verification_result",
+            "type": "bool"
+          }
+        ]
+      },
+      "parent": "code_optimizer",
+      "topology": "SEQ",
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and"
+    },
+    "check_for_environment_variables_and": {
+      "semantic": "Check for environment variables and configurations",
+      "io": {
+        "in": [
+          {
+            "name": "key_name",
+            "type": "str"
+          }
+        ],
+        "out": [
+          {
+            "name": "environment_variables",
+            "type": "list"
+          }
+        ]
+      },
+      "parent": "set_up_environment_variables_and",
+      "topology": "SEQ",
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/check_for_environment_variables_and"
+    },
+    "read_environment_variables_from_the": {
+      "semantic": "Read environment variables from the system",
+      "io": {
+        "in": [
+          {
+            "name": "key_name",
+            "type": "str"
+          }
+        ],
+        "out": [
+          {
+            "name": "environment_variables",
+            "type": "list"
+          },
+          {
+            "name": "key_name",
+            "type": "str"
+          }
+        ]
+      },
+      "parent": "check_for_environment_variables_and",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/check_for_environment_variables_and/read_environment_variables_from_the"
+    },
+    "filter_environment_variables_by_name": {
+      "semantic": "Filter environment variables by name if provided",
+      "io": {
+        "in": [
+          {
+            "name": "key_name",
+            "type": "str"
+          }
+        ],
+        "out": [
+          {
+            "name": "environment_variables",
+            "type": "list"
+          }
+        ]
+      },
+      "parent": "check_for_environment_variables_and",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/check_for_environment_variables_and/filter_environment_variables_by_name"
+    },
+    "check_if_the_environment_variable": {
+      "semantic": "Check if the environment variable list is empty",
+      "io": {
+        "in": [
+          {
+            "name": "environment_variables",
+            "type": "list"
+          }
+        ],
+        "out": [
+          {
+            "name": "environment_variables",
+            "type": "list"
+          }
+        ]
+      },
+      "parent": "check_for_environment_variables_and",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/check_for_environment_variables_and/check_if_the_environment_variable"
+    },
+    "extract_environment_variable_values_to": {
+      "semantic": "Extract environment variable values to a list",
+      "io": {
+        "in": [
+          {
+            "name": "environment_variables",
+            "type": "list"
+          }
+        ],
+        "out": [
+          {
+            "name": "environment_variables",
+            "type": "list"
+          }
+        ]
+      },
+      "parent": "check_for_environment_variables_and",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/check_for_environment_variables_and/extract_environment_variable_values_to"
+    },
+    "retrieve_debugging_tools_configuration_from": {
+      "semantic": "Retrieve debugging tools configuration from environment variables",
+      "io": {
+        "in": [
+          {
+            "name": "environment_variables_list",
+            "type": "list"
+          }
+        ],
+        "out": [
+          {
+            "name": "debugging_configurations_dict",
+            "type": "dict"
+          }
+        ]
+      },
+      "parent": "set_up_environment_variables_and",
+      "topology": "SEQ",
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/retrieve_debugging_tools_configuration_from"
+    },
+    "extract_debugging_tools_configuration_from": {
+      "semantic": "Extract debugging tools configuration from list of environment variables",
+      "io": {
+        "in": [],
+        "out": [
+          {
+            "name": "config_keys_list",
+            "type": "list"
+          }
+        ]
+      },
+      "parent": "retrieve_debugging_tools_configuration_from",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/retrieve_debugging_tools_configuration_from/extract_debugging_tools_configuration_from"
+    },
+    "filter_and_sort_keys_for": {
+      "semantic": "Filter and sort keys for debugging configurations",
+      "io": {
+        "in": [
+          {
+            "name": "config_keys_list",
+            "type": "list"
+          }
+        ],
+        "out": [
+          {
+            "name": "debugging_config_keys_list",
+            "type": "list"
+          }
+        ]
+      },
+      "parent": "retrieve_debugging_tools_configuration_from",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/retrieve_debugging_tools_configuration_from/filter_and_sort_keys_for"
+    },
+    "retrieve_debugging_configurations_based_on": {
+      "semantic": "Retrieve debugging configurations based on filtered keys",
+      "io": {
+        "in": [
+          {
+            "name": "debugging_config_keys_list",
+            "type": "list"
+          }
+        ],
+        "out": [
+          {
+            "name": "debugging_configurations_dict",
+            "type": "dict"
+          }
+        ]
+      },
+      "parent": "retrieve_debugging_tools_configuration_from",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/retrieve_debugging_tools_configuration_from/retrieve_debugging_configurations_based_on"
+    },
+    "finalize_debugging_configuration_retrieval": {
+      "semantic": "Finalize debugging configuration retrieval",
+      "io": {
+        "in": [],
+        "out": [
+          {
+            "name": "debugging_configurations_dict",
+            "type": "dict"
+          }
+        ]
+      },
+      "parent": "retrieve_debugging_tools_configuration_from",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/retrieve_debugging_tools_configuration_from/finalize_debugging_configuration_retrieval"
+    },
+    "set_up_debugging_tools_configuration": {
+      "semantic": "Set up debugging tools configuration",
+      "io": {
+        "in": [
+          {
+            "name": "debugging_configurations",
+            "type": "dict"
+          }
+        ],
+        "out": [
+          {
+            "name": "none",
+            "type": "none"
+          }
+        ]
+      },
+      "parent": "set_up_environment_variables_and",
+      "topology": "SEQ",
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/set_up_debugging_tools_configuration"
+    },
+    "retrieve_default_debugging_configuration_settings": {
+      "semantic": "Retrieve default debugging configuration settings",
+      "io": {
+        "in": [],
+        "out": [
+          {
+            "name": "debugging_configurations",
+            "type": "dict"
+          },
+          {
+            "name": "default_debugging_configurations",
+            "type": "dict"
+          }
+        ]
+      },
+      "parent": "set_up_debugging_tools_configuration",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/set_up_debugging_tools_configuration/retrieve_default_debugging_configuration_settings"
+    },
+    "merge_provided_configurations_with_default": {
+      "semantic": "Merge provided configurations with default ones",
+      "io": {
+        "in": [
+          {
+            "name": "debugging_configurations",
+            "type": "dict"
+          },
+          {
+            "name": "default_debugging_configurations",
+            "type": "dict"
+          }
+        ],
+        "out": [
+          {
+            "name": "merged_debugging_configurations",
+            "type": "dict"
+          }
+        ]
+      },
+      "parent": "set_up_debugging_tools_configuration",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/set_up_debugging_tools_configuration/merge_provided_configurations_with_default"
+    },
+    "validate_and_sanitize_the_merged": {
+      "semantic": "Validate and sanitize the merged configurations",
+      "io": {
+        "in": [
+          {
+            "name": "merged_debugging_configurations",
+            "type": "dict"
+          }
+        ],
+        "out": [
+          {
+            "name": "validated_debugging_configurations",
+            "type": "dict"
+          }
+        ]
+      },
+      "parent": "set_up_debugging_tools_configuration",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/set_up_debugging_tools_configuration/validate_and_sanitize_the_merged"
+    },
+    "save_the_configured_debugging_settings": {
+      "semantic": "Save the configured debugging settings to a file",
+      "io": {
+        "in": [
+          {
+            "name": "validated_debugging_configurations",
+            "type": "dict"
+          }
+        ],
+        "out": [
+          {
+            "name": "none",
+            "type": "none"
+          }
+        ]
+      },
+      "parent": "set_up_debugging_tools_configuration",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/set_up_debugging_tools_configuration/save_the_configured_debugging_settings"
+    },
+    "verify_setup_with_current_configurations": {
+      "semantic": "Verify setup with current configurations",
+      "io": {
+        "in": [
+          {
+            "name": "setup_config",
+            "type": "dict"
+          }
+        ],
+        "out": [
+          {
+            "name": "verification_result",
+            "type": "bool"
+          }
+        ]
+      },
+      "parent": "set_up_environment_variables_and",
+      "topology": "SEQ",
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/verify_setup_with_current_configurations"
+    },
+    "retrieve_current_setup_configuration_from": {
+      "semantic": "Retrieve current setup configuration from database",
+      "io": {
+        "in": [
+          {
+            "name": "setup_config",
+            "type": "dict"
+          }
+        ],
+        "out": [
+          {
+            "name": "current_setup",
+            "type": "dict"
+          },
+          {
+            "name": "setup_config",
+            "type": "dict"
+          }
+        ]
+      },
+      "parent": "verify_setup_with_current_configurations",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/verify_setup_with_current_configurations/retrieve_current_setup_configuration_from"
+    },
+    "load_reference_setup_configuration_from": {
+      "semantic": "Load reference setup configuration from file",
+      "io": {
+        "in": [
+          {
+            "name": "setup_config",
+            "type": "dict"
+          }
+        ],
+        "out": [
+          {
+            "name": "current_setup",
+            "type": "dict"
+          },
+          {
+            "name": "reference_setup",
+            "type": "dict"
+          }
+        ]
+      },
+      "parent": "verify_setup_with_current_configurations",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/verify_setup_with_current_configurations/load_reference_setup_configuration_from"
+    },
+    "compare_current_setup_with_reference": {
+      "semantic": "Compare current setup with reference setup",
+      "io": {
+        "in": [
+          {
+            "name": "current_setup",
+            "type": "dict"
+          },
+          {
+            "name": "reference_setup",
+            "type": "dict"
+          }
+        ],
+        "out": [
+          {
+            "name": "verification_result",
+            "type": "bool"
+          }
+        ]
+      },
+      "parent": "verify_setup_with_current_configurations",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/verify_setup_with_current_configurations/compare_current_setup_with_reference"
+    },
+    "log_verification_result": {
+      "semantic": "Log verification result",
+      "io": {
+        "in": [
+          {
+            "name": "verification_result",
+            "type": "bool"
+          }
+        ],
+        "out": []
+      },
+      "parent": "verify_setup_with_current_configurations",
+      "topology": null,
+      "code_path": "io/output/workplace/code_optimizer/src/code_optimizer/set_up_environment_variables_and/verify_setup_with_current_configurations/log_verification_result"
     }
   },
-  "updated": "2026-05-26T04:44:15.957947+00:00"
+  "updated": "2026-05-26T17:30:53.385677+00:00"
 }

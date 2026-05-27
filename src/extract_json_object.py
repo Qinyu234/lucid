@@ -1,23 +1,4 @@
 def extract_json_object(text: str) -> dict | None:
-    import json
-    import re
-    if not text or not str(text).strip():
-        return None
-    raw = str(text).strip()
-    fenced = re.search('```(?:json)?\\s*(\\{.*?\\})\\s*```', raw, re.DOTALL | re.IGNORECASE)
-    if fenced:
-        raw = fenced.group(1).strip()
-    try:
-        data = json.loads(raw)
-        return data if isinstance(data, dict) else None
-    except json.JSONDecodeError:
-        pass
-    start = raw.find('{')
-    end = raw.rfind('}')
-    if start >= 0 and end > start:
-        try:
-            data = json.loads(raw[start:end + 1])
-            return data if isinstance(data, dict) else None
-        except json.JSONDecodeError:
-            return None
-    return None
+    from src.shared.validate.extract_json_object_util import extract_json_object_util
+
+    return extract_json_object_util(text)

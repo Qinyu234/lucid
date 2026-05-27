@@ -1,5 +1,9 @@
-# Pipeline errors; see exceptions.py and error_packet.py.
+from .error_packet import error_packet
+from .exceptions import exceptions
 
 
-def errors():
-    return None
+def errors(ctx=None):
+    ns = type("_ErrorsNS", (), {})()
+    ns.error_packet = error_packet
+    ns.PipelineError = exceptions()
+    return ns

@@ -1,5 +1,0 @@
-{
-  "default_api_url": "http://localhost:11434/api/generate",
-  "default_model": "qwen2.5-coder",
-  "scenarios": {}
-}

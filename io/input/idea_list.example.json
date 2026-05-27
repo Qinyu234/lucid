@@ -1,0 +1,10 @@
+{
+    "jobs": [
+        {
+            "id": "my_project",
+            "goal": "Describe your project goal here",
+            "language": "python",
+            "root_path": "io/output/workplace/my_project"
+        }
+    ]
+}
