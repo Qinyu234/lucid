@@ -8,7 +8,7 @@ def register_util(root: dict, job: dict | None=None, parent: dict | None=None, r
         registry['modules'][fn] = {'semantic': node.get('semantic', ''), 'io': io, 'parent': parent_fn, 'topology': node.get('topology'), 'code_path': node.get('code_path')}
         used_by = []
         if parent_fn:
-            used_by.append({'module': parent_fn, 'import': f'from .{fn} import {fn}', 'location': f"{parent.get('code_path', '')}/__init__.py"})
+            used_by.append({'module': parent_fn, 'import': f'from .{fn} import {fn}', 'location': f"{(parent or {}).get('code_path', '')}/__init__.py"})
         for side in ('in', 'out'):
             for field in io.get(side, []):
                 name = field['name']

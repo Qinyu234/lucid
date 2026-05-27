@@ -1,5 +1,5 @@
 def schema_util(value, schema: dict, path: str='$'):
-    from src.shared.lib.schema_util import schema_util
+    from src.shared.lib.schema_util import schema_util as load_schema_util
 
     class ValidationResult:
 
@@ -35,7 +35,7 @@ def schema_util(value, schema: dict, path: str='$'):
             file_name = 'io_spec_schema.json'
         elif ref == 'io_field':
             file_name = 'io_field.json'
-        return schema_util(file_name)
+        return load_schema_util(file_name)
 
     def validate_value(value, schema: dict, path: str, result: ValidationResult):
         if 'ref' in schema:
