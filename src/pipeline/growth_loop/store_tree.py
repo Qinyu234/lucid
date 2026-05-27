@@ -8,8 +8,10 @@ def store_tree(
     extra: dict | None = None,
     job_id: str | None = None,
 ):
-    from src.shared.lib.store_tree_util import store_tree_util
+    from src.pipeline.save_job_tree import save_job_tree
 
-    return store_tree_util(
+    if job is None:
+        return None
+    return save_job_tree(
         root, job, stage, status=status, issues=issues, extra=extra, job_id=job_id
     )

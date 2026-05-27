@@ -1,4 +1,16 @@
 def verify_test(code: str, function_name: str) -> tuple:
-    from src.shared.lib.verify_test_util import verify_test_util
+    import ast
 
-    return verify_test_util(code, function_name)
+    expected = f"test_{function_name}_smoke"
+    try:
+        tree = ast.parse(code)
+    except SyntaxError as exc:
+        return False, str(exc)
+    tests = [
+        node.name
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef) and node.name.startswith("test_")
+    ]
+    if expected not in tests:
+        return False, f"missing test function {expected}"
+    return True, ""

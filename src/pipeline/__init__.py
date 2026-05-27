@@ -3,6 +3,7 @@ from .code_tree import code_tree
 from .ensure_job_scaffold import ensure_job_scaffold
 from .errors import errors
 from .growth_loop import growth_loop
+from .memory import memory
 from .resolve_code_paths import resolve_code_paths
 from .save_job_tree import save_job_tree
 from .seed import seed

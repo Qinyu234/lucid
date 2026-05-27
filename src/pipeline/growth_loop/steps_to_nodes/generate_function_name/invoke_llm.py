@@ -1,4 +1,4 @@
 def invoke_llm(scenario, prompt, job_id=None):
-    from src.llm import llm
+    from src.shared.lib.llm_util import llm_util
 
-    return llm(scenario, prompt, job_id=job_id)
+    return llm_util(scenario, prompt, job_id=job_id)

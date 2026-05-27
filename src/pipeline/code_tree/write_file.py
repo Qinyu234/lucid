@@ -1,4 +1,4 @@
 def write_file(path, code):
-    from src.shared.lib.write_file_util import write_file_util
+    from src.shared.lib.path_write_text_util import path_write_text_util
 
-    write_file_util(path, code)
+    path_write_text_util(path, code)

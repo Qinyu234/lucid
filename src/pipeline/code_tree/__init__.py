@@ -1,6 +1,7 @@
 from .compile_module import compile_module
 from .conftest_setup import conftest_setup
 from .generate_code import generate_code
+from .generate_test import generate_test
 from .persist_leaf import persist_leaf
 from .render_init import render_init
 from .render_init_minimal import render_init_minimal

@@ -1,4 +1,23 @@
 def ensure_conftest(job: dict | None, job_id=None):
-    from src.shared.lib.ensure_conftest_util import ensure_conftest_util
+    from pathlib import Path
 
-    ensure_conftest_util(job, job_id)
+    from src.pipeline.code_tree.generate_test.render_conftest import render_conftest
+    from src.pipeline.code_tree.generate_test.tests_enabled import tests_enabled
+    from src.pipeline.code_tree.write_file import write_file
+    from src.shared.lib.app_config_util import app_config_util
+    from src.shared.logging.event_util import event_util
+    from src.shared.logging.get_logger_util import get_logger_util
+
+    if not tests_enabled() or not job:
+        return
+    cfg = app_config_util().get("tests", {})
+    if not cfg.get("write_conftest", True):
+        return
+    root_path = job.get("root_path")
+    if not root_path:
+        return
+    path = Path(root_path) / "conftest.py"
+    if path.exists():
+        return
+    write_file(str(path), render_conftest())
+    event_util(get_logger_util(job_id), "code_tree_write_conftest", path=str(path))

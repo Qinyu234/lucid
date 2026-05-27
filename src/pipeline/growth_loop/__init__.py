@@ -4,6 +4,7 @@ from .collect_growing_nodes import collect_growing_nodes
 from .dedupe_sibling_names import dedupe_sibling_names
 from .evaluate_split_bridge import evaluate_split_bridge
 from .expand import expand
+from .filter import filter
 from .seq_io_repair import seq_io_repair
 from .shared_ctx import shared_ctx
 from .steps_to_nodes import steps_to_nodes
