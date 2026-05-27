@@ -2,14 +2,15 @@ def register_leaf(node: dict, code: str, file_path: str):
     from datetime import datetime, timezone
     from pathlib import Path
 
-    from src.pipeline.code_tree.generate_code.verify_shared_code import verify_shared_code
-    from src.pipeline.memory.extract_keywords import extract_keywords
-    from src.pipeline.memory.load_entries import load_entries
-    from src.pipeline.memory.save_entries import save_entries
-    from src.pipeline.memory.shared_dir import shared_dir
+    from src.pipeline.code_tree.generate_code import verify_shared_code
     from src.shared.lib.shutil_copy_util import shutil_copy_util
     from src.shared.logging.get_logger_util import get_logger_util
     from src.shared.validate.io_normalize_util import io_normalize_util
+
+    from .extract_keywords import extract_keywords
+    from .load_entries import load_entries
+    from .save_entries import save_entries
+    from .shared_dir import shared_dir
 
     module = node.get("function_name") or "unnamed"
     target = Path(shared_dir()) / f"{module}.py"

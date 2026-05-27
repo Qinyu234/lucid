@@ -1,10 +1,11 @@
 def hybrid_retrieve(query_semantic: str, top_k: int | None = None) -> list:
-    from src.pipeline.memory.extract_keywords import extract_keywords
-    from src.pipeline.memory.keyword_score import keyword_score
-    from src.pipeline.memory.load_entries import load_entries
     from src.shared.lib.app_config_util import app_config_util
     from src.shared.lib.cosine_similarity_util import cosine_similarity_util
     from src.shared.lib.embed_model_util import embed_model_util
+
+    from .extract_keywords import extract_keywords
+    from .keyword_score import keyword_score
+    from .load_entries import load_entries
 
     cfg = app_config_util().get("memory", {})
     top_k = top_k or int(cfg.get("retrieve_top_k", 10))

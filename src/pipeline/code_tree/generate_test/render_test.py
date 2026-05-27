@@ -1,7 +1,8 @@
 def render_test(node: dict) -> str:
-    from src.pipeline.code_tree.generate_test.sample_values import sample_values
     from src.shared.validate.io_format_comment_util import io_format_comment_util
     from src.shared.validate.io_normalize_util import io_normalize_util
+
+    from .sample_values import sample_values
 
     def _ctx_data_block(io_in: list) -> str:
         if not io_in:

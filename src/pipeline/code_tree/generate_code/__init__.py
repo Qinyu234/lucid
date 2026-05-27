@@ -5,6 +5,7 @@ from .recall_code import recall_code
 from .render_reuse import render_reuse
 from .shared_ctx import shared_ctx
 from .verify_code import verify_code
+from .verify_shared_code import verify_shared_code
 
 
 def generate_code(node, max_retry=None, job_id=None, root=None):

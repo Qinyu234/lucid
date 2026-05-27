@@ -1,10 +1,11 @@
 def recall_for_reuse(node: dict, job_id: str | None = None) -> list:
-    from src.pipeline.memory.check_io_compatible import check_io_compatible
-    from src.pipeline.memory.hybrid_retrieve import hybrid_retrieve
-    from src.pipeline.memory.rerank_candidates import rerank_candidates
     from src.shared.lib.feature_util import feature_util
     from src.shared.logging.event_util import event_util
     from src.shared.logging.get_logger_util import get_logger_util
+
+    from .check_io_compatible import check_io_compatible
+    from .hybrid_retrieve import hybrid_retrieve
+    from .rerank_candidates import rerank_candidates
 
     logger = get_logger_util(job_id)
     semantic = node.get("semantic", "")

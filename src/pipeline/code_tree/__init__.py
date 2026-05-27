@@ -5,6 +5,7 @@ from .generate_test import generate_test
 from .persist_leaf import persist_leaf
 from .render_init import render_init
 from .render_init_minimal import render_init_minimal
+from .render_leaf_stub import render_leaf_stub
 from .shared_ctx import shared_ctx
 from .verify_generated import verify_generated
 from .write_file import write_file

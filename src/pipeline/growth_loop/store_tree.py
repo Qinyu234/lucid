@@ -8,7 +8,7 @@ def store_tree(
     extra: dict | None = None,
     job_id: str | None = None,
 ):
-    from src.pipeline.save_job_tree import save_job_tree
+    from src.pipeline import save_job_tree
 
     if job is None:
         return None

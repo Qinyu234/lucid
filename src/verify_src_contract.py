@@ -153,7 +153,15 @@ def verify_src_contract(src_root: Path | None = None) -> list[str]:
 
         from src.import_rules.compiler_adapter_stems import is_compiler_adapter_stem
 
-        if not is_compiler_adapter_stem(path.stem):
+        if is_compiler_adapter_stem(path.stem):
+            from src.import_rules.verify_adapter_file_imports import (
+                verify_adapter_file_imports,
+            )
+
+            ok, msg = verify_adapter_file_imports(tree, src_root=root)
+            if not ok:
+                issues.append(f"{rel_s}: {msg}")
+        else:
             ok, msg = verify_leaf_imports(tree)
             if not ok:
                 issues.append(f"{rel_s}: {msg}")

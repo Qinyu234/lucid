@@ -104,7 +104,7 @@ def verify_workplace_contract(job_root: Path, job_id: str | None = None) -> list
         code = py.read_text(encoding="utf-8")
         rel = py.relative_to(job_root)
         if py.name.startswith("test_") and py.suffix == ".py":
-            from src.pipeline.code_tree.generate_test.verify_test import verify_test
+            from src.pipeline.code_tree.generate_test import verify_test
 
             leaf_fn = py.stem[5:] if py.stem.startswith("test_") else py.stem
             vok, vmsg = verify_test(code, leaf_fn)

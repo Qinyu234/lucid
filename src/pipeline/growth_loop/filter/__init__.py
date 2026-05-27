@@ -1,4 +1,4 @@
-# Split filters; use evaluate_split from evaluate_split.py.
+from .evaluate_split import evaluate_split
 
 
 def filter():

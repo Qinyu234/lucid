@@ -2,7 +2,7 @@ def verify_code(code: str, node: dict) -> tuple:
     import os
 
     from src.import_rules.verify_generated_code import verify_generated_code
-    from src.pipeline.repair_node_code_path import repair_node_code_path
+    from src.pipeline import repair_node_code_path
 
     expected = node.get("function_name") or "unnamed"
     children = node.get("children", [])

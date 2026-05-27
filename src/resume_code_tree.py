@@ -1,9 +1,6 @@
 def resume_code_tree(job_id):
     from src.load_jobs import load_jobs
-    from src.pipeline.assess_job import assess_job
-    from src.pipeline.code_tree import code_tree
-    from src.pipeline.resolve_code_paths import resolve_code_paths
-    from src.pipeline.save_job_tree import save_job_tree
+    from src.pipeline import assess_job, code_tree, resolve_code_paths, save_job_tree
     from src.shared.io_tree.persist_registry_util import persist_registry_util
     from src.shared.lib.json_read_file_util import json_read_file_util
     from src.shared.lib.path_is_file_util import path_is_file_util

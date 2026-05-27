@@ -1,13 +1,14 @@
 def write_leaf_test(node: dict, job_id=None) -> bool:
     import logging
 
-    from src.pipeline.code_tree.generate_test.render_test import render_test
-    from src.pipeline.code_tree.generate_test.test_path_for_leaf import test_path_for_leaf
-    from src.pipeline.code_tree.generate_test.tests_enabled import tests_enabled
-    from src.pipeline.code_tree.generate_test.verify_test import verify_test
-    from src.pipeline.code_tree.write_file import write_file
+    from src.pipeline.code_tree import write_file
     from src.shared.logging.event_util import event_util
     from src.shared.logging.get_logger_util import get_logger_util
+
+    from .render_test import render_test
+    from .test_path_for_leaf import test_path_for_leaf
+    from .tests_enabled import tests_enabled
+    from .verify_test import verify_test
 
     if not tests_enabled():
         return False

@@ -1,12 +1,13 @@
 def ensure_conftest(job: dict | None, job_id=None):
     from pathlib import Path
 
-    from src.pipeline.code_tree.generate_test.render_conftest import render_conftest
-    from src.pipeline.code_tree.generate_test.tests_enabled import tests_enabled
-    from src.pipeline.code_tree.write_file import write_file
+    from src.pipeline.code_tree import write_file
     from src.shared.lib.app_config_util import app_config_util
     from src.shared.logging.event_util import event_util
     from src.shared.logging.get_logger_util import get_logger_util
+
+    from .render_conftest import render_conftest
+    from .tests_enabled import tests_enabled
 
     if not tests_enabled() or not job:
         return
