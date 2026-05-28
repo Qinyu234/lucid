@@ -237,7 +237,7 @@ One idea:
 <ul>
   <li>拆成节点+路径<br/>Split into nodes and paths</li>
   <li>给路径拟合效率函数<br/>Fit efficiency functions</li>
-  <li>用 maxflow + gene优化方法分配<br/>Optimize with maxflow+gene methods</li>
+  <li>maxflow寻路优化方法<br/>Optimize with maxflow methods</li>
 </ul>
 
 <p>
