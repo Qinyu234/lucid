@@ -1,0 +1,134 @@
+{
+  "version": "1.0.0",
+  "registration_requirements": {
+    "description": "Conditions that must be satisfied for template registration",
+    "required_fields": {
+      "template_json": {
+        "description": "Template metadata file must exist and be valid",
+        "required_sections": [
+          "id",
+          "version",
+          "kind",
+          "description",
+          "inputs",
+          "outputs",
+          "implementations",
+          "tests"
+        ],
+        "validation": "Must validate against template.schema.json"
+      },
+      "io_schema": {
+        "description": "Input/output port definitions must be complete",
+        "requirements": [
+          "Each port must have a shape from primitives or registered types",
+          "Each port must specify required (true/false)",
+          "Optional ports may specify default value",
+          "No 'any' type allowed, use explicit union if needed"
+        ]
+      },
+      "implementation": {
+        "description": "At least one implementation must exist",
+        "requirements": [
+          "implementations field must not be empty",
+          "For each implementation: kind, language, and code_file must be specified",
+          "code_file must exist in implementations/<language>/ directory"
+        ]
+      },
+      "tests": {
+        "description": "Test suite must be comprehensive",
+        "requirements": [
+          "tests.json file must exist",
+          "fixed_cases must contain at least one happy_path",
+          "generated_rules must specify test generation strategy"
+        ]
+      }
+    }
+  },
+  "test_requirements": {
+    "fixed_cases": {
+      "description": "Manually defined test cases",
+      "minimum_count": 1,
+      "required_types": {
+        "happy_path": {
+          "description": "Normal operation with valid inputs",
+          "required": true
+        },
+        "boundary": {
+          "description": "Edge cases (empty strings, zero values, etc.)",
+          "required": false,
+          "recommended": true
+        }
+      }
+    },
+    "generated_rules": {
+      "description": "Rules for automatic test case generation",
+      "required_strategies": [
+        "boundary",
+        "null_input",
+        "type_error",
+        "missing_port"
+      ],
+      "strategy_definitions": {
+        "boundary": {
+          "description": "Generate boundary values for constrained ports",
+          "examples": ["min/max values, empty collections, boundary strings"]
+        },
+        "null_input": {
+          "description": "Test null values for required ports",
+          "expected": "Should fail validation"
+        },
+        "type_error": {
+          "description": "Test wrong shape values for each port",
+          "expected": "Should fail validation or coerce if unsafe"
+        },
+        "missing_port": {
+          "description": "Omit each required port one at a time",
+          "expected": "Should fail validation"
+        }
+      }
+    }
+  },
+  "metadata_requirements": {
+    "id": {
+      "description": "Unique template identifier",
+      "format": "lowercase_with_underscores",
+      "uniqueness": "Must be unique across all templates"
+    },
+    "version": {
+      "description": "Semantic version following semver format",
+      "format": "major.minor.patch"
+    },
+    "kind": {
+      "description": "Template category",
+      "allowed_values": ["functional", "control", "macro"]
+    },
+    "tags": {
+      "description": "Semantic tags for search and discovery",
+      "recommended": true,
+      "examples": ["text_processing", "data_transformation", "io"]
+    }
+  },
+  "implementation_constraints": {
+    "function_signature": {
+      "description": "All implementations must follow standard signature",
+      "signature": "fn(inputs: dict, meta: dict) -> dict",
+      "inputs": "Dictionary mapping port names to values",
+      "meta": "Dictionary containing context (graph, templates, etc.)",
+      "outputs": "Dictionary mapping output port names to values"
+    },
+    "error_handling": {
+      "description": "Standardized error reporting",
+      "format": "Return dict with 'error' key on failure",
+      "error_structure": {
+        "error": "Error message string",
+        "error_type": "Classification of error (validation/runtime/etc.)"
+      }
+    },
+    "side_effects": {
+      "description": "Constraints on side effects",
+      "pure_functions": "Recommended for functional nodes",
+      "io_operations": "Allowed but should be documented",
+      "external_calls": "Allowed but should be documented and tested"
+    }
+  }
+}

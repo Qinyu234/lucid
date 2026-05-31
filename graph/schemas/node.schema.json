@@ -1,0 +1,147 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "node.schema.json",
+  "version": "1.0.0",
+
+  "definitions": {
+
+    "node_type": {
+      "type": "string",
+      "enum": ["functional", "control", "macro"]
+    },
+
+    "control_kind": {
+      "description": "Topology primitives. These are the only legal control node kinds.",
+      "type": "string",
+      "enum": ["SEQ", "ROUTER", "LOOP", "FORK", "MERGE", "MACRO"]
+    },
+
+    "node_base": {
+      "description": "Fields shared by all node types",
+      "type": "object",
+      "required": ["id", "type", "inputs", "outputs"],
+      "properties": {
+        "id":          { "$ref": "primitives.schema.json#/definitions/identifier" },
+        "type":        { "$ref": "#/definitions/node_type" },
+        "inputs":      { "$ref": "io.schema.json#/definitions/port_set" },
+        "outputs":     { "$ref": "io.schema.json#/definitions/port_set" },
+        "description": { "type": "string" },
+        "tags":        { "type": "array", "items": { "type": "string" } }
+      }
+    },
+
+    "functional_node": {
+      "description": "A node backed by a template implementation",
+      "allOf": [
+        { "$ref": "#/definitions/node_base" },
+        {
+          "required": ["template_id", "template_version"],
+          "properties": {
+            "type":             { "const": "functional" },
+            "template_id":      { "$ref": "primitives.schema.json#/definitions/identifier" },
+            "template_version": { "$ref": "primitives.schema.json#/definitions/semver" },
+            "params":           {
+              "type": "object",
+              "description": "Static parameter overrides (not connected via edge)"
+            }
+          }
+        }
+      ]
+    },
+
+    "control_node": {
+      "description": "A topology node. Carries structural parameters, no template.",
+      "allOf": [
+        { "$ref": "#/definitions/node_base" },
+        {
+          "required": ["kind", "children"],
+          "properties": {
+            "type":     { "const": "control" },
+            "kind":     { "$ref": "#/definitions/control_kind" },
+            "children": {
+              "type": "array",
+              "items": { "$ref": "primitives.schema.json#/definitions/identifier" },
+              "description": "Ordered list of child node ids"
+            },
+            "condition_port": {
+              "type": "string",
+              "description": "ROUTER only: which input port carries the routing value"
+            },
+            "branches": {
+              "type": "object",
+              "description": "ROUTER only: value → child_node_id mapping",
+              "additionalProperties": { "$ref": "primitives.schema.json#/definitions/identifier" }
+            },
+            "default_branch": {
+              "description": "ROUTER only: fallback child_node_id",
+              "$ref": "primitives.schema.json#/definitions/identifier"
+            },
+            "iterator_port": {
+              "type": "string",
+              "description": "LOOP only: which input port provides the iterable"
+            },
+            "body": {
+              "description": "LOOP only: child node id that is the loop body",
+              "$ref": "primitives.schema.json#/definitions/identifier"
+            },
+            "termination": {
+              "type": "object",
+              "description": "LOOP only: termination condition",
+              "properties": {
+                "max_iterations": { "type": "integer", "minimum": 1 },
+                "condition_port": { "type": "string" }
+              }
+            }
+          }
+        }
+      ]
+    },
+
+    "macro_node": {
+      "description": "A node that expands to a sub-graph",
+      "allOf": [
+        { "$ref": "#/definitions/node_base" },
+        {
+          "required": ["macro_id", "macro_version"],
+          "properties": {
+            "type":          { "const": "macro" },
+            "macro_id":      { "$ref": "primitives.schema.json#/definitions/identifier" },
+            "macro_version": { "$ref": "primitives.schema.json#/definitions/semver" }
+          }
+        }
+      ]
+    },
+
+    "node": {
+      "description": "Any node. Discriminated by 'type' field.",
+      "oneOf": [
+        { "$ref": "#/definitions/functional_node" },
+        { "$ref": "#/definitions/control_node" },
+        { "$ref": "#/definitions/macro_node" }
+      ]
+    },
+
+    "edge": {
+      "type": "object",
+      "required": ["id", "from_node", "from_port", "to_node", "to_port"],
+      "properties": {
+        "id":        { "$ref": "primitives.schema.json#/definitions/identifier" },
+        "from_node": { "$ref": "primitives.schema.json#/definitions/identifier" },
+        "from_port": { "type": "string" },
+        "to_node":   { "$ref": "primitives.schema.json#/definitions/identifier" },
+        "to_port":   { "type": "string" },
+        "coerce":    {
+          "type": "object",
+          "description": "Populated at validate time if coerce is needed",
+          "properties": {
+            "safety":    { "$ref": "primitives.schema.json#/definitions/coerce_safety" },
+            "coerce_fn": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+
+  }
+}

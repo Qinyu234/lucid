@@ -1,0 +1,127 @@
+{
+  "version": "1.0.0",
+  "shape_definitions": {
+    "string": {
+      "description": "Unicode text string",
+      "base_type": "primitive",
+      "constraints": {
+        "length": {"min": null, "max": null},
+        "pattern": null,
+        "encoding": "utf-8"
+      }
+    },
+    "integer": {
+      "description": "Signed integer number",
+      "base_type": "primitive",
+      "constraints": {
+        "min": null,
+        "max": null,
+        "multiple_of": null
+      }
+    },
+    "float": {
+      "description": "Floating point number",
+      "base_type": "primitive",
+      "constraints": {
+        "min": null,
+        "max": null,
+        "precision": null
+      }
+    },
+    "boolean": {
+      "description": "True or false value",
+      "base_type": "primitive",
+      "constraints": {}
+    },
+    "list": {
+      "description": "Ordered collection of items",
+      "base_type": "primitive",
+      "constraints": {
+        "item_type": null,
+        "min_length": null,
+        "max_length": null,
+        "unique_items": false
+      }
+    },
+    "dict": {
+      "description": "Key-value mapping",
+      "base_type": "primitive",
+      "constraints": {
+        "key_type": "string",
+        "value_type": null,
+        "required_keys": [],
+        "additional_keys": true
+      }
+    },
+    "timestamp": {
+      "description": "ISO 8601 datetime string",
+      "base_type": "primitive",
+      "constraints": {
+        "format": "iso8601",
+        "timezone": "utc"
+      }
+    },
+    "identifier": {
+      "description": "Unique identifier string",
+      "base_type": "primitive",
+      "constraints": {
+        "pattern": "^[a-z][a-z0-9_]*$",
+        "length": {"min": 1, "max": 256}
+      }
+    },
+    "semver": {
+      "description": "Semantic version string",
+      "base_type": "primitive",
+      "constraints": {
+        "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+      }
+    }
+  },
+  "custom_coerce_registry": {
+    "description": "Custom coercion functions registered beyond the base coerce table",
+    "entries": {
+      "string_to_integer": {
+        "from": "string",
+        "to": "integer",
+        "coercion_type": "unsafe",
+        "function": "int_parse",
+        "error_handling": "raises ValueError if not parseable"
+      },
+      "integer_to_float": {
+        "from": "integer",
+        "to": "float",
+        "coercion_type": "safe",
+        "function": "float_cast",
+        "error_handling": "never fails"
+      },
+      "list_to_string": {
+        "from": "list",
+        "to": "string",
+        "coercion_type": "unsafe",
+        "function": "join_strings",
+        "error_handling": "fails if list contains non-strings"
+      },
+      "string_to_list": {
+        "from": "string",
+        "to": "list",
+        "coercion_type": "unsafe",
+        "function": "split_string",
+        "error_handling": "splits on whitespace, returns list"
+      }
+    }
+  },
+  "type_aliases": {
+    "description": "Commonly used type compositions with semantic meaning",
+    "aliases": {
+      "text": "string",
+      "number": "float",
+      "path": "string",
+      "url": "string",
+      "email": "string",
+      "json": "string",
+      "yaml": "string",
+      "csv": "string",
+      "timestamp_ms": "integer"
+    }
+  }
+}

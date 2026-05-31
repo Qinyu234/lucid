@@ -1,0 +1,115 @@
+{
+  "version": "1.0.0",
+  "description": "Built-in Role definitions and their permission sets",
+  "roles": {
+    "Viewer": {
+      "description": "Read-only access to graphs and templates",
+      "permissions": [
+        "graph:read",
+        "template:read",
+        "trace:read"
+      ]
+    },
+    "Editor": {
+      "description": "Can edit graph structure but not execute",
+      "permissions": [
+        "graph:read",
+        "graph:write",
+        "node:lock",
+        "node:unlock",
+        "template:read",
+        "trace:read"
+      ]
+    },
+    "Executor": {
+      "description": "Can execute graphs and view traces",
+      "permissions": [
+        "graph:read",
+        "graph:execute",
+        "template:read",
+        "trace:read",
+        "trace:delete"
+      ]
+    },
+    "Developer": {
+      "description": "Can register and manage templates",
+      "permissions": [
+        "graph:read",
+        "graph:write",
+        "graph:execute",
+        "node:lock",
+        "node:unlock",
+        "template:read",
+        "template:register",
+        "trace:read",
+        "trace:delete"
+      ]
+    },
+    "Admin": {
+      "description": "Full administrative access",
+      "permissions": [
+        "graph:read",
+        "graph:write",
+        "graph:execute",
+        "graph:export",
+        "graph:admin",
+        "node:lock",
+        "node:unlock",
+        "template:read",
+        "template:register",
+        "template:admin",
+        "trace:read",
+        "trace:delete"
+      ]
+    }
+  },
+  "permission_atoms": {
+    "graph:read": {
+      "description": "View graph structure and metadata"
+    },
+    "graph:write": {
+      "description": "Modify graph structure (add/edit/delete nodes and edges)"
+    },
+    "graph:execute": {
+      "description": "Execute graph and view execution results"
+    },
+    "graph:export": {
+      "description": "Export graph to external formats"
+    },
+    "graph:admin": {
+      "description": "Administrative operations on graphs (delete, archive, etc.)"
+    },
+    "node:lock": {
+      "description": "Lock nodes to prevent edits by others"
+    },
+    "node:unlock": {
+      "description": "Unlock nodes (including unlocking nodes locked by others)"
+    },
+    "template:read": {
+      "description": "View template definitions and implementations"
+    },
+    "template:register": {
+      "description": "Register new templates in the operator registry"
+    },
+    "template:admin": {
+      "description": "Administrative operations on templates (delete, deprecate, etc.)"
+    },
+    "trace:read": {
+      "description": "View execution traces and logs"
+    },
+    "trace:delete": {
+      "description": "Delete execution traces and logs"
+    }
+  },
+  "scope_hierarchy": {
+    "description": "Permission scope inheritance from most specific to most general",
+    "levels": [
+      "Node",
+      "Graph",
+      "Project",
+      "Team",
+      "Org"
+    ],
+    "inheritance_rule": "Permissions granted at a higher scope apply to all lower scopes"
+  }
+}

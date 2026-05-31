@@ -1,0 +1,132 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "primitives.schema.json",
+  "version": "1.0.0",
+
+  "definitions": {
+
+    "shape": {
+      "description": "All legal data shapes in the system. No 'any'. Union is the explicit escape.",
+      "type": "string",
+      "enum": ["string", "number", "bool", "bytes", "list", "dict", "null", "enum", "union"]
+    },
+
+    "constraint_string": {
+      "type": "object",
+      "properties": {
+        "min_length": { "type": "integer", "minimum": 0 },
+        "max_length": { "type": "integer", "minimum": 0 },
+        "pattern":    { "type": "string", "description": "regex" }
+      },
+      "additionalProperties": false
+    },
+
+    "constraint_number": {
+      "type": "object",
+      "properties": {
+        "min":          { "type": "number" },
+        "max":          { "type": "number" },
+        "integer_only": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+
+    "constraint_list": {
+      "type": "object",
+      "properties": {
+        "min_items": { "type": "integer", "minimum": 0 },
+        "max_items": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+
+    "port_schema": {
+      "description": "How a port describes the data it carries. Type is a lens, not a label.",
+      "type": "object",
+      "required": ["shape"],
+      "properties": {
+
+        "shape": { "$ref": "#/definitions/shape" },
+
+        "items": {
+          "description": "Element schema when shape=list",
+          "$ref": "#/definitions/port_schema"
+        },
+
+        "fields": {
+          "description": "Field schemas when shape=dict",
+          "type": "object",
+          "additionalProperties": { "$ref": "#/definitions/port_schema" }
+        },
+
+        "values": {
+          "description": "Legal values when shape=enum",
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+
+        "variants": {
+          "description": "Allowed shapes when shape=union. Must be explicit, cannot include union itself.",
+          "type": "array",
+          "items": { "$ref": "#/definitions/shape" },
+          "minItems": 2
+        },
+
+        "required": {
+          "description": "When used as a dict field: is this field required?",
+          "type": "boolean",
+          "default": true
+        },
+
+        "constraints": {
+          "description": "Shape-specific value constraints",
+          "type": "object"
+        },
+
+        "description": { "type": "string" }
+      },
+
+      "allOf": [
+        {
+          "if":   { "properties": { "shape": { "const": "list" } } },
+          "then": { "required": ["items"] }
+        },
+        {
+          "if":   { "properties": { "shape": { "const": "enum" } } },
+          "then": { "required": ["values"] }
+        },
+        {
+          "if":   { "properties": { "shape": { "const": "union" } } },
+          "then": { "required": ["variants"] }
+        }
+      ],
+
+      "additionalProperties": false
+    },
+
+    "coerce_safety": {
+      "description": "safe=auto coerce, unsafe=coerce but may fail at runtime, forbidden=reject at connect time",
+      "type": "string",
+      "enum": ["safe", "unsafe", "forbidden"]
+    },
+
+    "identifier": {
+      "description": "Shared format for all ids in the system",
+      "type": "string",
+      "pattern": "^[a-z0-9_][a-z0-9_\\-\\.]*$",
+      "maxLength": 128
+    },
+
+    "semver": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    }
+
+  }
+}

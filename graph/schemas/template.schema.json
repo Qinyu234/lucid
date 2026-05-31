@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "template.schema.json",
+  "version": "1.0.0",
+  "description": "A template defines what a functional node does: its io contract, implementations, and tests.",
+
+  "type": "object",
+  "required": ["id", "version", "schema_version", "inputs", "outputs", "implementations", "tests"],
+
+  "properties": {
+
+    "id":             { "$ref": "primitives.schema.json#/definitions/identifier" },
+    "version":        { "$ref": "primitives.schema.json#/definitions/semver" },
+    "schema_version": { "$ref": "primitives.schema.json#/definitions/semver" },
+    "name":           { "type": "string" },
+    "description":    { "type": "string" },
+    "tags":           { "type": "array", "items": { "type": "string" } },
+
+    "inputs":  { "$ref": "io.schema.json#/definitions/port_set" },
+    "outputs": { "$ref": "io.schema.json#/definitions/port_set" },
+
+    "implementations": {
+      "type": "object",
+      "description": "Map of language → implementation path",
+      "properties": {
+        "python": { "$ref": "#/definitions/implementation" },
+        "cpp":    { "$ref": "#/definitions/implementation" },
+        "rust":   { "$ref": "#/definitions/implementation" }
+      },
+      "minProperties": 1,
+      "additionalProperties": false
+    },
+
+    "tests": { "$ref": "#/definitions/test_suite" }
+
+  },
+
+  "additionalProperties": false,
+
+  "definitions": {
+
+    "implementation": {
+      "type": "object",
+      "required": ["code_file"],
+      "properties": {
+        "code_file":  { "type": "string", "description": "Path to .tpl file relative to template dir" },
+        "test_file":  { "type": "string", "description": "Path to test .tpl file" },
+        "deps":       { "type": "array", "items": { "type": "string" }, "description": "Package dependencies" }
+      },
+      "additionalProperties": false
+    },
+
+    "test_case": {
+      "type": "object",
+      "required": ["id", "inputs", "expect"],
+      "properties": {
+        "id":          { "$ref": "primitives.schema.json#/definitions/identifier" },
+        "description": { "type": "string" },
+        "inputs":      { "type": "object" },
+        "expect": {
+          "type": "object",
+          "properties": {
+            "outputs":    { "type": "object", "description": "Expected output values (exact match)" },
+            "properties": {
+              "type": "array",
+              "description": "Property-based assertions. Each is a Python expression string.",
+              "items": { "type": "string" }
+            },
+            "error":      { "type": "boolean", "description": "True if this case should raise an error" }
+          },
+          "additionalProperties": false
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["happy_path", "boundary", "null_input", "type_error", "missing_port", "overflow", "custom"]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "generated_rules": {
+      "description": "Rules for the test generator to auto-produce cases from io schema",
+      "type": "object",
+      "properties": {
+        "boundary":     { "type": "boolean", "description": "Generate min/max constraint cases" },
+        "null_input":   { "type": "boolean", "description": "Pass null to each required port" },
+        "type_error":   { "type": "boolean", "description": "Pass wrong shape to each port" },
+        "missing_port": { "type": "boolean", "description": "Omit each required port one at a time" },
+        "overflow":     { "type": "boolean", "description": "Exceed constraint limits" }
+      },
+      "additionalProperties": false
+    },
+
+    "test_suite": {
+      "type": "object",
+      "required": ["fixed_cases", "generated_rules"],
+      "properties": {
+        "fixed_cases":     {
+          "type": "array",
+          "items": { "$ref": "#/definitions/test_case" },
+          "minItems": 1,
+          "description": "At least one happy_path case required"
+        },
+        "generated_rules": { "$ref": "#/definitions/generated_rules" }
+      },
+      "additionalProperties": false
+    }
+
+  }
+}

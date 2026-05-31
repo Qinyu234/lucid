@@ -1,0 +1,376 @@
+PROJECT TODO
+Graph Compiler Architecture
+Source of truth: graph/ + templates/ + rules/
+Target: self-hosting system that can rewrite itself via graph
+
+设计原则（不随 phase 变化）
+
+graph 是 L1 source of truth，code 是 compiler artifact
+tree（语义意图）和 graph（执行结构）双向影响，可回溯，可异步
+所有模块满足 fn(inputs, meta) -> dict 签名（自举前提）
+schema 字段只能通过 compiler/accessor/schema_accessor.py 访问
+没有 any 类型，union 必须显式列出 variants
+没有通过测试的 template 不能注册进 registry
+core（loader/validator/executor/codegen）零 web 框架依赖
+
+
+PHASE 0 — Schema 地基
+目标：所有数据结构定义完毕，后续代码有稳定的地基
+状态：✅ 完成
+graph/schemas/
+[x] primitives.schema.json   原子定义：shape, identifier, semver, timestamp
+[x] io.schema.json           port 定义 + coerce 表（safe/unsafe/forbidden）
+[x] node.schema.json         functional / control / macro node + edge
+[x] graph.schema.json        graph L1 顶层结构（nodes, edges, root_id）
+[x] template.schema.json     template + test suite 定义
+[x] operation.schema.json    graph protocol operations + 冲突仲裁规则
+compiler/accessor/
+[x] schema_accessor.py       唯一允许直接读 schema 字段的文件
+schema 改字段时只改这一个文件
+graph/schemas/
+[x] SCHEMA_GUIDE.md          扩展速查：加新 shape/op/control node 各改哪些文件
+rules/
+[ ] graph_rules.json         图结构约束 + 冲突仲裁规则
+内容：禁止裸环路，root 唯一，节点引用合法
+冲突规则：same_node_param=last_write_wins 等
+rewrite rules 占位（Phase 6 填入）
+[ ] topology_rules.json      各 control node 合法参数和子结构
+SEQ/ROUTER/LOOP/FORK/MERGE/MACRO 各自约束
+[ ] io_rules.json            shape 集合说明 + coerce 表使用规则
+[ ] template_rules.json      template 注册必须满足的条件
+必须有 io schema / implementation / tests
+fixed_cases 至少一个 happy_path
+[ ] test_rules.json          测试必须覆盖的 case 类型
+boundary / null_input / type_error / missing_port
+[ ] codegen_rules.json       LLM 代码生成约束（标记 phase:codegen，Phase 4 前不执行）
+单文件单函数 / fn(inputs,meta)->dict / import 约束
+registry/
+[ ] type_registry.json       shape 定义 + 自定义 coerce 注册表
+[ ] operator_registry.json   template 注册表（id, version, location, tags）
+[ ] template_index.json      空文件，Phase 5 build_index.py 填充
+permissions/
+[ ] roles.json               内置 Role 定义
+Viewer / Editor / Executor / Developer / Admin
+每个 Role 对应的 Permission 原子集合
+
+PHASE 1 — 最小解释器
+目标：第一个 graph 能被加载、验证、解释执行，结果写入 trace
+完成标志：parse_text → save_json 跑通，runtime/traces/ 有输出
+compiler/loader/
+[ ] load_graph.py            读 graph/l1/latest.json
+validate against graph.schema.json
+返回 graph dict（通过 accessor 访问）
+[ ] load_template.py         读 templates/<kind>/<id>/template.json
+validate against template.schema.json
+返回 template dict
+[ ] load_rules.py            读 rules/ 目录下所有 json
+返回合并后的 rules dict
+compiler/passes/
+[ ] pass_runner.py           顺序执行 pass 列表
+支持 until 参数（validate/lower/optimize）
+validate 阶段失败立即停止
+接口：run_pipeline(graph, meta, until=None)
+[ ] 001_validate_nodes.py    所有 node 的 template_id 在 operator_registry 里
+control node 的 kind 在合法集合里
+[ ] 002_validate_edges.py    edge 的 from_node/to_node 存在
+from_port/to_port 在对应 node 的 outputs/inputs 里
+[ ] 003_validate_types.py    查 io.schema.json 的 coerce_table
+safe → 通过
+unsafe → 通过，在 edge.coerce 里标记
+forbidden → 报错，拒绝执行
+[ ] 010_lower_loop.py        占位文件，Phase 3 实现
+[ ] 020_fold_constants.py    占位文件，Phase 6 实现
+compiler/runtime/
+[ ] execute_graph.py         入口：load → pass_runner → dispatch root node
+dispatch 规则：node type → 对应 execute_*.py
+接口：fn(inputs, meta) -> dict
+[ ] execute_seq.py           顺序执行 children
+前一个 node 的 outputs 注入后一个 node 的 inputs
+接口：fn(inputs, meta) -> dict
+meta 包含：children, graph, templates, context
+[ ] trace_runtime.py         每个 node 执行时记录：
+input / output / duration / status / error
+写入 runtime/traces/<run_id>/node_traces/<node_id>.json
+graph/l1/
+[ ] latest.json              第一个可运行 graph
+两个节点：parse_text → save_json
+root: SEQ，children: [parse_text_node, save_json_node]
+templates/functional/parse_text/
+[ ] template.json            inputs: {text: string}
+outputs: {tokens: list[string]}
+implementations: python
+tests: 见 tests.json
+[ ] tests.json               fixed_cases:
+- happy_path: "hello world" → ["hello","world"]
+- boundary: "" → []
+generated_rules: boundary/null_input/type_error/missing_port
+[ ] implementations/python/code.py.tpl
+templates/functional/save_json/
+[ ] template.json            inputs: {data: dict, path: string}
+outputs: {success: bool, path: string}
+implementations: python
+[ ] tests.json
+[ ] implementations/python/code.py.tpl
+templates/control/seq/
+[ ] template.json            SEQ control node 的 schema 描述
+runtime/traces/
+[ ] <run_id>/manifest.json        graph_id, graph_version, timestamp, trigger
+[ ] <run_id>/execution_order.json 实际执行的 node 顺序
+[ ] <run_id>/node_traces/         每个 node 一个文件
+[ ] <run_id>/errors.json          如果有错误
+io/input/
+[ ] sample.txt               parse_text 的测试输入
+run.py
+[ ] 读 graph/l1/latest.json
+→ load_rules → load_graph → load_template
+→ pass_runner（full pipeline）
+→ execute_graph
+→ 写 runtime/traces/<run_id>/
+
+PHASE 2 — 测试系统
+目标：每个 template 有自动生成的测试，不合格不能注册
+compiler/passes/
+[ ] 004_validate_tests.py    检查 tests.json 格式合法
+fixed_cases 至少一个 happy_path
+generated_rules 字段合法
+compiler/codegen/python/
+[ ] generate_tests.py        从 io schema + generated_rules 自动生成 test cases
+boundary：对每个有 constraints 的 port 生成边界值
+null_input：对每个 required port 传 null
+type_error：对每个 port 传错误 shape 的值
+missing_port：逐一省略每个 required port
+property assertions：从 port schema 推断
+tests/templates/
+[ ] test_parse_text.py       跑 parse_text 所有 fixed + generated cases
+[ ] test_save_json.py
+tests/compiler/
+[ ] test_pass_runner.py      pass 顺序、until 参数、validate 失败停止
+[ ] test_validate_types.py   coerce 表各格子的判断结果
+[ ] test_schema_accessor.py  accessor 函数覆盖测试
+
+PHASE 3 — 控制流
+目标：ROUTER / LOOP / FORK / MERGE 可用
+compiler/passes/
+[ ] 010_lower_loop.py        实现：LOOP node 展开
+iterator_port 绑定，body 重复执行，termination 检查
+[ ] 011_lower_router.py      ROUTER condition 分析，标记 branch 选择逻辑
+[ ] 012_lower_fork.py        FORK 并行标记，标记哪些 node 可并行
+compiler/runtime/
+[ ] execute_router.py        读 condition_port 的值
+查 branches 映射，dispatch 到对应子节点
+condition 值不在 branches 里 → 走 default_branch
+接口：fn(inputs, meta) -> dict
+[ ] execute_loop.py          读 iterator_port，迭代执行 body
+检查 termination（max_iterations / condition_port）
+接口：fn(inputs, meta) -> dict
+[ ] execute_fork.py          并行执行所有 children（asyncio）
+等待所有完成，收集 outputs
+接口：fn(inputs, meta) -> dict
+MERGE 逻辑合并进来，不单独一个文件
+templates/control/
+[ ] router/template.json     condition_port, branches, default_branch
+[ ] loop/template.json       iterator_port, body, termination
+[ ] fork/template.json       children（并行）
+[ ] merge/template.json      等待对应 fork 的所有 branch
+tests/compiler/
+[ ] test_execute_router.py
+[ ] test_execute_loop.py
+[ ] test_execute_fork.py
+
+PHASE 4 — Codegen
+目标：graph → 通用 IR → Python/C++/Rust 代码，结果和解释执行一致
+compiler/codegen/
+[ ] ir.py                    通用 IR 定义（不依赖任何语言）
+Statement 类型：Assign / Call / If / Loop / Return
+每个 Statement 满足 fn(inputs, meta) -> dict
+compiler/lowering/
+[ ] lower_graph.py           Graph L2 → 通用 IR
+SEQ → 顺序 Statement 列表
+ROUTER → If Statement
+LOOP → Loop Statement
+functional node → Call Statement
+compiler/codegen/python/
+[ ] generate_leaf.py         IR Call → Python 函数文件
+[ ] generate_init.py         IR 包结构 → init.py
+[ ] generate_run.py          IR 入口 → run.py
+[ ] emit_project.py          组装完整项目到 output/python/generated_project/
+compiler/codegen/cpp/
+[ ] ir_to_cpp.py             IR → C++ 文件（结构同 python）
+compiler/codegen/rust/
+[ ] ir_to_rust.py            IR → Rust 文件
+tests/compiler/
+[ ] test_codegen_parity.py   对同一个 graph：
+解释执行结果 == codegen 生成代码执行结果
+output/python/generated_project/
+[ ] src/shared/              工具函数（仅标准库）
+[ ] src/<project_name>/      业务节点代码
+[ ] io/input/ io/output/
+[ ] tests/
+[ ] requirement/
+[ ] run.py
+
+PHASE 5 — 搜索和发现
+参考：R 语言 ?? 搜索（按语义，不按名字）
+registry/search_index/
+[ ] by_io_signature.json     按 input/output shape 组合索引所有 template
+例：{string} → {list[string]} → [parse_text, tokenize, ...]
+[ ] by_semantic_tag.json     按 tags 索引
+[ ] build_index.py           从 operator_registry 重建两个索引
+editor/backend/
+[ ] search_templates.py      接口1：给定 port schema，返回 input 兼容的 template 列表
+接口2：给定语义描述字符串，返回相关 template 列表
+连线时实时调用接口1，推荐可接的 template
+
+PHASE 6 — Pattern 和优化
+参考：egg equality saturation，rewrite rules 作为数据
+rules/graph_rules.json
+[ ] 填入 rewrite rules（等价变换规则）
+SEQ(A, SEQ(B,C)) → SEQ(A,B,C)          结合律
+FORK(A)+MERGE，A无副作用 → A            消除无意义并行
+SEQ(const_node, B) → 折叠常量进B        常量折叠
+compiler/passes/
+[ ] 020_fold_constants.py    实现：读 rewrite rules，折叠常量节点
+[ ] 021_dedupe_nodes.py      实现：相同 template_id + 相同 params → 合并
+[ ] 022_rewrite_rules.py     读 graph_rules.json 的 rewrite rules
+应用等价变换，选代价最小的形式
+[ ] 023_pattern_detect.py    识别重复出现的 subgraph pattern
+超过 N 次 → 建议用户打包为 MACRO
+templates/macro/
+[ ] <macro_id>/template.json MACRO template：implementation 是内嵌子 graph
+格式同 functional template，但 implementations
+包含 subgraph 字段而非 code_file
+
+PHASE 7 — 权限系统
+参考：Azure RBAC（身份 × 角色 × 范围）
+permissions/
+[ ] roles.json               实现内容：
+Permission 原子集合：
+graph:read/write/execute/export/admin
+node:lock/unlock
+template:read/register/admin
+trace:read/delete
+内置 Role → Permission 映射表
+[ ] assignments/             <graph_id>.json：谁在这个 graph 是什么 Role
+[ ] policies/                <org_id>.json：组织级继承策略
+web/api/
+[ ] auth.py                  session 管理（身份验证）
+[ ] permission_check.py      fn(user_id, graph_id, permission) -> allow/deny
+[ ] scope_resolver.py        沿 Scope 树向上查找：
+Node → Graph → Project → Team → Org
+
+PHASE 8 — 协作机制
+参考：Word 网页版（authority server + 乐观执行）+ Azure 权限
+离线策略：freeze 无锁节点，持有锁的节点可继续编辑，重连后 rebase
+multiplayer/sessions/
+[ ] <session_id>.json        在线用户列表 + presence 状态
+presence：cursor(node_id) / color / status(idle/editing/executing)
+ephemeral，不进 operation log
+multiplayer/locks/
+[ ] <graph_id>/<node_id>.json  节点锁
+locked_by, locked_at, expires_at
+默认超时 5 分钟，Admin 可强制解锁
+multiplayer/patches/
+[ ] <graph_id>/<op_id>.json  服务器确认的 operation log
+按 parent_op_id 形成链表（支持 rebase）
+multiplayer/users/
+[ ] <user_id>.json           用户信息 + 颜色分配（固定，不随 session 变）
+web/websocket/
+[ ] presence.py              broadcast presence 给同 graph 的所有在线用户
+不存盘，连接断开自动清除
+[ ] operation_handler.py     接收 operation → 执行验证链：
+1. session 合法
+2. permission_check
+3. lock_check（涉及节点未被他人锁定）
+4. pass_runner validate 阶段
+5. conflict_resolver
+6. apply → broadcast
+[ ] conflict_resolver.py     按 graph_rules.json 的冲突规则仲裁
+same_node_param → last_write_wins
+same_port_edge → first_write_wins
+double_remove → idempotent
+remove + edit → remove_wins
+[ ] offline_rebase.py        重连时处理离线 operation queue
+找分叉点（parent_op_id 链表对比）
+自动 rebase 或标记需要手动合并
+fork graph 选项：本地副本 → rebase 流程
+workspace/
+[ ] session.json             本地离线 operation queue（断网时累积）
+重连时提交给 offline_rebase.py
+[ ] current_graph.json       本地 graph 副本（含 freeze 状态标记）
+freeze_reason: "no_lock" | "locked_by_other"
+editor/backend/
+[ ] sync_graph.py            editor ↔ websocket 双向同步
+[ ] autosave.py              定期将 canonical graph 写入 graph/l1/latest.json
+
+PHASE 9 — Editor
+核心：基于 React Flow，不自己写图编辑底层
+editor/frontend/blocks/
+[ ] FunctionalNode.jsx       functional node 的渲染组件
+显示：名称 / io ports / 执行状态
+[ ] ControlNode.jsx          SEQ/ROUTER/LOOP/FORK/MERGE 各自的渲染
+[ ] MacroNode.jsx            可展开/折叠的 macro 节点
+editor/frontend/graph/
+[ ] GraphCanvas.jsx          React Flow 画布
+operation dispatch：用户操作 → op → websocket
+[ ] EdgeRenderer.jsx         连线颜色：绿(safe) / 黄(unsafe coerce) / 红(forbidden)
+连线时实时查 coerce_table，高亮可接的 port
+editor/frontend/inspector/
+[ ] NodeInspector.jsx        选中节点的参数编辑面板
+显示 io schema / params / test status
+editor/frontend/search/
+[ ] TemplateSearch.jsx       调用 search_templates.py
+连线拖出时自动弹出兼容 template 列表
+支持语义搜索
+editor/frontend/renderer/
+[ ] PresenceLayer.jsx        显示其他用户的 cursor（颜色 + 头像）
+[ ] LockIndicator.jsx        节点锁定状态显示（锁图标 + 锁定者头像）
+[ ] TraceOverlay.jsx         执行后高亮实际走过的 edge 和 node
+web/api/
+[ ] graph_api.py             REST endpoints：
+GET  /graph/<id>
+POST /graph/<id>/execute
+GET  /graph/<id>/traces
+[ ] websocket_api.py         WebSocket endpoint：
+operation stream + presence broadcast
+web/static/
+[ ] editor 前端构建产物（从 editor/frontend/ 构建）
+
+PHASE ∞ — 自举
+目标：系统能用 graph 描述自身，compiler 重新生成自身并验证等价
+compiler/ 所有模块
+[ ] 确认每个模块满足 fn(inputs, meta) -> dict 签名
+load_graph / load_template / pass_runner / execute_seq 等全部验证
+graph/l1/
+[ ] execute_seq.graph.json       用 graph 描述 execute_seq 的逻辑
+[ ] pass_runner.graph.json       用 graph 描述 pass_runner
+[ ] validate_nodes.graph.json    用 graph 描述 001_validate_nodes
+compiler/
+[ ] bootstrap.py                 从 graph 描述编译生成对应 Python 模块
+替换原始手写文件
+运行完整测试套件，验证行为等价
+tests/integration/
+[ ] test_bootstrap.py            执行自举：
+1. 编译 execute_seq.graph → execute_seq_generated.py
+2. 用 generated 版本跑 Phase 1 的 graph
+3. 对比 trace：输出完全一致
+4. 替换 execute_seq.py，系统还能跑
+
+文件数量统计（预估）
+Phase 0：  15 个文件（已完成 8 个）
+Phase 1：  25 个文件
+Phase 2：   8 个文件
+Phase 3：  12 个文件
+Phase 4：  15 个文件
+Phase 5：   4 个文件
+Phase 6：   8 个文件
+Phase 7：   6 个文件
+Phase 8：  12 个文件
+Phase 9：  15 个文件
+Phase ∞：   8 个文件
+─────────────────
+合计：    ~128 个文件
+
+当前状态
+完成：Phase 0 schema 文件（8/15）
+下一步：Phase 0 剩余（rules/ + registry/ + permissions/）
+然后：Phase 1 loader + pass_runner + 第一个可运行 graph

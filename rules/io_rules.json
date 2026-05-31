@@ -1,0 +1,108 @@
+{
+  "version": "1.0.0",
+  "shape_collection": {
+    "description": "Available primitive shapes and their characteristics",
+    "primitives": {
+      "string": {
+        "description": "Unicode text string",
+        "constraints": ["length", "pattern", "encoding"]
+      },
+      "integer": {
+        "description": "Signed integer number",
+        "constraints": ["min", "max", "multiple_of"]
+      },
+      "float": {
+        "description": "Floating point number",
+        "constraints": ["min", "max", "precision"]
+      },
+      "boolean": {
+        "description": "True or false value",
+        "constraints": []
+      },
+      "list": {
+        "description": "Ordered collection of items",
+        "constraints": ["item_type", "min_length", "max_length", "unique_items"]
+      },
+      "dict": {
+        "description": "Key-value mapping",
+        "constraints": ["key_type", "value_type", "required_keys", "additional_keys"]
+      },
+      "timestamp": {
+        "description": "ISO 8601 datetime string",
+        "constraints": ["format", "timezone"]
+      },
+      "identifier": {
+        "description": "Unique identifier string",
+        "constraints": ["pattern", "length"]
+      },
+      "semver": {
+        "description": "Semantic version string",
+        "constraints": ["pattern"]
+      },
+      "any": {
+        "description": "Wildcard type (discouraged, use explicit union)",
+        "constraints": [],
+        "note": "Should be avoided in favor of explicit union types"
+      }
+    }
+  },
+  "coerce_table_usage": {
+    "description": "Rules for using the coerce table from io.schema.json",
+    "safe": {
+      "description": "Coercion that never loses information or causes errors",
+      "examples": [
+        "integer -> float (widening)",
+        "list[string] -> list (generalization)",
+        "dict with extra keys -> dict with subset of keys"
+      ],
+      "behavior": "Always allowed, no marking required"
+    },
+    "unsafe": {
+      "description": "Coercion that may lose information or cause runtime errors",
+      "examples": [
+        "float -> integer (truncation)",
+        "string -> integer (parsing may fail)",
+        "list -> list[string] (may fail if items not strings)"
+      ],
+      "behavior": "Allowed but must be marked in edge.coerce field"
+    },
+    "forbidden": {
+      "description": "Coercion that is never allowed",
+      "examples": [
+        "dict -> list (structural incompatibility)",
+        "boolean -> integer (semantic mismatch)",
+        "any -> specific type (too permissive)"
+      ],
+      "behavior": "Reject graph validation, execution not allowed"
+    }
+  },
+  "port_constraints": {
+    "required_ports": {
+      "description": "Ports that must be provided for node execution",
+      "rule": "If port.required is true, value must be non-null and match shape"
+    },
+    "optional_ports": {
+      "description": "Ports that may be omitted",
+      "rule": "If port.required is false, null is acceptable, otherwise must match shape"
+    },
+    "default_values": {
+      "description": "Default values for optional ports",
+      "rule": "If port.default is defined, use when port not provided"
+    }
+  },
+  "union_types": {
+    "description": "Rules for union type handling",
+    "explicit_variants": {
+      "description": "Union types must explicitly list all possible variants",
+      "rule": "Use union field with array of shape names, never use 'any'"
+    },
+    "variant_matching": {
+      "description": "How to match values against union variants",
+      "rule": "Try variants in order, first match wins"
+    },
+    "nested_unions": {
+      "description": "Union of unions is flattened",
+      "rule": "union[A, union[B, C]] becomes union[A, B, C]"
+    }
+  }
+}

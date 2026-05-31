@@ -1,0 +1,66 @@
+{
+  "version": "1.0.0",
+  "structure_constraints": {
+    "root_unique": {
+      "description": "Graph must have exactly one root node",
+      "rule": "count nodes where node.id == graph.root_id must equal 1"
+    },
+    "no_bare_loops": {
+      "description": "Forbidden: cycles without control nodes (LOOP/FORK/MERGE)",
+      "rule": "detect cycles in edges, filter out cycles containing control nodes, count must be 0"
+    },
+    "valid_node_references": {
+      "description": "All edge from_node/to_node must reference existing nodes",
+      "rule": "for every edge, from_node and to_node must exist in graph.nodes"
+    },
+    "valid_port_references": {
+      "description": "Edge ports must exist in corresponding node's inputs/outputs",
+      "rule": "for every edge, from_port must exist in from_node.outputs and to_port must exist in to_node.inputs"
+    }
+  },
+  "conflict_arbitration": {
+    "same_node_param": {
+      "strategy": "last_write_wins",
+      "description": "Multiple edits to same node parameter: last operation wins"
+    },
+    "same_port_edge": {
+      "strategy": "first_write_wins",
+      "description": "Multiple edges connecting same ports: first creation wins, later rejected"
+    },
+    "double_remove": {
+      "strategy": "idempotent",
+      "description": "Removing same node/edge twice: second operation is no-op"
+    },
+    "remove_then_edit": {
+      "strategy": "remove_wins",
+      "description": "Remove followed by edit on same entity: remove wins, edit rejected"
+    },
+    "edit_then_remove": {
+      "strategy": "remove_wins",
+      "description": "Edit followed by remove on same entity: remove wins, edit discarded"
+    }
+  },
+  "rewrite_rules": {
+    "placeholder": "Rewrite rules will be populated in Phase 6",
+    "examples": [
+      {
+        "name": "seq_associativity",
+        "pattern": "SEQ(A, SEQ(B, C))",
+        "replacement": "SEQ(A, B, C)",
+        "description": "Flatten nested SEQ nodes"
+      },
+      {
+        "name": "eliminate_harmless_fork",
+        "pattern": "FORK(A) + MERGE where A has no side effects",
+        "replacement": "A",
+        "description": "Remove unnecessary parallelization"
+      },
+      {
+        "name": "constant_folding",
+        "pattern": "SEQ(const_node, B)",
+        "replacement": "B with folded constants",
+        "description": "Fold constant nodes into downstream nodes"
+      }
+    ]
+  }
+}

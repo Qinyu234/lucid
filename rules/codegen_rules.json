@@ -1,0 +1,116 @@
+{
+  "version": "1.0.0",
+  "phase_marker": {
+    "description": "This file contains codegen rules that should only be executed in Phase 4 or later",
+    "phase": "codegen",
+    "execution_condition": "Phase >= 4"
+  },
+  "function_signature": {
+    "description": "All generated code must follow the standard function signature",
+    "signature": "fn(inputs: dict, meta: dict) -> dict",
+    "inputs": {
+      "type": "dict",
+      "description": "Dictionary mapping port names to values"
+    },
+    "meta": {
+      "type": "dict",
+      "description": "Dictionary containing context (graph, templates, node_id, etc.)"
+    },
+    "outputs": {
+      "type": "dict",
+      "description": "Dictionary mapping output port names to values"
+    }
+  },
+  "file_organization": {
+    "description": "Code generation must produce single-function-per-file structure",
+    "rules": [
+      "Each functional node becomes a separate Python file",
+      "Each file contains exactly one function",
+      "Function name matches node ID or template ID",
+      "File name matches function name with .py extension"
+    ]
+  },
+  "import_constraints": {
+    "description": "Restrictions on imports in generated code",
+    "allowed_imports": {
+      "standard_library": [
+        "json",
+        "os",
+        "pathlib",
+        "datetime",
+        "typing",
+        "dataclasses"
+      ],
+      "external_libraries": [
+        "Only if specified in requirements.txt",
+        "Must be version-pinned"
+      ]
+    },
+    "forbidden_imports": [
+      "No relative imports",
+      "No dynamic imports (importlib)",
+      "No exec/eval statements"
+    ]
+  },
+  "code_structure": {
+    "description": "Structure requirements for generated functions",
+    "requirements": [
+      "Function must be at module top level",
+      "Type hints required for parameters and return",
+      "Docstring required describing behavior",
+      "Error handling with try/except blocks",
+      "Return error dict on failure: {'error': str, 'error_type': str}"
+    ]
+  },
+  "error_handling": {
+    "description": "Standardized error handling in generated code",
+    "pattern": {
+      "try": "Wrap main logic in try block",
+      "except": "Catch specific exceptions, fallback to Exception",
+      "error_return": "Return dict with 'error' and 'error_type' keys",
+      "error_types": [
+        "validation_error",
+        "runtime_error",
+        "io_error",
+        "type_error"
+      ]
+    }
+  },
+  "type_safety": {
+    "description": "Type checking requirements",
+    "rules": [
+      "Use typing module for type hints",
+      "Validate input types at function start",
+      "Use isinstance checks for type validation",
+      "Document expected types in docstrings"
+    ]
+  },
+  "testing_requirements": {
+    "description": "Generated code must be testable",
+    "requirements": [
+      "Function must be importable as module",
+      "No side effects that prevent testing",
+      "Deterministic output for given inputs",
+      "Mockable external dependencies"
+    ]
+  },
+  "performance_constraints": {
+    "description": "Performance considerations for generated code",
+    "guidelines": [
+      "Avoid unnecessary loops",
+      "Use appropriate data structures",
+      "Consider lazy evaluation for large datasets",
+      "Document time complexity in docstring"
+    ]
+  },
+  "documentation": {
+    "description": "Documentation requirements for generated code",
+    "required_sections": [
+      "Function description",
+      "Parameters with types and descriptions",
+      "Return value with type and description",
+      "Raises section for exceptions",
+      "Examples section if applicable"
+    ]
+  }
+}

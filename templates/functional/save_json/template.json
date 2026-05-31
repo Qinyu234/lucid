@@ -1,0 +1,67 @@
+{
+  "id": "save_json",
+  "version": "1.0.0",
+  "schema_version": "1.0.0",
+  "kind": "functional",
+  "description": "Save data dictionary to JSON file",
+  "inputs": {
+    "data": {
+      "schema": {
+        "shape": "dict"
+      },
+      "required": true
+    },
+    "path": {
+      "schema": {
+        "shape": "string"
+      },
+      "required": true
+    }
+  },
+  "outputs": {
+    "success": {
+      "schema": {
+        "shape": "boolean"
+      },
+      "required": true
+    },
+    "path": {
+      "schema": {
+        "shape": "string"
+      },
+      "required": true
+    }
+  },
+  "implementations": {
+    "python": {
+      "code_file": "implementations/python/code.py",
+      "deps": []
+    }
+  },
+  "tests": {
+    "fixed_cases": [
+      {
+        "name": "happy_path",
+        "inputs": {
+          "data": {
+            "tokens": ["hello", "world"]
+          },
+          "path": "output.json"
+        },
+        "expect": {
+          "outputs": {
+            "success": true,
+            "path": "output.json"
+          }
+        }
+      }
+    ],
+    "generated_rules": {
+      "boundary": true,
+      "null_input": true,
+      "type_error": true,
+      "missing_port": true
+    }
+  },
+  "tags": ["io", "json", "serialization"]
+}

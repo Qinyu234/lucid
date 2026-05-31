@@ -1,0 +1,151 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "operation.schema.json",
+  "version": "1.0.0",
+  "description": "All legal graph mutations. History = sequence of operations. Undo = apply inverse.",
+
+  "definitions": {
+
+    "op_base": {
+      "description": "Fields every operation carries",
+      "type": "object",
+      "required": ["op_id", "parent_op_id", "op", "graph_id", "author", "timestamp"],
+      "properties": {
+        "op_id":        { "$ref": "primitives.schema.json#/definitions/identifier" },
+        "parent_op_id": {
+          "description": "Forms a linked list. Enables rebase on reconnect after offline.",
+          "oneOf": [
+            { "$ref": "primitives.schema.json#/definitions/identifier" },
+            { "type": "null", "description": "null only for the very first operation on a graph" }
+          ]
+        },
+        "op":           { "type": "string" },
+        "graph_id":     { "$ref": "primitives.schema.json#/definitions/identifier" },
+        "author":       { "$ref": "primitives.schema.json#/definitions/identifier" },
+        "session_id":   { "$ref": "primitives.schema.json#/definitions/identifier" },
+        "timestamp":    { "$ref": "primitives.schema.json#/definitions/timestamp" },
+        "online":       { "type": "boolean", "default": true,
+                          "description": "False = produced while offline, queued for rebase on reconnect" },
+        "reversible":   { "type": "boolean", "default": true },
+        "result":       { "type": "string", "enum": ["pending", "ok", "rejected"] },
+        "reject_reason":{ "type": "string" }
+      }
+    },
+
+    "op_add_node": {
+      "allOf": [ { "$ref": "#/definitions/op_base" } ],
+      "properties": {
+        "op":   { "const": "add_node" },
+        "node": { "$ref": "node.schema.json#/definitions/node" }
+      },
+      "required": ["node"]
+    },
+
+    "op_remove_node": {
+      "allOf": [ { "$ref": "#/definitions/op_base" } ],
+      "properties": {
+        "op":      { "const": "remove_node" },
+        "node_id": { "$ref": "primitives.schema.json#/definitions/identifier" }
+      },
+      "required": ["node_id"]
+    },
+
+    "op_add_edge": {
+      "allOf": [ { "$ref": "#/definitions/op_base" } ],
+      "properties": {
+        "op":   { "const": "add_edge" },
+        "edge": { "$ref": "node.schema.json#/definitions/edge" }
+      },
+      "required": ["edge"]
+    },
+
+    "op_remove_edge": {
+      "allOf": [ { "$ref": "#/definitions/op_base" } ],
+      "properties": {
+        "op":      { "const": "remove_edge" },
+        "edge_id": { "$ref": "primitives.schema.json#/definitions/identifier" }
+      },
+      "required": ["edge_id"]
+    },
+
+    "op_set_param": {
+      "allOf": [ { "$ref": "#/definitions/op_base" } ],
+      "properties": {
+        "op":      { "const": "set_param" },
+        "node_id": { "$ref": "primitives.schema.json#/definitions/identifier" },
+        "key":     { "type": "string" },
+        "value":   { "description": "New value. Type must match port schema." }
+      },
+      "required": ["node_id", "key", "value"]
+    },
+
+    "op_move_node": {
+      "allOf": [ { "$ref": "#/definitions/op_base" } ],
+      "properties": {
+        "op":      { "const": "move_node" },
+        "node_id": { "$ref": "primitives.schema.json#/definitions/identifier" },
+        "x":       { "type": "number" },
+        "y":       { "type": "number" }
+      },
+      "required": ["node_id", "x", "y"],
+      "description": "Editor layout only. Ignored by compiler."
+    },
+
+    "op_lock_node": {
+      "allOf": [ { "$ref": "#/definitions/op_base" } ],
+      "properties": {
+        "op":         { "const": "lock_node" },
+        "node_id":    { "$ref": "primitives.schema.json#/definitions/identifier" },
+        "expires_at": { "$ref": "primitives.schema.json#/definitions/timestamp" }
+      },
+      "required": ["node_id"]
+    },
+
+    "op_unlock_node": {
+      "allOf": [ { "$ref": "#/definitions/op_base" } ],
+      "properties": {
+        "op":      { "const": "unlock_node" },
+        "node_id": { "$ref": "primitives.schema.json#/definitions/identifier" }
+      },
+      "required": ["node_id"]
+    },
+
+    "op_group_nodes": {
+      "allOf": [ { "$ref": "#/definitions/op_base" } ],
+      "properties": {
+        "op":       { "const": "group_nodes" },
+        "node_ids": { "type": "array", "items": { "$ref": "primitives.schema.json#/definitions/identifier" } },
+        "macro_id": { "$ref": "primitives.schema.json#/definitions/identifier" }
+      },
+      "required": ["node_ids", "macro_id"]
+    },
+
+    "operation": {
+      "description": "Any legal operation. Discriminated by 'op' field.",
+      "oneOf": [
+        { "$ref": "#/definitions/op_add_node" },
+        { "$ref": "#/definitions/op_remove_node" },
+        { "$ref": "#/definitions/op_add_edge" },
+        { "$ref": "#/definitions/op_remove_edge" },
+        { "$ref": "#/definitions/op_set_param" },
+        { "$ref": "#/definitions/op_move_node" },
+        { "$ref": "#/definitions/op_lock_node" },
+        { "$ref": "#/definitions/op_unlock_node" },
+        { "$ref": "#/definitions/op_group_nodes" }
+      ]
+    },
+
+    "conflict_rules": {
+      "description": "Server arbitration rules when two concurrent operations conflict.",
+      "version": "1.0.0",
+      "rules": {
+        "same_node_param":       "last_write_wins",
+        "same_port_edge":        "first_write_wins",
+        "double_remove_node":    "idempotent",
+        "remove_and_edit_node":  "remove_wins",
+        "double_add_same_id":    "first_write_wins_id_dedup"
+      }
+    }
+
+  }
+}
