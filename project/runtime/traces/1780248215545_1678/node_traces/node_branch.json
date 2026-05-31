@@ -1,0 +1,12 @@
+{
+  "run_id": "1780248215545_1678",
+  "node_id": "node_branch",
+  "node_inputs": {
+    "value": null,
+    "condition": null
+  },
+  "node_outputs": null,
+  "status": "error",
+  "error": "condition must be bool, got NoneType",
+  "duration_ms": 25
+}

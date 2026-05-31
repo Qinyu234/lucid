@@ -1,0 +1,45 @@
+{
+  "run_id": "1780250112288_3921",
+  "node_id": "node_loop",
+  "node_inputs": {
+    "items": [
+      "hello world",
+      "foo bar",
+      "baz"
+    ],
+    "initial_accumulator": []
+  },
+  "node_outputs": {
+    "outputs": {
+      "accumulator": [
+        [
+          "hello",
+          "world"
+        ],
+        [
+          "foo",
+          "bar"
+        ],
+        [
+          "baz"
+        ]
+      ],
+      "results": [
+        [
+          "hello",
+          "world"
+        ],
+        [
+          "foo",
+          "bar"
+        ],
+        [
+          "baz"
+        ]
+      ]
+    }
+  },
+  "status": "ok",
+  "error": null,
+  "duration_ms": 23
+}

@@ -1,0 +1,21 @@
+{
+  "run_id": "1780249294194_5322",
+  "node_id": "node_branch",
+  "node_inputs": {
+    "value": "hello world",
+    "condition": true
+  },
+  "node_outputs": {
+    "outputs": {
+      "result": {
+        "tokens": [
+          "hello",
+          "world"
+        ]
+      }
+    }
+  },
+  "status": "ok",
+  "error": null,
+  "duration_ms": 12
+}

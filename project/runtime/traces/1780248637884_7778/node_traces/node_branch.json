@@ -1,0 +1,12 @@
+{
+  "run_id": "1780248637884_7778",
+  "node_id": "node_branch",
+  "node_inputs": {
+    "value": "hello world",
+    "condition": true
+  },
+  "node_outputs": null,
+  "status": "error",
+  "error": "input 'text' is required and cannot be None",
+  "duration_ms": 20
+}

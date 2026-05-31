@@ -1,0 +1,17 @@
+{
+  "run_id": "1780248637884_7778",
+  "node_id": "node_input",
+  "node_inputs": {
+    "text": "hello world",
+    "condition": true
+  },
+  "node_outputs": {
+    "outputs": {
+      "text": "hello world",
+      "condition": true
+    }
+  },
+  "status": "ok",
+  "error": null,
+  "duration_ms": 0
+}

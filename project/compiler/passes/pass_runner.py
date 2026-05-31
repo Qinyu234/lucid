@@ -46,4 +46,23 @@ def run_pipeline(inputs: dict, meta: dict) -> dict:
     if result["errors"]:
         return {"ok": False, "errors": result["errors"], "graph": graph}
     
+    # Load validate_node_count pass
+    validate_node_count_path = os.path.join(passes_dir, "003_validate_node_count.py")
+    spec = importlib.util.spec_from_file_location("validate_node_count", validate_node_count_path)
+    validate_node_count_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(validate_node_count_module)
+    
+    # Run validate_node_count
+    result = validate_node_count_module.validate_node_count({
+        "graph": graph
+    }, {})
+    
+    # Print warnings but don't interrupt execution
+    if result.get("warnings"):
+        for warning in result["warnings"]:
+            print(f"WARNING: {warning}")
+    
+    if result["errors"]:
+        return {"ok": False, "errors": result["errors"], "graph": graph}
+    
     return {"ok": True, "errors": [], "graph": graph}

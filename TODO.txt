@@ -5,6 +5,30 @@
 
 ---
 
+
+
+# 之后的 PHASE（不展开，等 TASK-017 通过后再写）
+
+PHASE 4：BRANCH primitive
+PHASE 5：LOOP primitive + accumulator
+PHASE 6：强制 Macro（10个软提示，15个强制）
+PHASE 7：操作库（文字/数字/列表操作，用户从列表选）
+PHASE 8：INPUT node（用户在图上提供数据）
+PHASE 9：LaTeX 表达式支持
+PHASE 10：Editor 前端（React Flow）
+PHASE 11：PARALLEL primitive
+PHASE 12：FEEDBACK edge
+PHASE 13：多人协作
+PHASE 14：权限系统
+
+
+# AI-EXECUTABLE TODO
+# 每个任务：一件事 / 明确输入 / 明确输出 / 可验证
+# 执行顺序：严格按编号，前一个完成再做下一个
+# 当前状态：所有任务未开始，从 TASK-001 开始
+
+---
+
 # PHASE 0 — 目录和空文件建立
 # 目标：建立项目骨架，所有后续任务都有地方写
 
@@ -770,16 +794,1014 @@ TASK-017 的验证全部通过 = Phase 0-3 完成 = 系统活了
 
 ---
 
-# 之后的 PHASE（不展开，等 TASK-017 通过后再写）
+# PHASE 4 — BRANCH primitive
+# 目标：graph 能根据条件选择不同执行路径
+# Macro 规则：节点数 >= 7 软提示，>= 15 强制打包
 
-PHASE 4：BRANCH primitive
-PHASE 5：LOOP primitive + accumulator
-PHASE 6：强制 Macro（10个软提示，15个强制）
-PHASE 7：操作库（文字/数字/列表操作，用户从列表选）
-PHASE 8：INPUT node（用户在图上提供数据）
-PHASE 9：LaTeX 表达式支持
-PHASE 10：Editor 前端（React Flow）
+---
+
+## TASK-018
+状态：未完成
+做什么：在 operator_registry.json 里注册 BRANCH 控制节点
+输入：project/registry/operator_registry.json
+输出：project/registry/operator_registry.json（更新）
+
+在 templates 数组末尾加入：
+```json
+{
+  "id": "branch",
+  "version": "1.0.0",
+  "location": "templates/control/branch/template.json",
+  "tags": ["control", "condition", "if"]
+}
+```
+
+验证：
+  python -c "
+  import json
+  r = json.load(open('project/registry/operator_registry.json'))
+  ids = [t['id'] for t in r['templates']]
+  assert 'branch' in ids
+  print('OK')
+  "
+
+---
+
+## TASK-019
+状态：未完成
+做什么：写 branch 的 template.json
+输入：project/graph/schemas/template.schema.json
+输出：project/templates/control/branch/template.json
+
+内容：
+```json
+{
+  "id": "branch",
+  "version": "1.0.0",
+  "schema_version": "1.0.0",
+  "name": "Branch",
+  "description": "Evaluate a condition and route to true_node or false_node",
+  "tags": ["control", "condition", "if"],
+  "inputs": {
+    "condition": {
+      "id": "condition",
+      "schema": { "shape": "bool" },
+      "required": true,
+      "description": "If true, execute true_branch. If false, execute false_branch."
+    },
+    "value": {
+      "id": "value",
+      "schema": { "shape": "union", "variants": ["string","number","bool","list","dict","null"] },
+      "required": false,
+      "description": "Optional value to pass into whichever branch is taken"
+    }
+  },
+  "outputs": {
+    "result": {
+      "id": "result",
+      "schema": { "shape": "union", "variants": ["string","number","bool","list","dict","null"] },
+      "required": true,
+      "description": "Output from whichever branch was executed"
+    }
+  },
+  "implementations": {
+    "python": { "code_file": "implementations/python/code.py" }
+  },
+  "tests": {
+    "fixed_cases": [
+      {
+        "id": "happy_path_true",
+        "description": "condition true routes to true_branch",
+        "inputs": { "condition": true, "value": "hello" },
+        "expect": { "outputs": { "result": "hello" } },
+        "tags": ["happy_path"]
+      },
+      {
+        "id": "happy_path_false",
+        "description": "condition false routes to false_branch",
+        "inputs": { "condition": false, "value": "hello" },
+        "expect": { "outputs": { "result": null } },
+        "tags": ["happy_path"]
+      },
+      {
+        "id": "null_condition",
+        "description": "null condition should error",
+        "inputs": { "condition": null, "value": "hello" },
+        "expect": { "error": true },
+        "tags": ["null_input"]
+      },
+      {
+        "id": "type_error",
+        "description": "non-bool condition should error",
+        "inputs": { "condition": "yes", "value": "hello" },
+        "expect": { "error": true },
+        "tags": ["type_error"]
+      }
+    ],
+    "generated_rules": {
+      "boundary": false,
+      "null_input": true,
+      "type_error": true,
+      "missing_port": true,
+      "overflow": false
+    }
+  }
+}
+```
+
+验证：json 合法，有 id / inputs / outputs / implementations / tests 字段
+
+---
+
+## TASK-020
+状态：未完成
+做什么：写 execute_branch.py
+输入：TASK-019 的 template.json，compiler/accessor/schema_accessor.py
+输出：project/compiler/runtime/execute_branch.py
+
+要求：
+  函数签名：def execute_branch(inputs: dict, meta: dict) -> dict
+  inputs["node"] = 当前 BRANCH control node dict
+    node 必须有：
+      condition_port：哪个 input port 是条件
+      true_branch：条件为 true 时执行的子 node id
+      false_branch：条件为 false 时执行的子 node id（可为 null）
+  meta["graph"] = 完整 graph dict
+  meta["templates"] = {template_id: template dict}
+  meta["context"] = {"run_id", "trace_path", "registry_path"}
+  meta["resolved_inputs"] = 已从 edge 解析好的 input 值 dict
+  逻辑：
+    读 condition_port 对应的值
+    如果不是 bool → raise TypeError
+    如果 true  → 执行 true_branch 子 node，返回其 outputs
+    如果 false → false_branch 存在则执行，否则返回 {"result": null}
+    记录 trace（调用 record_node，记录走了哪条分支）
+  返回：{"result": <branch 执行结果>}
+
+验证：
+  python -c "
+  import sys; sys.path.insert(0,'project')
+  from compiler.runtime.execute_branch import execute_branch
+  # 构造最小 graph 和 node，condition=True，true_branch 是一个返回 'ok' 的 node
+  # 验证返回 {'result': 'ok'}
+  print('OK')
+  "
+
+---
+
+## TASK-021
+状态：未完成
+做什么：在 execute_graph.py 的 dispatch 里加入 BRANCH
+输入：project/compiler/runtime/execute_graph.py，TASK-020
+输出：project/compiler/runtime/execute_graph.py（更新）
+
+要求：
+  找到 dispatch 部分：
+    根据 root node 的 kind dispatch
+  加入：
+    BRANCH → execute_branch
+  其他不变
+
+验证：
+  python -c "
+  import sys; sys.path.insert(0,'project')
+  from compiler.runtime.execute_graph import execute_graph
+  # 构造一个 root=BRANCH 的 graph，condition=True
+  # 验证走了 true_branch
+  print('OK')
+  "
+
+---
+
+## TASK-022
+状态：未完成
+做什么：写 BRANCH 的端到端测试 graph
+输入：project/graph/schemas/graph.schema.json
+输出：project/graph/branch_test.json
+
+图结构：
+  INPUT node（提供 text="hello world" 和 condition=True）
+  → BRANCH node（condition_port="condition"）
+    → true_branch：parse_text node
+    → false_branch：null（不执行）
+  → save_json node（保存结果）
+
+验证：
+  python -c "
+  import sys; sys.path.insert(0,'project')
+  from compiler.runtime.execute_graph import execute_graph
+  r = execute_graph({
+    'graph_path':    'graph/branch_test.json',
+    'registry_path': 'registry/operator_registry.json',
+    'trace_dir':     'runtime/traces/'
+  },{})
+  assert r['ok'] == True
+  print('OK')
+  "
+
+---
+
+# PHASE 5 — LOOP primitive + accumulator
+# 目标：graph 能对列表迭代执行，用 accumulator 替代 STATE
+
+---
+
+## TASK-023
+状态：未完成
+做什么：在 operator_registry.json 里注册 LOOP 控制节点
+输入：project/registry/operator_registry.json
+输出：project/registry/operator_registry.json（更新）
+
+在 templates 数组末尾加入：
+```json
+{
+  "id": "loop",
+  "version": "1.0.0",
+  "location": "templates/control/loop/template.json",
+  "tags": ["control", "loop", "iterate"]
+}
+```
+
+验证：
+  python -c "
+  import json
+  r = json.load(open('project/registry/operator_registry.json'))
+  ids = [t['id'] for t in r['templates']]
+  assert 'loop' in ids
+  print('OK')
+  "
+
+---
+
+## TASK-024
+状态：未完成
+做什么：写 loop 的 template.json
+输入：project/graph/schemas/template.schema.json
+输出：project/templates/control/loop/template.json
+
+内容：
+```json
+{
+  "id": "loop",
+  "version": "1.0.0",
+  "schema_version": "1.0.0",
+  "name": "Loop",
+  "description": "Iterate over a list, executing body for each item. Accumulator carries state between iterations.",
+  "tags": ["control", "loop", "iterate"],
+  "inputs": {
+    "items": {
+      "id": "items",
+      "schema": { "shape": "list", "items": { "shape": "union", "variants": ["string","number","bool","dict","null"] } },
+      "required": true,
+      "description": "List to iterate over"
+    },
+    "initial_accumulator": {
+      "id": "initial_accumulator",
+      "schema": { "shape": "union", "variants": ["string","number","bool","list","dict","null"] },
+      "required": false,
+      "default": null,
+      "description": "Starting value of accumulator"
+    }
+  },
+  "outputs": {
+    "accumulator": {
+      "id": "accumulator",
+      "schema": { "shape": "union", "variants": ["string","number","bool","list","dict","null"] },
+      "required": true,
+      "description": "Final accumulator value after all iterations"
+    },
+    "results": {
+      "id": "results",
+      "schema": { "shape": "list", "items": { "shape": "union", "variants": ["string","number","bool","dict","null"] } },
+      "required": true,
+      "description": "List of each iteration's output"
+    }
+  },
+  "implementations": {
+    "python": { "code_file": "implementations/python/code.py" }
+  },
+  "tests": {
+    "fixed_cases": [
+      {
+        "id": "happy_path_sum",
+        "description": "sum a list of numbers via accumulator",
+        "inputs": { "items": [1, 2, 3], "initial_accumulator": 0 },
+        "expect": {
+          "outputs": { "accumulator": 6, "results": [1, 3, 6] }
+        },
+        "tags": ["happy_path"]
+      },
+      {
+        "id": "happy_path_empty",
+        "description": "empty list returns initial accumulator",
+        "inputs": { "items": [], "initial_accumulator": 0 },
+        "expect": { "outputs": { "accumulator": 0, "results": [] } },
+        "tags": ["boundary"]
+      },
+      {
+        "id": "null_items",
+        "description": "null items should error",
+        "inputs": { "items": null, "initial_accumulator": 0 },
+        "expect": { "error": true },
+        "tags": ["null_input"]
+      }
+    ],
+    "generated_rules": {
+      "boundary": true,
+      "null_input": true,
+      "type_error": true,
+      "missing_port": true,
+      "overflow": false
+    }
+  }
+}
+```
+
+验证：json 合法，有 id / inputs / outputs / implementations / tests 字段
+
+---
+
+## TASK-025
+状态：未完成
+做什么：写 execute_loop.py
+输入：TASK-024 的 template.json，compiler/accessor/schema_accessor.py，TASK-014
+输出：project/compiler/runtime/execute_loop.py
+
+要求：
+  函数签名：def execute_loop(inputs: dict, meta: dict) -> dict
+  inputs["node"] = 当前 LOOP control node dict
+    node 必须有：
+      iterator_port：哪个 input port 提供迭代列表
+      body：body 子 node 的 id
+      accumulator_port：body 的哪个 output 是 accumulator（默认 "accumulator"）
+  meta["graph"] / meta["templates"] / meta["context"] 同前
+  meta["resolved_inputs"] = 已解析的 input 值 dict
+  逻辑：
+    读 iterator_port 对应的列表
+    如果不是 list → raise TypeError
+    accumulator = initial_accumulator（从 resolved_inputs 读，默认 null）
+    results = []
+    对列表每个 item：
+      把 item 和 accumulator 注入 body node 的 inputs
+      执行 body node
+      accumulator = body outputs["accumulator"]
+      results.append(body outputs 里非 accumulator 的第一个值)
+      记录 trace（此次迭代的 input/output）
+    返回：{"accumulator": accumulator, "results": results}
+
+验证：
+  python -c "
+  import sys; sys.path.insert(0,'project')
+  from compiler.runtime.execute_loop import execute_loop
+  # 构造 items=[1,2,3], body 是一个把 item+accumulator 的 node
+  # 验证 accumulator=6, results=[1,3,6]
+  print('OK')
+  "
+
+---
+
+## TASK-026
+状态：未完成
+做什么：在 execute_graph.py 的 dispatch 里加入 LOOP
+输入：project/compiler/runtime/execute_graph.py，TASK-025
+输出：project/compiler/runtime/execute_graph.py（更新）
+
+要求：
+  在 dispatch 部分加入：
+    LOOP → execute_loop
+  其他不变
+
+验证：
+  python -c "
+  import sys; sys.path.insert(0,'project')
+  from compiler.runtime.execute_graph import execute_graph
+  # 构造 root=LOOP 的 graph，items=[1,2,3]，body 做累加
+  # 验证 accumulator=6
+  print('OK')
+  "
+
+---
+
+## TASK-027
+状态：未完成
+做什么：写 LOOP 的端到端测试 graph
+输入：project/graph/schemas/graph.schema.json
+输出：project/graph/loop_test.json
+
+图结构：
+  INPUT node（提供 items=["hello world","foo bar","baz"]，initial_accumulator=[]）
+  → LOOP node
+      body：parse_text node（把每个 item 切割成 tokens）
+      accumulator：把每次结果 append 进列表
+  → save_json node（保存最终 accumulator）
+
+验证：
+  python -c "
+  import sys, json; sys.path.insert(0,'project')
+  from compiler.runtime.execute_graph import execute_graph
+  r = execute_graph({
+    'graph_path':    'graph/loop_test.json',
+    'registry_path': 'registry/operator_registry.json',
+    'trace_dir':     'runtime/traces/'
+  },{})
+  assert r['ok'] == True
+  result = json.load(open('io/output/loop_result.json'))
+  assert result['accumulator'] == [['hello','world'],['foo','bar'],['baz']]
+  print('OK')
+  "
+
+---
+
+# PHASE 6 — 强制 Macro
+# 目标：graph 层节点数 >= 7 软提示，>= 15 强制，用户手选打包
+
+---
+
+## TASK-028
+状态：未完成
+做什么：在 pass_runner 里加入 validate_node_count pass
+输入：project/compiler/passes/pass_runner.py
+输出：project/compiler/passes/003_validate_node_count.py（新文件）
+      project/compiler/passes/pass_runner.py（更新，加入新 pass）
+
+003_validate_node_count.py 要求：
+  函数签名：def validate_node_count(inputs: dict, meta: dict) -> dict
+  inputs["graph"] = graph dict
+  统计当前层（root 的直接 children）的节点数
+  节点数 >= 7 且 < 15：
+    返回 {"graph": graph, "errors": [], "warnings": ["节点数为 N，建议打包部分节点（>=7 时提示）"]}
+  节点数 >= 15：
+    返回 {"graph": graph, "errors": ["节点数为 N，超过 15 个上限，必须打包后才能执行"], "warnings": []}
+  节点数 < 7：
+    返回 {"graph": graph, "errors": [], "warnings": []}
+
+pass_runner.py 更新：
+  在 validate_nodes 和 validate_edges 之后加入 validate_node_count
+  warnings 不中断执行，打印到 stdout
+  errors 中断执行（已有逻辑，不变）
+
+验证：
+  python -c "
+  import sys; sys.path.insert(0,'project')
+  from compiler.passes.validate_node_count_003 import validate_node_count
+
+  # 少于 7 个节点，无 warning
+  graph_small = {'nodes': {str(i): {'id': str(i)} for i in range(5)}, 'edges': {}}
+  r = validate_node_count({'graph': graph_small},{})
+  assert r['errors'] == [] and r['warnings'] == []
+
+  # 7-14 个节点，有 warning
+  graph_mid = {'nodes': {str(i): {'id': str(i)} for i in range(9)}, 'edges': {}}
+  r = validate_node_count({'graph': graph_mid},{})
+  assert r['errors'] == [] and len(r['warnings']) == 1
+
+  # 15+ 个节点，有 error
+  graph_big = {'nodes': {str(i): {'id': str(i)} for i in range(15)}, 'edges': {}}
+  r = validate_node_count({'graph': graph_big},{})
+  assert len(r['errors']) == 1
+
+  print('OK')
+  "
+
+---
+
+## TASK-029
+状态：未完成
+做什么：实现 group_nodes operation（手选打包为 MACRO）
+输入：project/graph/schemas/operation.schema.json，compiler/accessor/schema_accessor.py
+输出：project/compiler/operations/apply_operation.py（新文件）
+
+要求：
+  函数签名：def apply_operation(inputs: dict, meta: dict) -> dict
+  inputs["graph"] = graph dict
+  inputs["operation"] = operation dict（格式见 operation.schema.json）
+  现在只处理 op == "group_nodes"：
+    inputs["operation"]["node_ids"] = 要打包的 node id 列表
+    inputs["operation"]["macro_id"] = 新 macro node 的 id
+    inputs["operation"]["macro_name"] = 新 macro node 的名字
+    验证：node_ids 里的所有 node 存在于 graph.nodes
+    验证：node_ids 长度 >= 2
+    创建新的 macro node：
+      id = macro_id
+      type = "control"
+      kind = "MACRO"
+      children = node_ids
+      inputs/outputs：从被打包节点的外部 edge 推断
+        外部 edge = 一端在 node_ids 里，另一端不在
+    从 graph.nodes 里移除 node_ids 里的节点
+    把 macro node 加入 graph.nodes
+    把内部 edge（两端都在 node_ids 里）移入 macro node 的内部 graph
+    把外部 edge 的端点更新为 macro node
+    返回：{"graph": <更新后的 graph>}
+  其他 op 类型：返回 {"graph": graph}（暂不处理）
+
+验证：
+  python -c "
+  import sys; sys.path.insert(0,'project')
+  from compiler.operations.apply_operation import apply_operation
+
+  graph = {
+    'nodes': {
+      'n1': {'id':'n1','type':'functional','template_id':'parse_text','template_version':'1.0.0','inputs':{},'outputs':{'tokens':{'id':'tokens','schema':{'shape':'list','items':{'shape':'string'}}}}},
+      'n2': {'id':'n2','type':'functional','template_id':'save_json','template_version':'1.0.0','inputs':{'data':{'id':'data','schema':{'shape':'dict'}}},'outputs':{}},
+      'n3': {'id':'n3','type':'functional','template_id':'parse_text','template_version':'1.0.0','inputs':{},'outputs':{}}
+    },
+    'edges': {
+      'e1': {'id':'e1','from_node':'n1','from_port':'tokens','to_node':'n2','to_port':'data'}
+    },
+    'root_id': 'root'
+  }
+  op = {'op': 'group_nodes', 'node_ids': ['n1','n2'], 'macro_id': 'macro_1', 'macro_name': 'ParseAndSave'}
+  r = apply_operation({'graph': graph, 'operation': op},{})
+  assert 'macro_1' in r['graph']['nodes']
+  assert 'n1' not in r['graph']['nodes']
+  assert 'n2' not in r['graph']['nodes']
+  print('OK')
+  "
+
+---
+
+# PHASE 7 — 操作库
+# 目标：用户可以从列表选操作，不用手写表达式
+
+---
+
+## TASK-030
+状态：未完成
+做什么：写 operation_library.json（操作库定义）
+输入：project/registry/type_registry.json（看 shape 定义）
+输出：project/registry/operation_library.json
+
+内容：操作按类别组织，每个操作有 id / name / category / input_shapes / output_shape / expression
+```json
+{
+  "version": "1.0.0",
+  "operations": [
+    {
+      "id": "text_split",
+      "name": "切割文字",
+      "category": "文字",
+      "description": "按分隔符切割文字，返回列表",
+      "input_shapes": ["string", "string"],
+      "input_labels": ["文字", "分隔符"],
+      "output_shape": "list",
+      "expression": "a.split(b)"
+    },
+    {
+      "id": "text_join",
+      "name": "合并文字",
+      "category": "文字",
+      "description": "用分隔符合并列表，返回文字",
+      "input_shapes": ["list", "string"],
+      "input_labels": ["列表", "分隔符"],
+      "output_shape": "string",
+      "expression": "b.join(a)"
+    },
+    {
+      "id": "text_length",
+      "name": "文字长度",
+      "category": "文字",
+      "description": "返回文字的字符数",
+      "input_shapes": ["string"],
+      "input_labels": ["文字"],
+      "output_shape": "number",
+      "expression": "len(a)"
+    },
+    {
+      "id": "text_strip",
+      "name": "去除空白",
+      "category": "文字",
+      "description": "去除文字两端空白字符",
+      "input_shapes": ["string"],
+      "input_labels": ["文字"],
+      "output_shape": "string",
+      "expression": "a.strip()"
+    },
+    {
+      "id": "text_replace",
+      "name": "替换文字",
+      "category": "文字",
+      "description": "把文字里的 A 替换成 B",
+      "input_shapes": ["string", "string", "string"],
+      "input_labels": ["文字", "查找", "替换为"],
+      "output_shape": "string",
+      "expression": "a.replace(b, c)"
+    },
+    {
+      "id": "text_contains",
+      "name": "包含文字",
+      "category": "文字",
+      "description": "判断文字是否包含某个子串",
+      "input_shapes": ["string", "string"],
+      "input_labels": ["文字", "子串"],
+      "output_shape": "bool",
+      "expression": "b in a"
+    },
+    {
+      "id": "num_add",
+      "name": "加",
+      "category": "数字",
+      "input_shapes": ["number", "number"],
+      "input_labels": ["A", "B"],
+      "output_shape": "number",
+      "expression": "a + b"
+    },
+    {
+      "id": "num_subtract",
+      "name": "减",
+      "category": "数字",
+      "input_shapes": ["number", "number"],
+      "input_labels": ["A", "B"],
+      "output_shape": "number",
+      "expression": "a - b"
+    },
+    {
+      "id": "num_multiply",
+      "name": "乘",
+      "category": "数字",
+      "input_shapes": ["number", "number"],
+      "input_labels": ["A", "B"],
+      "output_shape": "number",
+      "expression": "a * b"
+    },
+    {
+      "id": "num_divide",
+      "name": "除",
+      "category": "数字",
+      "input_shapes": ["number", "number"],
+      "input_labels": ["A", "B"],
+      "output_shape": "number",
+      "expression": "a / b"
+    },
+    {
+      "id": "num_greater",
+      "name": "大于",
+      "category": "数字",
+      "input_shapes": ["number", "number"],
+      "input_labels": ["A", "B"],
+      "output_shape": "bool",
+      "expression": "a > b"
+    },
+    {
+      "id": "num_equal",
+      "name": "等于",
+      "category": "数字",
+      "input_shapes": ["number", "number"],
+      "input_labels": ["A", "B"],
+      "output_shape": "bool",
+      "expression": "a == b"
+    },
+    {
+      "id": "list_length",
+      "name": "列表长度",
+      "category": "列表",
+      "input_shapes": ["list"],
+      "input_labels": ["列表"],
+      "output_shape": "number",
+      "expression": "len(a)"
+    },
+    {
+      "id": "list_get",
+      "name": "取第N个",
+      "category": "列表",
+      "input_shapes": ["list", "number"],
+      "input_labels": ["列表", "位置（从0开始）"],
+      "output_shape": "union",
+      "expression": "a[int(b)]"
+    },
+    {
+      "id": "list_append",
+      "name": "追加元素",
+      "category": "列表",
+      "input_shapes": ["list", "union"],
+      "input_labels": ["列表", "元素"],
+      "output_shape": "list",
+      "expression": "a + [b]"
+    },
+    {
+      "id": "list_filter_nonempty",
+      "name": "过滤空值",
+      "category": "列表",
+      "input_shapes": ["list"],
+      "input_labels": ["列表"],
+      "output_shape": "list",
+      "expression": "[x for x in a if x is not None and x != '' and x != []]"
+    },
+    {
+      "id": "logic_and",
+      "name": "且",
+      "category": "逻辑",
+      "input_shapes": ["bool", "bool"],
+      "input_labels": ["A", "B"],
+      "output_shape": "bool",
+      "expression": "a and b"
+    },
+    {
+      "id": "logic_or",
+      "name": "或",
+      "category": "逻辑",
+      "input_shapes": ["bool", "bool"],
+      "input_labels": ["A", "B"],
+      "output_shape": "bool",
+      "expression": "a or b"
+    },
+    {
+      "id": "logic_not",
+      "name": "非",
+      "category": "逻辑",
+      "input_shapes": ["bool"],
+      "input_labels": ["A"],
+      "output_shape": "bool",
+      "expression": "not a"
+    }
+  ]
+}
+```
+
+验证：
+  python -c "
+  import json
+  r = json.load(open('project/registry/operation_library.json'))
+  assert len(r['operations']) >= 19
+  categories = set(op['category'] for op in r['operations'])
+  assert categories == {'文字','数字','列表','逻辑'}
+  print('OK')
+  "
+
+---
+
+## TASK-031
+状态：未完成
+做什么：写 execute_operation.py（从操作库执行单个操作）
+输入：project/registry/operation_library.json，compiler/accessor/schema_accessor.py
+输出：project/compiler/runtime/execute_operation.py
+
+要求：
+  函数签名：def execute_operation(inputs: dict, meta: dict) -> dict
+  inputs["operation_id"] = 操作库里的 id（如 "text_split"）
+  inputs["args"] = 按 input_labels 顺序排列的参数列表（如 ["hello world", " "]）
+  inputs["library_path"] = operation_library.json 路径
+  逻辑：
+    从 library 里找到 operation_id 对应的操作
+    如果找不到 → raise ValueError
+    验证 args 数量和 input_shapes 数量一致
+    把 args 按顺序绑定到 a, b, c...（最多3个参数）
+    eval(expression)（受限 eval，只允许内置函数，不允许 import）
+    返回：{"result": <eval 结果>}
+
+受限 eval 实现：
+  allowed_builtins = {len, str, int, float, bool, list, dict, set, sorted, sum, min, max, abs, round}
+  eval(expr, {"__builtins__": allowed_builtins}, {"a":args[0], "b":args[1] if len>1 else None, ...})
+
+验证：
+  python -c "
+  import sys; sys.path.insert(0,'project')
+  from compiler.runtime.execute_operation import execute_operation
+
+  r = execute_operation({
+    'operation_id': 'text_split',
+    'args': ['hello world', ' '],
+    'library_path': 'project/registry/operation_library.json'
+  },{})
+  assert r['result'] == ['hello', 'world']
+
+  r2 = execute_operation({
+    'operation_id': 'num_add',
+    'args': [3, 4],
+    'library_path': 'project/registry/operation_library.json'
+  },{})
+  assert r2['result'] == 7
+
+  print('OK')
+  "
+
+---
+
+# PHASE 8 — INPUT / OUTPUT node
+# 目标：graph 有明确的数据入口和出口，用户在 INPUT node 提供数据
+
+---
+
+## TASK-032
+状态：未完成
+做什么：在 operator_registry.json 里注册 input / output 内置节点
+输入：project/registry/operator_registry.json
+输出：project/registry/operator_registry.json（更新）
+
+加入：
+```json
+{
+  "id": "input",
+  "version": "1.0.0",
+  "location": "templates/functional/input/template.json",
+  "tags": ["io", "input", "source"]
+},
+{
+  "id": "output",
+  "version": "1.0.0",
+  "location": "templates/functional/output/template.json",
+  "tags": ["io", "output", "sink"]
+}
+```
+
+验证：
+  python -c "
+  import json
+  r = json.load(open('project/registry/operator_registry.json'))
+  ids = [t['id'] for t in r['templates']]
+  assert 'input' in ids and 'output' in ids
+  print('OK')
+  "
+
+---
+
+## TASK-033
+状态：未完成
+做什么：写 input node 的 template.json 和 code.py
+输入：project/graph/schemas/template.schema.json
+输出：project/templates/functional/input/template.json
+      project/templates/functional/input/implementations/python/code.py
+
+template.json 内容：
+```json
+{
+  "id": "input",
+  "version": "1.0.0",
+  "schema_version": "1.0.0",
+  "name": "Input",
+  "description": "Graph entry point. Provides a value from params into the graph.",
+  "tags": ["io", "input", "source"],
+  "inputs": {},
+  "outputs": {
+    "value": {
+      "id": "value",
+      "schema": { "shape": "union", "variants": ["string","number","bool","list","dict","null"] },
+      "required": true,
+      "description": "The value provided by the user via params"
+    }
+  },
+  "implementations": {
+    "python": { "code_file": "implementations/python/code.py" }
+  },
+  "tests": {
+    "fixed_cases": [
+      {
+        "id": "happy_path_string",
+        "description": "provide a string value",
+        "inputs": {},
+        "expect": { "outputs": { "value": "hello" } },
+        "tags": ["happy_path"]
+      }
+    ],
+    "generated_rules": {
+      "boundary": false,
+      "null_input": false,
+      "type_error": false,
+      "missing_port": false,
+      "overflow": false
+    }
+  }
+}
+```
+
+code.py 内容：
+```python
+def input(inputs: dict, meta: dict) -> dict:
+    # params["value"] 是用户在 graph 里直接填写的字面量
+    params = meta.get("params", {})
+    value = params.get("value")
+    return {"value": value}
+```
+
+验证：
+  python -c "
+  import sys; sys.path.insert(0,'project')
+  # 直接调用
+  import importlib.util, os
+  spec = importlib.util.spec_from_file_location('input_code',
+    'project/templates/functional/input/implementations/python/code.py')
+  mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+  r = mod.input({}, {'params': {'value': 'hello'}})
+  assert r == {'value': 'hello'}
+  print('OK')
+  "
+
+---
+
+## TASK-034
+状态：未完成
+做什么：写 output node 的 template.json 和 code.py
+输入：project/graph/schemas/template.schema.json
+输出：project/templates/functional/output/template.json
+      project/templates/functional/output/implementations/python/code.py
+
+template.json 内容：
+```json
+{
+  "id": "output",
+  "version": "1.0.0",
+  "schema_version": "1.0.0",
+  "name": "Output",
+  "description": "Graph exit point. Collects the final value and labels it.",
+  "tags": ["io", "output", "sink"],
+  "inputs": {
+    "value": {
+      "id": "value",
+      "schema": { "shape": "union", "variants": ["string","number","bool","list","dict","null"] },
+      "required": true,
+      "description": "Final value to output"
+    }
+  },
+  "outputs": {
+    "value": {
+      "id": "value",
+      "schema": { "shape": "union", "variants": ["string","number","bool","list","dict","null"] },
+      "required": true,
+      "description": "Pass-through of the input value"
+    }
+  },
+  "implementations": {
+    "python": { "code_file": "implementations/python/code.py" }
+  },
+  "tests": {
+    "fixed_cases": [
+      {
+        "id": "happy_path",
+        "description": "pass through a value",
+        "inputs": { "value": "hello" },
+        "expect": { "outputs": { "value": "hello" } },
+        "tags": ["happy_path"]
+      }
+    ],
+    "generated_rules": {
+      "boundary": false,
+      "null_input": true,
+      "type_error": false,
+      "missing_port": true,
+      "overflow": false
+    }
+  }
+}
+```
+
+code.py 内容：
+```python
+def output(inputs: dict, meta: dict) -> dict:
+    value = inputs.get("value")
+    return {"value": value}
+```
+
+验证：
+  python -c "
+  import importlib.util
+  spec = importlib.util.spec_from_file_location('output_code',
+    'project/templates/functional/output/implementations/python/code.py')
+  mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+  r = mod.output({'value': 42}, {})
+  assert r == {'value': 42}
+  print('OK')
+  "
+
+---
+
+## TASK-035
+状态：未完成
+做什么：把 graph/latest.json 更新为使用正式 input/output node
+输入：project/graph/latest.json（TASK-008 的版本），TASK-033，TASK-034
+输出：project/graph/latest.json（更新）
+
+要求：
+  node_input 的 template_id 改为 "input"
+  在 graph 末尾加一个 node_output（template_id = "output"）
+  加一条 edge：node_save.success → node_output.value
+  SEQ children 末尾加入 node_output
+
+验证：
+  python -c "
+  import sys; sys.path.insert(0,'project')
+  from compiler.runtime.execute_graph import execute_graph
+  r = execute_graph({
+    'graph_path':    'graph/latest.json',
+    'registry_path': 'registry/operator_registry.json',
+    'trace_dir':     'runtime/traces/'
+  },{})
+  assert r['ok'] == True
+  assert r['outputs']['value'] == True
+  print('OK')
+  "
+
+---
+
+# 完成标志
+
+TASK-035 验证通过 = Phase 4-8 完成
+
+之后的 PHASE（等 TASK-035 通过后再写）：
+
+PHASE 9：Python 表达式 TRANSFORM node（用操作库执行单步计算）
+PHASE 10：LaTeX 表达式支持（前端渲染，内部同一 AST）
 PHASE 11：PARALLEL primitive
 PHASE 12：FEEDBACK edge
-PHASE 13：多人协作
-PHASE 14：权限系统
+PHASE 13：Editor 前端（React Flow）
+PHASE 14：多人协作
+PHASE 15：权限系统

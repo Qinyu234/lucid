@@ -1,0 +1,72 @@
+{
+  "id": "branch",
+  "version": "1.0.0",
+  "schema_version": "1.0.0",
+  "name": "Branch",
+  "description": "Evaluate a condition and route to true_node or false_node",
+  "tags": ["control", "condition", "if"],
+  "inputs": {
+    "condition": {
+      "id": "condition",
+      "schema": { "shape": "bool" },
+      "required": true,
+      "description": "If true, execute true_branch. If false, execute false_branch."
+    },
+    "value": {
+      "id": "value",
+      "schema": { "shape": "union", "variants": ["string","number","bool","list","dict","null"] },
+      "required": false,
+      "description": "Optional value to pass into whichever branch is taken"
+    }
+  },
+  "outputs": {
+    "result": {
+      "id": "result",
+      "schema": { "shape": "union", "variants": ["string","number","bool","list","dict","null"] },
+      "required": true,
+      "description": "Output from whichever branch was executed"
+    }
+  },
+  "implementations": {
+    "python": { "code_file": "implementations/python/code.py" }
+  },
+  "tests": {
+    "fixed_cases": [
+      {
+        "id": "happy_path_true",
+        "description": "condition true routes to true_branch",
+        "inputs": { "condition": true, "value": "hello" },
+        "expect": { "outputs": { "result": "hello" } },
+        "tags": ["happy_path"]
+      },
+      {
+        "id": "happy_path_false",
+        "description": "condition false routes to false_branch",
+        "inputs": { "condition": false, "value": "hello" },
+        "expect": { "outputs": { "result": null } },
+        "tags": ["happy_path"]
+      },
+      {
+        "id": "null_condition",
+        "description": "null condition should error",
+        "inputs": { "condition": null, "value": "hello" },
+        "expect": { "error": true },
+        "tags": ["null_input"]
+      },
+      {
+        "id": "type_error",
+        "description": "non-bool condition should error",
+        "inputs": { "condition": "yes", "value": "hello" },
+        "expect": { "error": true },
+        "tags": ["type_error"]
+      }
+    ],
+    "generated_rules": {
+      "boundary": false,
+      "null_input": true,
+      "type_error": true,
+      "missing_port": true,
+      "overflow": false
+    }
+  }
+}

@@ -44,7 +44,7 @@ def execute_graph(inputs: dict, meta: dict) -> dict:
     for node_id, node in graph["nodes"].items():
         if node.get("type") == "functional":
             template_id = node.get("template_id")
-            if template_id and template_id != "input" and template_id not in template_ids:
+            if template_id and template_id != "input" and template_id != "output" and template_id not in template_ids:
                 template_ids.add(template_id)
                 result = load_template({
                     "template_id": template_id,
@@ -74,6 +74,36 @@ def execute_graph(inputs: dict, meta: dict) -> dict:
                 "trace_path": trace_path,
                 "registry_path": registry_path
             }
+        })
+        outputs = result["outputs"]
+    elif kind == "BRANCH":
+        from compiler.runtime.execute_branch import execute_branch
+        result = execute_branch({
+            "node": root_node
+        }, {
+            "graph": graph,
+            "templates": templates,
+            "context": {
+                "run_id": run_id,
+                "trace_path": trace_path,
+                "registry_path": registry_path
+            },
+            "resolved_inputs": {}
+        })
+        outputs = result
+    elif kind == "LOOP":
+        from compiler.runtime.execute_loop import execute_loop
+        result = execute_loop({
+            "node": root_node
+        }, {
+            "graph": graph,
+            "templates": templates,
+            "context": {
+                "run_id": run_id,
+                "trace_path": trace_path,
+                "registry_path": registry_path
+            },
+            "node_outputs": {}
         })
         outputs = result["outputs"]
     else:

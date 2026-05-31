@@ -1,0 +1,45 @@
+{
+  "id": "output",
+  "version": "1.0.0",
+  "schema_version": "1.0.0",
+  "name": "Output",
+  "description": "Graph exit point. Collects the final value and labels it.",
+  "tags": ["io", "output", "sink"],
+  "inputs": {
+    "value": {
+      "id": "value",
+      "schema": { "shape": "union", "variants": ["string","number","bool","list","dict","null"] },
+      "required": true,
+      "description": "Final value to output"
+    }
+  },
+  "outputs": {
+    "value": {
+      "id": "value",
+      "schema": { "shape": "union", "variants": ["string","number","bool","list","dict","null"] },
+      "required": true,
+      "description": "Pass-through of the input value"
+    }
+  },
+  "implementations": {
+    "python": { "code_file": "implementations/python/code.py" }
+  },
+  "tests": {
+    "fixed_cases": [
+      {
+        "id": "happy_path",
+        "description": "pass through a value",
+        "inputs": { "value": "hello" },
+        "expect": { "outputs": { "value": "hello" } },
+        "tags": ["happy_path"]
+      }
+    ],
+    "generated_rules": {
+      "boundary": false,
+      "null_input": true,
+      "type_error": false,
+      "missing_port": true,
+      "overflow": false
+    }
+  }
+}

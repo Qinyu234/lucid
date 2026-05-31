@@ -1,0 +1,22 @@
+{
+  "run_id": "1780249294194_5322",
+  "node_id": "node_save",
+  "node_inputs": {
+    "data": {
+      "tokens": [
+        "hello",
+        "world"
+      ]
+    },
+    "path": "d:\\10_projects\\static_generator\\project\\io/output/branch_result.json"
+  },
+  "node_outputs": {
+    "outputs": {
+      "success": true,
+      "path": "d:\\10_projects\\static_generator\\project\\io/output/branch_result.json"
+    }
+  },
+  "status": "ok",
+  "error": null,
+  "duration_ms": 7
+}

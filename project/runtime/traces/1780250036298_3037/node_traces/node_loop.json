@@ -1,0 +1,16 @@
+{
+  "run_id": "1780250036298_3037",
+  "node_id": "node_loop",
+  "node_inputs": {
+    "items": [
+      "hello world",
+      "foo bar",
+      "baz"
+    ],
+    "initial_accumulator": []
+  },
+  "node_outputs": null,
+  "status": "error",
+  "error": "Control kind 'LOOP' not implemented in SEQ",
+  "duration_ms": 0
+}

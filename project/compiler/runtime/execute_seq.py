@@ -76,7 +76,32 @@ def execute_seq(inputs: dict, meta: dict) -> dict:
         status = "ok"
         
         try:
-            outputs = execute_node(child_node, child_inputs, templates, registry_path)
+            if child_node.get("type") == "control":
+                kind = child_node.get("kind")
+                if kind == "BRANCH":
+                    from compiler.runtime.execute_branch import execute_branch
+                    outputs = execute_branch({
+                        "node": child_node
+                    }, {
+                        "graph": graph,
+                        "templates": templates,
+                        "context": context,
+                        "node_outputs": node_outputs
+                    })
+                elif kind == "LOOP":
+                    from compiler.runtime.execute_loop import execute_loop
+                    outputs = execute_loop({
+                        "node": child_node
+                    }, {
+                        "graph": graph,
+                        "templates": templates,
+                        "context": context,
+                        "node_outputs": node_outputs
+                    })
+                else:
+                    raise ValueError(f"Control kind '{kind}' not implemented in SEQ")
+            else:
+                outputs = execute_node(child_node, child_inputs, templates, registry_path)
         except Exception as e:
             error = str(e)
             status = "error"
@@ -126,10 +151,17 @@ def execute_node(node: dict, inputs: dict, templates: dict, registry_path: str) 
         
         # Handle built-in "input" node
         if template_id == "input":
-            # Return the value from params to the specified port
+            # Return all params as outputs to their respective ports
+            outputs = {}
+            for key, value in inputs.items():
+                outputs[key] = value
+            return {"outputs": outputs}
+        
+        # Handle built-in "output" node
+        if template_id == "output":
+            # Pass through the value
             value = inputs.get("value")
-            port = inputs.get("port", "output")
-            return {"outputs": {port: value}}
+            return {"outputs": {"value": value}}
         
         # Load template
         template = templates.get(template_id)
