@@ -1,8 +1,0 @@
-{
-  "type": "object",
-  "required": ["in", "out"],
-  "properties": {
-    "in": { "type": "array", "items": { "ref": "io_field" } },
-    "out": { "type": "array", "items": { "ref": "io_field" } }
-  }
-}

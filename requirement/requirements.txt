@@ -1,3 +1,0 @@
-requests
-sentence_transformers
-pytest

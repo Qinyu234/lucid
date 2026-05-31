@@ -1,0 +1,22 @@
+{
+  "run_id": "1780246334084_9933",
+  "node_id": "node_save",
+  "node_inputs": {
+    "data": [
+      "hello",
+      "world",
+      "foo",
+      "bar"
+    ],
+    "path": "io/output/result.json"
+  },
+  "node_outputs": {
+    "outputs": {
+      "success": true,
+      "path": "io/output/result.json"
+    }
+  },
+  "status": "ok",
+  "error": null,
+  "duration_ms": 9
+}

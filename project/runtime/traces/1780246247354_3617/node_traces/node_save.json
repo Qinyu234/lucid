@@ -1,0 +1,12 @@
+{
+  "run_id": "1780246247354_3617",
+  "node_id": "node_save",
+  "node_inputs": {
+    "data": null,
+    "path": "io/output/result.json"
+  },
+  "node_outputs": null,
+  "status": "error",
+  "error": "input 'data' is required and cannot be None",
+  "duration_ms": 2
+}

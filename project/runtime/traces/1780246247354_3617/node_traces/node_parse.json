@@ -1,0 +1,18 @@
+{
+  "run_id": "1780246247354_3617",
+  "node_id": "node_parse",
+  "node_inputs": {
+    "text": "hello world foo bar"
+  },
+  "node_outputs": {
+    "tokens": [
+      "hello",
+      "world",
+      "foo",
+      "bar"
+    ]
+  },
+  "status": "ok",
+  "error": null,
+  "duration_ms": 1
+}

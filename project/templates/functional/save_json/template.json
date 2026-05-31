@@ -1,0 +1,62 @@
+{
+  "id": "save_json",
+  "version": "1.0.0",
+  "schema_version": "1.0.0",
+  "name": "Save JSON",
+  "description": "Save a value to a JSON file",
+  "tags": ["io", "save", "output"],
+  "inputs": {
+    "data": {
+      "id": "data",
+      "schema": { "shape": "dict" },
+      "required": true,
+      "description": "Data to save"
+    },
+    "path": {
+      "id": "path",
+      "schema": { "shape": "string" },
+      "required": true,
+      "description": "Output file path"
+    }
+  },
+  "outputs": {
+    "success": {
+      "id": "success",
+      "schema": { "shape": "bool" },
+      "required": true
+    },
+    "path": {
+      "id": "path",
+      "schema": { "shape": "string" },
+      "required": true
+    }
+  },
+  "implementations": {
+    "python": { "code_file": "implementations/python/code.py" }
+  },
+  "tests": {
+    "fixed_cases": [
+      {
+        "id": "happy_path_basic",
+        "description": "save a dict to a file",
+        "inputs": { "data": {"key": "value"}, "path": "/tmp/test_output.json" },
+        "expect": { "outputs": { "success": true, "path": "/tmp/test_output.json" } },
+        "tags": ["happy_path"]
+      },
+      {
+        "id": "null_data",
+        "description": "null data should error",
+        "inputs": { "data": null, "path": "/tmp/test.json" },
+        "expect": { "error": true },
+        "tags": ["null_input"]
+      }
+    ],
+    "generated_rules": {
+      "boundary": false,
+      "null_input": true,
+      "type_error": true,
+      "missing_port": true,
+      "overflow": false
+    }
+  }
+}

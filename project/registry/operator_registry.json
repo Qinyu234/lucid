@@ -1,0 +1,23 @@
+{
+  "version": "1.0.0",
+  "templates": [
+    {
+      "id": "input",
+      "version": "1.0.0",
+      "location": "builtin:input",
+      "tags": ["builtin", "input"]
+    },
+    {
+      "id": "parse_text",
+      "version": "1.0.0",
+      "location": "templates/functional/parse_text/template.json",
+      "tags": ["text", "split", "tokenize"]
+    },
+    {
+      "id": "save_json",
+      "version": "1.0.0",
+      "location": "templates/functional/save_json/template.json",
+      "tags": ["io", "save", "output"]
+    }
+  ]
+}

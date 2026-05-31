@@ -1,0 +1,17 @@
+{
+  "version": "1.0.0",
+  "shapes": ["string", "number", "bool", "bytes", "list", "null", "enum", "union"],
+  "coerce": [
+    { "from": "number", "to": "string", "safety": "safe",   "fn": "str(x)" },
+    { "from": "bool",   "to": "string", "safety": "safe",   "fn": "str(x)" },
+    { "from": "bool",   "to": "number", "safety": "safe",   "fn": "int(x)" },
+    { "from": "string", "to": "number", "safety": "unsafe", "fn": "float(x)" },
+    { "from": "string", "to": "bool",   "safety": "unsafe", "fn": "x in ('true','1','yes')" },
+    { "from": "dict",   "to": "string", "safety": "safe",   "fn": "json.dumps(x)" },
+    { "from": "string", "to": "dict",   "safety": "unsafe", "fn": "json.loads(x)" },
+    { "from": "list",   "to": "string", "safety": "unsafe", "fn": "json.dumps(x)" },
+    { "from": "enum",   "to": "string", "safety": "safe",   "fn": "x" },
+    { "from": "bytes",  "to": "string", "safety": "unsafe", "fn": "x.decode('utf-8')" },
+    { "from": "string", "to": "bytes",  "safety": "safe",   "fn": "x.encode('utf-8')" }
+  ]
+}

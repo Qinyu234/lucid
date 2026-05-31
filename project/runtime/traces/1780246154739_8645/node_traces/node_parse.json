@@ -1,0 +1,11 @@
+{
+  "run_id": "1780246154739_8645",
+  "node_id": "node_parse",
+  "node_inputs": {
+    "text": null
+  },
+  "node_outputs": null,
+  "status": "error",
+  "error": "input 'text' is required and cannot be None",
+  "duration_ms": 2
+}

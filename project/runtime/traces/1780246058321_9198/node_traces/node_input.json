@@ -1,0 +1,17 @@
+{
+  "run_id": "1780246058321_9198",
+  "node_id": "node_input",
+  "node_inputs": {
+    "value": "hello world foo bar",
+    "port": "text"
+  },
+  "node_outputs": {
+    "outputs": {
+      "value": "hello world foo bar",
+      "port": "text"
+    }
+  },
+  "status": "ok",
+  "error": null,
+  "duration_ms": 0
+}
