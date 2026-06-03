@@ -1,1807 +1,1163 @@
-# AI-EXECUTABLE TODO
-# 每个任务：一件事 / 明确输入 / 明确输出 / 可验证
-# 执行顺序：严格按编号，前一个完成再做下一个
-# 当前状态：所有任务未开始，从 TASK-001 开始
+# Project Direction v0.2 — AI Executable Tasks
+# 思想来源：20260602（主导）+ philosophy.md（补充）
+# 使用案例：不变（前端理解 + 太阳能小组件）
+# 执行规则：严格按编号，前一个验证通过再做下一个
+# 每个 task 完成后：状态改为"已完成"
 
 ---
 
-
-
-# 之后的 PHASE（不展开，等 TASK-017 通过后再写）
-
-PHASE 4：BRANCH primitive
-PHASE 5：LOOP primitive + accumulator
-PHASE 6：强制 Macro（10个软提示，15个强制）
-PHASE 7：操作库（文字/数字/列表操作，用户从列表选）
-PHASE 8：INPUT node（用户在图上提供数据）
-PHASE 9：LaTeX 表达式支持
-PHASE 10：Editor 前端（React Flow）
-PHASE 11：PARALLEL primitive
-PHASE 12：FEEDBACK edge
-PHASE 13：多人协作
-PHASE 14：权限系统
-
-
-# AI-EXECUTABLE TODO
-# 每个任务：一件事 / 明确输入 / 明确输出 / 可验证
-# 执行顺序：严格按编号，前一个完成再做下一个
-# 当前状态：所有任务未开始，从 TASK-001 开始
-
----
-
-# PHASE 0 — 目录和空文件建立
-# 目标：建立项目骨架，所有后续任务都有地方写
+# V0.1 — Canonicalization Pipeline
+# 目标：Python source → canonical IR，双向 source map
+# 完成标志：任意 Python 文件能跑完整个管道，输出 canonical IR JSON
 
 ---
 
 ## TASK-001
-状态：未完成
+状态：已完成
 做什么：建立项目目录结构
 输入：无
-输出：以下目录和空文件
+输出：以下目录和文件
 
 ```
 project/
-├── run.py                                    # 空文件
-├── graph/
-│   ├── latest.json                           # 空文件
-│   └── schemas/
-│       ├── primitives.schema.json            # 待完成
-│       ├── io.schema.json                    # 待完成
-│       ├── node.schema.json                  # 待完成
-│       ├── graph.schema.json                 # 待完成
-│       ├── template.schema.json              # 待完成
-│       └── operation.schema.json             # 待完成
-├── templates/
-│   └── functional/
-│       ├── parse_text/
-│       │   ├── template.json                 # 空文件
-│       │   ├── tests.json                    # 空文件
-│       │   └── implementations/
-│       │       └── python/
-│       │           └── code.py               # 空文件
-│       └── save_json/
-│           ├── template.json                 # 空文件
-│           ├── tests.json                    # 空文件
-│           └── implementations/
-│               └── python/
-│                   └── code.py               # 空文件
-├── registry/
-│   ├── operator_registry.json                # 空文件
-│   └── type_registry.json                    # 空文件
+├── README.md
 ├── compiler/
-│   ├── accessor/
-│   │   └── schema_accessor.py                # 待完成
-│   ├── loader/
-│   │   ├── load_graph.py                     # 空文件
-│   │   └── load_template.py                  # 空文件
-│   ├── passes/
-│   │   ├── pass_runner.py                    # 空文件
-│   │   ├── 001_validate_nodes.py             # 空文件
-│   │   └── 002_validate_edges.py             # 空文件
-│   └── runtime/
-│       ├── execute_graph.py                  # 空文件
-│       ├── execute_seq.py                    # 空文件
-│       └── trace_runtime.py                  # 空文件
-├── io/
-│   └── input/
-│       └── sample.txt                        # 写入内容："hello world foo bar"
-└── runtime/
-    └── traces/                               # 空目录
+│   ├── __init__.py
+│   ├── ingest/
+│   │   └── __init__.py
+│   ├── macro/
+│   │   └── __init__.py
+│   ├── canon/
+│   │   └── __init__.py
+│   ├── ir/
+│   │   └── __init__.py
+│   ├── projection/
+│   │   └── __init__.py
+│   ├── pattern/
+│   │   └── __init__.py
+│   ├── rewrite/
+│   │   └── __init__.py
+│   ├── validation/
+│   │   └── __init__.py
+│   └── trace/
+│       └── __init__.py
+├── examples/
+└── tests/
 ```
 
-验证：运行 `find project/ -type f | sort`，输出和上面一致
+README.md 必须包含：
+- "code is execution truth"
+- "graph is structural projection"
+- "canonical IR is structural contract"
+- "system does not guess semantics"
+- "AI owns no structural truth"
 
----
-
-# PHASE 1 — Registry 填充
-# 目标：系统知道有哪些合法的 template 和类型
+验证：
+```
+python -c "
+from pathlib import Path
+dirs = ['compiler/ingest','compiler/macro','compiler/canon',
+        'compiler/ir','compiler/projection','compiler/pattern',
+        'compiler/rewrite','compiler/validation','compiler/trace']
+for d in dirs:
+    assert Path('project/'+d).exists(), d
+    assert Path('project/'+d+'/__init__.py').exists(), d+'/__init__.py'
+text = Path('project/README.md').read_text(encoding='utf-8')
+assert 'execution truth' in text
+assert 'structural contract' in text
+print('OK')
+"
+```
 
 ---
 
 ## TASK-002
-状态：未完成
-做什么：写 type_registry.json
-输入：无
-输出：project/registry/type_registry.json
+状态：已完成
+做什么：定义 Canonical IR schema
+输入：project_direction_outline.md 第五节
+输出：project/compiler/ir/schema.py
 
-内容：
-```json
-{
-  "version": "1.0.0",
-  "shapes": ["string", "number", "bool", "bytes", "list", "null", "enum", "union"],
-  "coerce": [
-    { "from": "number", "to": "string", "safety": "safe",   "fn": "str(x)" },
-    { "from": "bool",   "to": "string", "safety": "safe",   "fn": "str(x)" },
-    { "from": "bool",   "to": "number", "safety": "safe",   "fn": "int(x)" },
-    { "from": "string", "to": "number", "safety": "unsafe", "fn": "float(x)" },
-    { "from": "string", "to": "bool",   "safety": "unsafe", "fn": "x in ('true','1','yes')" },
-    { "from": "dict",   "to": "string", "safety": "safe",   "fn": "json.dumps(x)" },
-    { "from": "string", "to": "dict",   "safety": "unsafe", "fn": "json.loads(x)" },
-    { "from": "list",   "to": "string", "safety": "unsafe", "fn": "json.dumps(x)" },
-    { "from": "enum",   "to": "string", "safety": "safe",   "fn": "x" },
-    { "from": "bytes",  "to": "string", "safety": "unsafe", "fn": "x.decode('utf-8')" },
-    { "from": "string", "to": "bytes",  "safety": "safe",   "fn": "x.encode('utf-8')" }
-  ]
-}
+要求：
+  IR 是结构契约，不是语义 IR。
+  IR 只表达可静态展开的执行结构。
+
+  定义 ir_node dict：
+  ```python
+  {
+    "id": str,
+    "kind": str,        # function / call / assign / branch / loop / return / side_effect / opaque
+    "label": str,
+    "scope": str,       # 所属 scope id
+    "inputs": list,     # 依赖的 ir_node id 列表
+    "outputs": list,    # 产出的 ir_node id 列表
+    "meta": dict,       # 附加信息（side_effect flag，safe_level 等）
+    "source_ref": dict, # {"path": str, "lineno": int, "end_lineno": int}
+  }
+  ```
+
+  定义 ir_scope dict：
+  ```python
+  {
+    "id": str,
+    "kind": str,   # module / function / class / block
+    "parent": str | None,
+    "node_ids": list[str],
+  }
+  ```
+
+  定义 canonical_ir dict（顶层）：
+  ```python
+  {
+    "version": str,
+    "source_path": str,
+    "nodes": dict,    # id → ir_node
+    "scopes": dict,   # id → ir_scope
+    "edges": list,    # [{"from": id, "to": id, "kind": str}]
+    "source_map": dict,  # node_id → source_ref
+    "meta": dict,
+  }
+  ```
+
+  safe_level（写入 node meta）：
+  ```python
+  SAFE_LEVEL = {
+    "L1": "implicit_to_explicit",   # 完全安全：desugaring / scope explicitization
+    "L2": "trace_preserving",       # 条件安全：结构重组但 trace 不变
+    "L3": "forbidden",              # 禁止：runtime-dependent（eval/reflection/monkey patch）
+    "OPAQUE": "opaque",             # 系统无法分析，标记为黑盒
+  }
+  ```
+
+  提供函数：
+  ```python
+  def empty_ir(source_path: str, version: str = "0.1") -> dict
+  def make_ir_node(node_id: str, kind: str, label: str, scope: str, **kwargs) -> dict
+  def make_scope(scope_id: str, kind: str, parent: str | None = None) -> dict
+  def make_edge(from_id: str, to_id: str, kind: str = "data") -> dict
+  ```
+
+  kind 合法值（ir_node）：
+  function / call / assign / branch / loop / return / side_effect / opaque
+
+  kind 合法值（ir_scope）：
+  module / function / class / block
+
+  kind 合法值（edge）：
+  data / control / scope / mutation
+
+验证：
 ```
-
-验证：文件存在，json 合法（python -c "import json; json.load(open('...'))"）
+python -c "
+import sys; sys.path.insert(0,'project')
+from compiler.ir.schema import empty_ir, make_ir_node, make_scope, make_edge
+ir = empty_ir('test.py')
+n = make_ir_node('n1','function','add','scope_module')
+s = make_scope('scope_module','module')
+e = make_edge('n1','n2','data')
+assert ir['version'] == '0.1'
+assert n['kind'] == 'function'
+assert s['kind'] == 'module'
+assert e['kind'] == 'data'
+print('OK')
+"
+```
 
 ---
 
 ## TASK-003
-状态：未完成
-做什么：写 parse_text 的 template.json
-输入：graph/schemas/template.schema.json（看格式）
-输出：project/templates/functional/parse_text/template.json
+状态：已完成
+做什么：写 Python source ingestor
+输入：任意 Python 文件路径
+输出：project/compiler/ingest/python_ingest.py
 
-内容：
-```json
-{
-  "id": "parse_text",
-  "version": "1.0.0",
-  "schema_version": "1.0.0",
-  "name": "Parse Text",
-  "description": "Split a text string into a list of tokens by separator",
-  "tags": ["text", "split", "tokenize"],
-  "inputs": {
-    "text": {
-      "id": "text",
-      "schema": { "shape": "string" },
-      "required": true,
-      "description": "Input text to split"
-    },
-    "separator": {
-      "id": "separator",
-      "schema": { "shape": "string" },
-      "required": false,
-      "default": " ",
-      "description": "Separator string, default is space"
-    }
-  },
-  "outputs": {
-    "tokens": {
-      "id": "tokens",
-      "schema": { "shape": "list", "items": { "shape": "string" } },
-      "required": true,
-      "description": "List of tokens"
-    }
-  },
-  "implementations": {
-    "python": { "code_file": "implementations/python/code.py" }
-  },
-  "tests": {
-    "fixed_cases": [
-      {
-        "id": "happy_path_basic",
-        "description": "basic split by space",
-        "inputs": { "text": "hello world", "separator": " " },
-        "expect": { "outputs": { "tokens": ["hello", "world"] } },
-        "tags": ["happy_path"]
-      },
-      {
-        "id": "happy_path_empty",
-        "description": "empty string returns empty list",
-        "inputs": { "text": "", "separator": " " },
-        "expect": { "outputs": { "tokens": [] } },
-        "tags": ["boundary"]
-      },
-      {
-        "id": "null_input",
-        "description": "null text should error",
-        "inputs": { "text": null, "separator": " " },
-        "expect": { "error": true },
-        "tags": ["null_input"]
-      },
-      {
-        "id": "type_error",
-        "description": "number input should error",
-        "inputs": { "text": 123, "separator": " " },
-        "expect": { "error": true },
-        "tags": ["type_error"]
-      }
-    ],
-    "generated_rules": {
-      "boundary": true,
-      "null_input": true,
-      "type_error": true,
-      "missing_port": true,
-      "overflow": false
-    }
+要求：
+  函数签名：def ingest(path: str) -> dict
+  返回：
+  ```python
+  {
+    "path": str,
+    "source": str,
+    "ast_tree": ast.AST,
+    "has_macros": bool,   # v0 永远 False，占位
   }
-}
-```
+  ```
+  读文件，parse，捕获 SyntaxError 返回 {"error": str}
+  不做语义分析，只做读取和 parse
 
-验证：json 合法，有 id / inputs / outputs / implementations / tests 字段
+验证：
+```
+python -c "
+import sys; sys.path.insert(0,'project')
+from pathlib import Path
+from compiler.ingest.python_ingest import ingest
+p = Path('project/examples/sample.py')
+p.parent.mkdir(exist_ok=True)
+p.write_text('def add(a,b):\n    return a+b\n', encoding='utf-8')
+r = ingest(str(p))
+assert r['path'] == str(p)
+assert r['has_macros'] == False
+assert r['ast_tree'] is not None
+print('OK')
+"
+```
 
 ---
 
 ## TASK-004
-状态：未完成
-做什么：写 parse_text 的 code.py
-输入：TASK-003 的 template.json（看 inputs/outputs 定义）
-输出：project/templates/functional/parse_text/implementations/python/code.py
+状态：已完成
+做什么：写 macro expansion layer（v0 stub）
+输入：TASK-003 的 ingest result
+输出：project/compiler/macro/expand.py
 
-内容：
-```python
-def parse_text(inputs: dict, meta: dict) -> dict:
-    text = inputs.get("text")
-    separator = inputs.get("separator", " ")
-
-    if text is None:
-        raise ValueError("input 'text' is required and cannot be None")
-    if not isinstance(text, str):
-        raise TypeError(f"input 'text' must be string, got {type(text).__name__}")
-    if not isinstance(separator, str):
-        raise TypeError(f"input 'separator' must be string, got {type(separator).__name__}")
-
-    if text == "":
-        tokens = []
-    else:
-        tokens = text.split(separator)
-
-    return { "tokens": tokens }
-```
+要求：
+  函数签名：def expand(ingested: dict) -> dict
+  v0 实现：
+    has_macros == False → 原样返回，不做任何变换
+    has_macros == True  → raise NotImplementedError（v0 不支持）
+  返回和 ingest 格式相同，加一个字段 "macro_expanded": bool
+  这一层必须存在，因为 macro expansion 必须先于 AST 稳定化
 
 验证：
-  python -c "from code import parse_text; r = parse_text({'text':'hello world','separator':' '},{});
-  assert r == {'tokens':['hello','world']}, r"
+```
+python -c "
+import sys; sys.path.insert(0,'project')
+from pathlib import Path
+from compiler.ingest.python_ingest import ingest
+from compiler.macro.expand import expand
+p = Path('project/examples/sample.py')
+r = expand(ingest(str(p)))
+assert r['macro_expanded'] == False
+print('OK')
+"
+```
 
 ---
 
 ## TASK-005
-状态：未完成
-做什么：写 save_json 的 template.json
-输入：graph/schemas/template.schema.json（看格式）
-输出：project/templates/functional/save_json/template.json
+状态：已完成
+做什么：写 Python AST → canonical IR 的 canonicalization
+输入：TASK-004 的 expand result，TASK-002 的 ir/schema.py
+输出：project/compiler/canon/python_canon.py
 
-内容：
-```json
-{
-  "id": "save_json",
-  "version": "1.0.0",
-  "schema_version": "1.0.0",
-  "name": "Save JSON",
-  "description": "Save a value to a JSON file",
-  "tags": ["io", "save", "output"],
-  "inputs": {
-    "data": {
-      "id": "data",
-      "schema": { "shape": "dict" },
-      "required": true,
-      "description": "Data to save"
-    },
-    "path": {
-      "id": "path",
-      "schema": { "shape": "string" },
-      "required": true,
-      "description": "Output file path"
-    }
-  },
-  "outputs": {
-    "success": {
-      "id": "success",
-      "schema": { "shape": "bool" },
-      "required": true
-    },
-    "path": {
-      "id": "path",
-      "schema": { "shape": "string" },
-      "required": true
-    }
-  },
-  "implementations": {
-    "python": { "code_file": "implementations/python/code.py" }
-  },
-  "tests": {
-    "fixed_cases": [
-      {
-        "id": "happy_path_basic",
-        "description": "save a dict to a file",
-        "inputs": { "data": {"key": "value"}, "path": "/tmp/test_output.json" },
-        "expect": { "outputs": { "success": true, "path": "/tmp/test_output.json" } },
-        "tags": ["happy_path"]
-      },
-      {
-        "id": "null_data",
-        "description": "null data should error",
-        "inputs": { "data": null, "path": "/tmp/test.json" },
-        "expect": { "error": true },
-        "tags": ["null_input"]
-      }
-    ],
-    "generated_rules": {
-      "boundary": false,
-      "null_input": true,
-      "type_error": true,
-      "missing_port": true,
-      "overflow": false
-    }
-  }
-}
+要求：
+  函数签名：def canonicalize(expanded: dict) -> dict
+  返回：canonical_ir dict（TASK-002 定义的格式）
+
+  必须处理的 AST 节点（优先级从高到低）：
+
+  FunctionDef / AsyncFunctionDef
+    → ir_node kind="function"
+    → 创建对应 scope（kind="function"）
+    → source_ref 记录 lineno / end_lineno
+
+  Call
+    → ir_node kind="call"
+    → label = 被调用函数名（静态可知时）或 "dynamic_call"（静态不可知时）
+    → 如果是 print / open / requests.* / subprocess.* → meta["side_effect"] = True
+
+  Assign / AugAssign / AnnAssign
+    → ir_node kind="assign"
+    → AugAssign（a += 1）必须 desugar 为 a = a + 1 的显式形式
+      meta["desugared"] = True, meta["safe_level"] = "L1"
+
+  If
+    → ir_node kind="branch"
+    → meta["has_else"] = bool
+
+  For / While
+    → ir_node kind="loop"
+    → meta["loop_kind"] = "for" | "while"
+
+  Return
+    → ir_node kind="return"
+
+  eval() / exec() / getattr() 动态调用
+    → ir_node kind="opaque"
+    → meta["safe_level"] = "L3"
+    → meta["reason"] = "runtime-dependent"
+
+  scope 规则：
+    - module 级别：scope_id = "scope:module"
+    - 每个 FunctionDef：scope_id = "scope:func:{name}:{lineno}"
+    - 嵌套 scope 的 parent 正确指向外层 scope
+
+  edge 规则：
+    - Call 的 caller → callee：kind="control"
+    - Assign 的 value → target：kind="data"
+    - If 的 condition → branch node：kind="control"
+    - 函数内节点 → 函数 scope：kind="scope"
+
+验证：
 ```
+python -c "
+import sys; sys.path.insert(0,'project')
+from pathlib import Path
+from compiler.ingest.python_ingest import ingest
+from compiler.macro.expand import expand
+from compiler.canon.python_canon import canonicalize
 
-验증：json 合법，有 id / inputs / outputs / implementations / tests 字段
+p = Path('project/examples/canon_sample.py')
+p.write_text('''
+def f(x):
+    a = x + 1
+    if a:
+        print(a)
+    return a
+'''.strip(), encoding='utf-8')
+
+ir = canonicalize(expand(ingest(str(p))))
+kinds = [n['kind'] for n in ir['nodes'].values()]
+assert 'function' in kinds
+assert 'assign' in kinds
+assert 'branch' in kinds
+assert 'return' in kinds
+assert any(n.get('meta',{}).get('side_effect') for n in ir['nodes'].values())
+assert 'scope:module' in ir['scopes']
+print('OK')
+"
+```
 
 ---
 
 ## TASK-006
-状态：未完成
-做什么：写 save_json 的 code.py
-输入：TASK-005 的 template.json（看 inputs/outputs 定义）
-输出：project/templates/functional/save_json/implementations/python/code.py
+状态：已完成
+做什么：写 canonical IR validator
+输入：canonical_ir dict
+输出：project/compiler/canon/validate_ir.py
 
-内容：
-```python
-import json
-import os
+要求：
+  函数签名：def validate_ir(ir: dict) -> list[dict]
+  返回 issue list，不 raise
+  issue 格式：{"level": "error"|"warning", "code": str, "message": str, "target": str|None}
 
-def save_json(inputs: dict, meta: dict) -> dict:
-    data = inputs.get("data")
-    path = inputs.get("path")
-
-    if data is None:
-        raise ValueError("input 'data' is required and cannot be None")
-    if path is None:
-        raise ValueError("input 'path' is required and cannot be None")
-    if not isinstance(path, str):
-        raise TypeError(f"input 'path' must be string, got {type(path).__name__}")
-
-    os.makedirs(os.path.dirname(path), exist_ok=True) if os.path.dirname(path) else None
-
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-
-    return { "success": True, "path": path }
-```
+  检查项：
+  - ir 必须有 version / source_path / nodes / scopes / edges / source_map / meta
+  - node id 不重复
+  - node kind 在合法集合里（function/call/assign/branch/loop/return/side_effect/opaque）
+  - edge 引用的 from/to node 存在
+  - scope 引用的 node_ids 里的 node 存在
+  - branch node 没有 inputs → warning（BRANCH_NO_CONDITION）
+  - loop node 没有 inputs → warning（LOOP_NO_ITERATOR）
+  - opaque node → warning（OPAQUE_NODE，提示无法分析）
+  - L3 node → warning（FORBIDDEN_CONSTRUCT）
 
 验证：
-  python -c "from code import save_json;
-  r = save_json({'data':{'k':'v'},'path':'/tmp/test.json'},{});
-  assert r['success'] == True"
+```
+python -c "
+import sys; sys.path.insert(0,'project')
+from pathlib import Path
+from compiler.ingest.python_ingest import ingest
+from compiler.macro.expand import expand
+from compiler.canon.python_canon import canonicalize
+from compiler.canon.validate_ir import validate_ir
+
+p = Path('project/examples/canon_sample.py')
+ir = canonicalize(expand(ingest(str(p))))
+issues = validate_ir(ir)
+errors = [i for i in issues if i['level'] == 'error']
+assert errors == [], errors
+print('OK')
+"
+```
 
 ---
 
 ## TASK-007
-状态：未完成
-做什么：写 operator_registry.json
-输入：TASK-003 的 template.json，TASK-005 的 template.json
-输出：project/registry/operator_registry.json
+状态：已完成
+做什么：写 source map 双向定位
+输入：canonical_ir dict
+输出：project/compiler/ir/source_map.py
 
-内容：
-```json
-{
-  "version": "1.0.0",
-  "templates": [
-    {
-      "id": "parse_text",
-      "version": "1.0.0",
-      "location": "templates/functional/parse_text/template.json",
-      "tags": ["text", "split", "tokenize"]
-    },
-    {
-      "id": "save_json",
-      "version": "1.0.0",
-      "location": "templates/functional/save_json/template.json",
-      "tags": ["io", "save", "output"]
-    }
-  ]
-}
+要求：
+  函数：
+  ```python
+  def node_to_source(ir: dict, node_id: str) -> dict | None
+    # 返回 {"path": str, "lineno": int, "end_lineno": int} 或 None
+
+  def source_to_nodes(ir: dict, path: str, lineno: int) -> list[dict]
+    # 返回覆盖该行号的所有 ir_node list
+  ```
+
+验证：
 ```
+python -c "
+import sys; sys.path.insert(0,'project')
+from pathlib import Path
+from compiler.ingest.python_ingest import ingest
+from compiler.macro.expand import expand
+from compiler.canon.python_canon import canonicalize
+from compiler.ir.source_map import node_to_source, source_to_nodes
 
-验证：json 合法，templates 数组有 2 个元素
-
----
-
-# PHASE 2 — Graph 定义
-# 目标：写出第一个可执行的 graph
+p = Path('project/examples/canon_sample.py')
+ir = canonicalize(expand(ingest(str(p))))
+node_id = next(iter(ir['nodes']))
+ref = node_to_source(ir, node_id)
+assert ref is None or 'lineno' in ref
+nodes = source_to_nodes(ir, str(p), 2)
+assert isinstance(nodes, list)
+print('OK')
+"
+```
 
 ---
 
 ## TASK-008
-状态：未完成
-做什么：写 graph/latest.json
-输入：graph/schemas/graph.schema.json（看格式）
-输出：project/graph/latest.json
+状态：已完成
+做什么：写 pipeline CLI（v0.1 完整管道入口）
+输入：Python source file path
+输出：project/compiler/cli.py
 
-图的结构：
-  INPUT node → parse_text node → save_json node
-  root 是 SEQ，children 是这三个 node 的顺序
+要求：
+  支持命令：
+  ```
+  python -m compiler.cli project/examples/sample.py --out project/examples/sample.ir.json
+  ```
 
-内容：
-```json
-{
-  "id": "first_graph",
-  "version": "1.0.0",
-  "schema_version": "1.0.0",
-  "name": "First Graph",
-  "description": "Read text, parse into tokens, save as JSON",
-  "root_id": "root_seq",
-  "nodes": {
-    "root_seq": {
-      "id": "root_seq",
-      "type": "control",
-      "kind": "SEQ",
-      "inputs": {},
-      "outputs": {},
-      "children": ["node_input", "node_parse", "node_save"]
-    },
-    "node_input": {
-      "id": "node_input",
-      "type": "functional",
-      "template_id": "input",
-      "template_version": "1.0.0",
-      "inputs": {},
-      "outputs": {
-        "text": {
-          "id": "text",
-          "schema": { "shape": "string" }
-        }
-      },
-      "params": {
-        "value": "hello world foo bar",
-        "port": "text"
-      }
-    },
-    "node_parse": {
-      "id": "node_parse",
-      "type": "functional",
-      "template_id": "parse_text",
-      "template_version": "1.0.0",
-      "inputs": {
-        "text": { "id": "text", "schema": { "shape": "string" }, "required": true },
-        "separator": { "id": "separator", "schema": { "shape": "string" }, "required": false }
-      },
-      "outputs": {
-        "tokens": { "id": "tokens", "schema": { "shape": "list", "items": { "shape": "string" } }, "required": true }
-      }
-    },
-    "node_save": {
-      "id": "node_save",
-      "type": "functional",
-      "template_id": "save_json",
-      "template_version": "1.0.0",
-      "inputs": {
-        "data": { "id": "data", "schema": { "shape": "dict" }, "required": true },
-        "path": { "id": "path", "schema": { "shape": "string" }, "required": true }
-      },
-      "outputs": {
-        "success": { "id": "success", "schema": { "shape": "bool" }, "required": true },
-        "path": { "id": "path", "schema": { "shape": "string" }, "required": true }
-      },
-      "params": {
-        "path": "io/output/result.json"
-      }
-    }
-  },
-  "edges": {
-    "e1": {
-      "id": "e1",
-      "from_node": "node_input",
-      "from_port": "text",
-      "to_node": "node_parse",
-      "to_port": "text"
-    },
-    "e2": {
-      "id": "e2",
-      "from_node": "node_parse",
-      "from_port": "tokens",
-      "to_node": "node_save",
-      "to_port": "data"
-    }
-  }
-}
+  管道：
+    ingest → expand → canonicalize → validate_ir → 输出 JSON
+
+  如果 validate_ir 有 error level issue：
+    打印 issue，exit code = 1
+
+  如果只有 warning：
+    打印 warning，继续输出，exit code = 0
+
+  输出 JSON 格式：canonical_ir dict（ast_tree 字段不序列化，跳过）
+
+验证：
 ```
-
-验证：json 合法，有 root_id / nodes / edges 字段，nodes 有 4 个，edges 有 2 个
+python -c "
+from pathlib import Path
+Path('project/examples/cli_sample.py').write_text(
+    'def add(a,b):\n    return a+b\n', encoding='utf-8')
+print('prepared')
+"
+python -m compiler.cli project/examples/cli_sample.py --out project/examples/cli_sample.ir.json
+python -c "
+import json
+from pathlib import Path
+ir = json.loads(Path('project/examples/cli_sample.ir.json').read_text())
+assert 'nodes' in ir
+assert 'scopes' in ir
+print('OK')
+"
+```
 
 ---
 
-# PHASE 3 — Compiler 实现
-# 目标：loader + validator + executor 能跑通 TASK-008 的 graph
+# V0.2 — Structural Pattern Matching
+# 目标：在 canonical IR 上做确定性 pattern matching，不用 LLM
+# 完成标志：能在任意 Python 文件里识别 pipeline / branch / loop / fetch_transform_cache
 
 ---
 
 ## TASK-009
-状态：未完成
-做什么：写 load_graph.py
-输入：graph/schemas/graph.schema.json，compiler/accessor/schema_accessor.py
-输出：project/compiler/loader/load_graph.py
+状态：已完成
+做什么：定义 structural pattern schema
+输入：project_direction_outline.md 第七节
+输出：project/compiler/pattern/schema.py
 
 要求：
-  函数签名：def load_graph(inputs: dict, meta: dict) -> dict
-  inputs["path"] = graph json 文件路径
-  读文件，解析 json
-  检查：有 id / version / root_id / nodes / edges 字段
-  检查：root_id 在 nodes 里
-  返回：{"graph": <graph dict>}
-  出错：raise ValueError 说明原因
+  pattern dict：
+  ```python
+  {
+    "id": str,
+    "name": str,
+    "description": str,
+    "required_node_kinds": list[str],   # 必须包含的 ir_node kind
+    "required_edge_kinds": list[str],   # 必须包含的 edge kind
+    "min_nodes": int,
+    "max_nodes": int | None,
+    "tags": list[str],
+  }
+  ```
+
+  提供函数：
+  ```python
+  def make_pattern(pattern_id: str, name: str, required_node_kinds: list[str], **kwargs) -> dict
+  ```
+
+  内置 5 个 pattern：
+  ```python
+  BUILTIN_PATTERNS = [
+    {
+      "id": "pipeline",
+      "name": "Pipeline",
+      "description": "Linear sequence of transforms with no branching",
+      "required_node_kinds": ["function", "call"],
+      "required_edge_kinds": ["data"],
+      "min_nodes": 2,
+      "max_nodes": None,
+      "tags": ["linear", "transform"],
+    },
+    {
+      "id": "branch_pattern",
+      "name": "Branch",
+      "description": "Conditional execution path",
+      "required_node_kinds": ["branch"],
+      "required_edge_kinds": ["control"],
+      "min_nodes": 1,
+      "max_nodes": None,
+      "tags": ["conditional"],
+    },
+    {
+      "id": "loop_pattern",
+      "name": "Loop",
+      "description": "Repeated execution",
+      "required_node_kinds": ["loop"],
+      "required_edge_kinds": [],
+      "min_nodes": 1,
+      "max_nodes": None,
+      "tags": ["iteration"],
+    },
+    {
+      "id": "fetch_transform_cache",
+      "name": "Fetch-Transform-Cache",
+      "description": "Call → transform → assign pattern (common caching/fetching flow)",
+      "required_node_kinds": ["call", "assign"],
+      "required_edge_kinds": ["data"],
+      "min_nodes": 2,
+      "max_nodes": 5,
+      "tags": ["fetch", "cache", "io"],
+    },
+    {
+      "id": "validation_chain",
+      "name": "Validation Chain",
+      "description": "Sequential branch checks (guard clauses)",
+      "required_node_kinds": ["branch", "return"],
+      "required_edge_kinds": ["control"],
+      "min_nodes": 2,
+      "max_nodes": None,
+      "tags": ["validation", "guard"],
+    },
+  ]
+  ```
 
 验证：
-  python -c "
-  import sys; sys.path.insert(0,'project')
-  from compiler.loader.load_graph import load_graph
-  r = load_graph({'path':'project/graph/latest.json'},{})
-  assert 'graph' in r
-  assert r['graph']['id'] == 'first_graph'
-  print('OK')
-  "
+```
+python -c "
+import sys; sys.path.insert(0,'project')
+from compiler.pattern.schema import BUILTIN_PATTERNS, make_pattern
+assert len(BUILTIN_PATTERNS) == 5
+ids = [p['id'] for p in BUILTIN_PATTERNS]
+assert 'pipeline' in ids
+assert 'fetch_transform_cache' in ids
+t = make_pattern('test','Test',['function'])
+assert t['id'] == 'test'
+print('OK')
+"
+```
 
 ---
 
 ## TASK-010
-状态：未完成
-做什么：写 load_template.py
-输入：registry/operator_registry.json，compiler/accessor/schema_accessor.py
-输出：project/compiler/loader/load_template.py
+状态：已完成
+做什么：写 structural pattern matcher
+输入：canonical_ir dict，pattern list
+输出：project/compiler/pattern/match.py
 
 要求：
-  函数签名：def load_template(inputs: dict, meta: dict) -> dict
-  inputs["template_id"] = template id 字符串
-  inputs["registry_path"] = operator_registry.json 路径
-  从 registry 找到 location
-  读 template.json
-  检查：有 id / inputs / outputs / implementations 字段
-  返回：{"template": <template dict>}
-  出错：raise ValueError 说明原因
+  函数签名：def match_patterns(ir: dict, patterns: list[dict]) -> list[dict]
+
+  返回 match list：
+  ```python
+  {
+    "pattern_id": str,
+    "pattern_name": str,
+    "node_ids": list[str],
+    "scope_id": str,         # 哪个 scope 里匹配到的
+    "confidence": float,     # v0 只用 1.0（确定性匹配）或 0.0（不匹配）
+    "reason": str,
+  }
+  ```
+
+  匹配规则（确定性，不用 LLM）：
+  - 对每个 scope 里的 node 集合，检查是否满足 pattern 的 required_node_kinds
+  - required_edge_kinds：检查该 scope 里的 edges 是否包含
+  - min_nodes / max_nodes：scope 里的 node 数量是否在范围内
+  - 所有条件满足 → confidence = 1.0
+  - 不满足 → 不返回该 match
+
+  不做近似匹配，不用 embedding，不用 LLM。
 
 验证：
-  python -c "
-  import sys; sys.path.insert(0,'project')
-  from compiler.loader.load_template import load_template
-  r = load_template({
-    'template_id': 'parse_text',
-    'registry_path': 'project/registry/operator_registry.json'
-  },{})
-  assert r['template']['id'] == 'parse_text'
-  print('OK')
-  "
+```
+python -c "
+import sys; sys.path.insert(0,'project')
+from pathlib import Path
+from compiler.ingest.python_ingest import ingest
+from compiler.macro.expand import expand
+from compiler.canon.python_canon import canonicalize
+from compiler.pattern.schema import BUILTIN_PATTERNS
+from compiler.pattern.match import match_patterns
+
+p = Path('project/examples/pattern_sample.py')
+p.write_text('''
+def process(data):
+    result = fetch(data)
+    clean = transform(result)
+    cache[data] = clean
+    return clean
+'''.strip(), encoding='utf-8')
+
+ir = canonicalize(expand(ingest(str(p))))
+matches = match_patterns(ir, BUILTIN_PATTERNS)
+assert isinstance(matches, list)
+matched_ids = [m['pattern_id'] for m in matches]
+assert 'fetch_transform_cache' in matched_ids or 'pipeline' in matched_ids
+print('OK')
+"
+```
 
 ---
 
 ## TASK-011
-状态：未完成
-做什么：写 001_validate_nodes.py
-输入：compiler/accessor/schema_accessor.py，registry/operator_registry.json 格式
-输出：project/compiler/passes/001_validate_nodes.py
+状态：已完成
+做什么：写 structural search index 和 query
+输入：canonical_ir dict
+输出：project/compiler/pattern/index.py
+      project/compiler/pattern/query.py
 
-要求：
-  函数签名：def validate_nodes(inputs: dict, meta: dict) -> dict
-  inputs["graph"] = graph dict
-  inputs["registry_path"] = operator_registry.json 路径
-  对每个 node：
-    type == "functional" → template_id 必须在 registry 里
-    type == "control"    → kind 必须是 SEQ/BRANCH/LOOP/PARALLEL 之一
-    type == "functional" → 必须有 template_id 和 template_version
-  返回：{"graph": graph, "errors": []}
-  有错误时：errors 列表非空，不 raise，让 pass_runner 决定
+index.py 要求：
+  函数：def build_index(ir: dict) -> dict
+  index 包含：
+  - by_kind: {kind → [node_id]}
+  - by_scope: {scope_id → [node_id]}
+  - by_label_token: {token → [node_id]}（label 按空格/下划线分词，小写）
+  - edges_by_from: {node_id → [edge]}
+  - edges_by_to: {node_id → [edge]}
+
+query.py 要求：
+  ```python
+  def search_by_kind(ir: dict, kind: str) -> list[dict]
+  def search_by_label(ir: dict, text: str) -> list[dict]
+  def search_by_scope(ir: dict, scope_id: str) -> list[dict]
+  ```
 
 验证：
-  python -c "
-  import sys; sys.path.insert(0,'project')
-  from compiler.passes.validate_nodes_001 import validate_nodes
-  # 正常 graph
-  graph = {里面的 node 都合法}
-  r = validate_nodes({'graph': graph, 'registry_path': '...'},{})
-  assert r['errors'] == []
-  print('OK')
-  "
+```
+python -c "
+import sys; sys.path.insert(0,'project')
+from pathlib import Path
+from compiler.ingest.python_ingest import ingest
+from compiler.macro.expand import expand
+from compiler.canon.python_canon import canonicalize
+from compiler.pattern.index import build_index
+from compiler.pattern.query import search_by_kind, search_by_label
+
+p = Path('project/examples/canon_sample.py')
+ir = canonicalize(expand(ingest(str(p))))
+idx = build_index(ir)
+assert 'by_kind' in idx
+assert 'by_label_token' in idx
+funcs = search_by_kind(ir, 'function')
+assert isinstance(funcs, list)
+print('OK')
+"
+```
+
+---
+
+# V0.3 — Recognition Projection
+# 目标：canonical IR → graph（recognition-constrained），支持 expand/collapse
+# 完成标志：任意 canonical IR 能生成满足点/线/面限制的 graph，
+#           并能 expand 某个折叠节点看到内部结构
 
 ---
 
 ## TASK-012
-状态：未完成
-做什么：写 002_validate_edges.py
-输入：compiler/accessor/schema_accessor.py
-输出：project/compiler/passes/002_validate_edges.py
+状态：已完成
+做什么：定义 graph projection schema
+输入：project_direction_outline.md 第九节
+输出：project/compiler/projection/schema.py
 
 要求：
-  函数签名：def validate_edges(inputs: dict, meta: dict) -> dict
-  inputs["graph"] = graph dict
-  对每条 edge：
-    from_node 在 nodes 里
-    to_node 在 nodes 里
-    from_port 在 from_node 的 outputs 里
-    to_port 在 to_node 的 inputs 里
-  返回：{"graph": graph, "errors": []}
+  graph_node dict：
+  ```python
+  {
+    "id": str,
+    "label": str,
+    "kind": str,       # ir_node kind 或 "group"（折叠组）
+    "ir_node_ids": list[str],  # 对应的 canonical IR node ids
+    "collapsed": bool,
+    "meta": dict,
+  }
+  ```
+
+  graph_edge dict：
+  ```python
+  {
+    "id": str,
+    "from_node": str,
+    "to_node": str,
+    "kind": str,
+  }
+  ```
+
+  graph dict（projection 顶层）：
+  ```python
+  {
+    "version": str,
+    "ir_source": str,    # 来源 canonical IR 的 source_path
+    "nodes": dict,       # id → graph_node
+    "edges": list,       # graph_edge list
+    "recognition_meta": {
+      "node_count": int,
+      "edge_count": int,
+      "warning": str | None,  # 超过限制时的提示
+    },
+  }
+  ```
+
+  Recognition limits（写成常量）：
+  ```python
+  RECOGNITION_LIMITS = {
+    "max_nodes_soft": 7,    # >= 7 warning
+    "max_nodes_hard": 15,   # >= 15 必须折叠
+    "max_edges_soft": 12,   # >= 12 warning
+  }
+  ```
+
+  提供函数：
+  ```python
+  def empty_graph(ir_source: str) -> dict
+  def make_graph_node(node_id: str, label: str, kind: str, ir_node_ids: list[str], **kwargs) -> dict
+  ```
 
 验证：
-  python -c "
-  import sys; sys.path.insert(0,'project')
-  from compiler.passes.validate_edges_002 import validate_edges
-  r = validate_edges({'graph': <valid_graph>},{})
-  assert r['errors'] == []
-  print('OK')
-  "
+```
+python -c "
+import sys; sys.path.insert(0,'project')
+from compiler.projection.schema import empty_graph, make_graph_node, RECOGNITION_LIMITS
+g = empty_graph('test.py')
+n = make_graph_node('gn1','add','function',['n1'])
+assert g['version'] is not None
+assert n['collapsed'] == False
+assert RECOGNITION_LIMITS['max_nodes_soft'] == 7
+assert RECOGNITION_LIMITS['max_nodes_hard'] == 15
+print('OK')
+"
+```
 
 ---
 
 ## TASK-013
-状态：未完成
-做什么：写 pass_runner.py
-输入：TASK-011，TASK-012 的函数
-输出：project/compiler/passes/pass_runner.py
+状态：已完成
+做什么：写 canonical IR → graph projector
+输入：canonical_ir dict，TASK-012 的 projection schema
+输出：project/compiler/projection/project_ir.py
 
 要求：
-  函数签名：def run_pipeline(inputs: dict, meta: dict) -> dict
-  inputs["graph"] = graph dict
-  inputs["registry_path"] = registry 路径
-  inputs["until"] = "validate" | "full"（默认 "full"）
-  按顺序执行：
-    validate_nodes → validate_edges
-  每个 pass 返回 errors
-  有任何 error → 停止，返回 {"ok": false, "errors": [...], "graph": graph}
-  全部通过    → 返回 {"ok": true, "errors": [], "graph": graph}
+  函数签名：def project_to_graph(ir: dict, scope_id: str = "scope:module") -> dict
+  只投影指定 scope（默认 module 顶层）
+  每个 ir_node → 一个 graph_node
+  每个 ir edge（在 scope 内）→ 一个 graph_edge
+  投影后检查 recognition limits：
+    node_count < 7   → recognition_meta["warning"] = None
+    7 ≤ node_count < 15 → warning = "节点数 {N}，建议折叠部分节点（>= 7 时提示）"
+    node_count >= 15 → warning = "节点数 {N}，超过上限 15，必须折叠后才能使用"
 
 验证：
-  python -c "
-  import sys; sys.path.insert(0,'project')
-  from compiler.passes.pass_runner import run_pipeline
-  r = run_pipeline({
-    'graph': <valid_graph>,
-    'registry_path': 'project/registry/operator_registry.json'
-  },{})
-  assert r['ok'] == True
-  print('OK')
-  "
+```
+python -c "
+import sys; sys.path.insert(0,'project')
+from pathlib import Path
+from compiler.ingest.python_ingest import ingest
+from compiler.macro.expand import expand
+from compiler.canon.python_canon import canonicalize
+from compiler.projection.project_ir import project_to_graph
+
+p = Path('project/examples/canon_sample.py')
+ir = canonicalize(expand(ingest(str(p))))
+g = project_to_graph(ir)
+assert 'nodes' in g
+assert 'recognition_meta' in g
+assert isinstance(g['recognition_meta']['node_count'], int)
+print('OK')
+"
+```
 
 ---
 
 ## TASK-014
-状态：未完成
-做什么：写 trace_runtime.py
-输入：无
-输出：project/compiler/runtime/trace_runtime.py
+状态：已完成
+做什么：写 expand / collapse 操作
+输入：graph dict（TASK-013 产出）
+输出：project/compiler/projection/fold.py
 
 要求：
-  两个函数：
+  ```python
+  def collapse_nodes(graph: dict, node_ids: list[str], group_id: str, label: str) -> dict
+    # 把 node_ids 里的节点合并成一个 group node（kind="group"，collapsed=True）
+    # 内部 edge（两端都在 node_ids 里）移入 group node 的 meta["internal_edges"]
+    # 外部 edge（一端在，一端不在）的端点更新为 group_id
+    # 重新计算 recognition_meta
 
-  def start_trace(inputs: dict, meta: dict) -> dict
-    inputs["graph_id"] = graph id
-    inputs["trace_dir"] = 存放目录（如 runtime/traces/）
-    生成 run_id（时间戳 + 随机4位）
-    创建目录：trace_dir/<run_id>/node_traces/
-    写 manifest.json：{"run_id", "graph_id", "started_at"}
-    返回：{"run_id": run_id, "trace_path": ...}
+  def expand_group(graph: dict, group_id: str) -> dict
+    # 把 group node 展开，还原内部 nodes 和 edges
+    # collapsed 设为 False
+    # 重新计算 recognition_meta
+  ```
 
-  def record_node(inputs: dict, meta: dict) -> dict
-    inputs["run_id"]
-    inputs["trace_path"]
-    inputs["node_id"]
-    inputs["node_inputs"]
-    inputs["node_outputs"]
-    inputs["status"] = "ok" | "error"
-    inputs["error"] = None 或 错误信息
-    inputs["duration_ms"] = 执行时间
-    写文件：trace_path/node_traces/<node_id>.json
-    返回：{"recorded": true}
+  注意：collapse 不删除原始 ir_node_ids，保留在 group node 的 meta 里，
+  保证可以随时 expand 回来（可逆）。
 
 验证：
-  python -c "
-  import sys; sys.path.insert(0,'project')
-  from compiler.runtime.trace_runtime import start_trace, record_node
-  import tempfile, os
-  with tempfile.TemporaryDirectory() as d:
-    r = start_trace({'graph_id':'g1','trace_dir':d},{})
-    assert 'run_id' in r
-    record_node({'run_id':r['run_id'],'trace_path':r['trace_path'],
-      'node_id':'n1','node_inputs':{},'node_outputs':{},'status':'ok',
-      'error':None,'duration_ms':10},{})
-    assert os.path.exists(r['trace_path']+'/node_traces/n1.json')
-  print('OK')
-  "
+```
+python -c "
+import sys; sys.path.insert(0,'project')
+from pathlib import Path
+from compiler.ingest.python_ingest import ingest
+from compiler.macro.expand import expand
+from compiler.canon.python_canon import canonicalize
+from compiler.projection.project_ir import project_to_graph
+from compiler.projection.fold import collapse_nodes, expand_group
+
+p = Path('project/examples/canon_sample.py')
+ir = canonicalize(expand(ingest(str(p))))
+g = project_to_graph(ir)
+node_ids = list(g['nodes'].keys())
+if len(node_ids) >= 2:
+    g2 = collapse_nodes(g, node_ids[:2], 'group_1', 'MyGroup')
+    assert 'group_1' in g2['nodes']
+    assert g2['nodes']['group_1']['collapsed'] == True
+    g3 = expand_group(g2, 'group_1')
+    assert g3['nodes']['group_1']['collapsed'] == False
+print('OK')
+"
+```
+
+---
+
+# V0.4 — Progressive Materialization
+# 目标：支持 sketch → stage 0/1/2/3 的渐进约束，partial structure legality validation
+# 完成标志：能创建不完整结构，系统正确标记 stage 和 legality
 
 ---
 
 ## TASK-015
-状态：未完成
-做什么：写 execute_seq.py
-输入：compiler/accessor/schema_accessor.py，TASK-014
-输出：project/compiler/runtime/execute_seq.py
+状态：已完成
+做什么：定义 materialization stage schema
+输入：project_direction_outline.md 第八节
+输出：project/compiler/validation/stages.py
 
 要求：
-  函数签名：def execute_seq(inputs: dict, meta: dict) -> dict
-  inputs["node"] = 当前 SEQ control node dict
-  meta["graph"] = 完整 graph dict
-  meta["templates"] = {template_id: template dict}
-  meta["context"] = {"run_id", "trace_path", "registry_path"}
-  按 children 顺序执行每个子 node：
-    找到子 node dict
-    找到对应 edge（谁连到这个 node 的哪个 port）
-    从上一个 node 的 output 注入这个 node 的 input
-    执行子 node（调用对应的 template code.py 里的函数）
-    记录 trace（调用 record_node）
-  返回：{"outputs": <最后一个 node 的 outputs>}
-  出错：记录 trace（status=error），raise
+  定义 stage 常量：
+  ```python
+  STAGE = {
+    "S0": "sketch",           # placeholder，意图草图
+    "S1": "structural",       # dependency/ownership/scope 约束
+    "S2": "type_interface",   # port schema / type compatibility
+    "S3": "canonical",        # 完整 canonical IR，可 rewrite / project
+  }
+  ```
+
+  定义 partial legality 规则（dict）：
+  ```python
+  PARTIAL_LEGALITY = {
+    "unresolved_type":             {"stage_ok": ["S0","S1"], "level": "warning"},
+    "unresolved_dependency":       {"stage_ok": ["S0"],      "level": "warning"},
+    "unresolved_control_target":   {"stage_ok": [],           "level": "error"},
+    "unresolved_mutation_ownership":{"stage_ok": ["S0"],     "level": "warning", "unsafe": True},
+  }
+  ```
+
+  提供函数：
+  ```python
+  def check_legality(ir_node: dict, stage: str) -> list[dict]
+    # 返回 issue list（同 validate_ir 格式）
+    # 根据 ir_node 的 meta 字段和 PARTIAL_LEGALITY 规则检查
+  ```
+
+  ir_node meta 字段约定（canonicalize 时写入，check_legality 时读取）：
+  - meta["unresolved_type"] = True 表示类型未知
+  - meta["unresolved_dependency"] = True 表示依赖未确定
+  - meta["unresolved_control_target"] = True 表示 branch/loop 的 target 未确定
+  - meta["unresolved_mutation_ownership"] = True 表示 mutation 归属未确定
 
 验证：
-  执行后 runtime/traces/<run_id>/node_traces/ 里有每个 node 的记录文件
+```
+python -c "
+import sys; sys.path.insert(0,'project')
+from compiler.validation.stages import STAGE, PARTIAL_LEGALITY, check_legality
+assert STAGE['S0'] == 'sketch'
+assert STAGE['S3'] == 'canonical'
+node = {'id':'n1','kind':'branch','meta':{'unresolved_control_target': True}}
+issues = check_legality(node, 'S0')
+assert any(i['level'] == 'error' for i in issues)
+node2 = {'id':'n2','kind':'assign','meta':{'unresolved_type': True}}
+issues2 = check_legality(node2, 'S0')
+assert all(i['level'] == 'warning' for i in issues2)
+print('OK')
+"
+```
 
 ---
 
 ## TASK-016
-状态：未完成
-做什么：写 execute_graph.py
-输入：TASK-009，TASK-013，TASK-015，TASK-014
-输出：project/compiler/runtime/execute_graph.py
+状态：已完成
+做什么：写 stage detector（自动判断 canonical IR 当前处于哪个 stage）
+输入：canonical_ir dict
+输出：project/compiler/validation/detect_stage.py
 
 要求：
-  函数签名：def execute_graph(inputs: dict, meta: dict) -> dict
-  inputs["graph_path"] = graph json 路径
-  inputs["registry_path"] = operator_registry.json 路径
-  inputs["trace_dir"] = runtime/traces/
-  步骤：
-    load_graph
-    run_pipeline（validate）
-    如果 not ok → 返回 {"ok": false, "errors": [...]}
-    start_trace
-    加载所有 node 用到的 template
-    找到 root node
-    根据 root node 的 kind dispatch：
-      SEQ → execute_seq
-    返回：{"ok": true, "run_id": ..., "outputs": ...}
+  函数签名：def detect_stage(ir: dict) -> dict
+  返回：
+  ```python
+  {
+    "stage": str,          # S0 / S1 / S2 / S3
+    "issues": list[dict],  # 阻止到达更高 stage 的问题
+    "summary": str,
+  }
+  ```
 
-验证：见 TASK-017
+  判断规则：
+  - 有任何 unresolved_control_target → 最高 S0
+  - 有任何 unresolved_dependency → 最高 S0（warning，不 block S1）
+  - 有任何 opaque node → 最高 S2（opaque 阻止 S3）
+  - 有任何 L3 node → 最高 S2
+  - 所有 branch/loop 都有 inputs → 可以到 S1
+  - 所有 node 都有 source_ref → 可以到 S2
+  - validate_ir 无 error → 可以到 S3
+
+验证：
+```
+python -c "
+import sys; sys.path.insert(0,'project')
+from pathlib import Path
+from compiler.ingest.python_ingest import ingest
+from compiler.macro.expand import expand
+from compiler.canon.python_canon import canonicalize
+from compiler.validation.detect_stage import detect_stage
+
+p = Path('project/examples/canon_sample.py')
+ir = canonicalize(expand(ingest(str(p))))
+result = detect_stage(ir)
+assert result['stage'] in ['S0','S1','S2','S3']
+assert 'issues' in result
+assert 'summary' in result
+print(f\"stage={result['stage']}\")
+print('OK')
+"
+```
+
+---
+
+# V0.5 — Reversible Rewriting（Level 1 只）
+# 目标：Level 1 安全变换（desugaring / scope explicitization），并验证 round-trip
+# 完成标志：对任意 Python 文件做 L1 变换后，canonical IR 等价，source 可还原
 
 ---
 
 ## TASK-017
-状态：未完成
-做什么：写 run.py
-输入：TASK-016
-输出：project/run.py
+状态：已完成
+做什么：写 Level 1 rewriter（desugaring）
+输入：canonical_ir dict
+输出：project/compiler/rewrite/l1_desugar.py
 
 要求：
-```python
-import sys
-sys.path.insert(0, ".")
-from compiler.runtime.execute_graph import execute_graph
+  函数签名：def desugar(ir: dict) -> dict
+  返回新的 canonical_ir dict（不修改原始 ir，返回副本）
+  只处理 Level 1 变换（safe_level = "L1"）：
 
-result = execute_graph({
-    "graph_path":    "graph/latest.json",
-    "registry_path": "registry/operator_registry.json",
-    "trace_dir":     "runtime/traces/"
-}, {})
+  必须处理：
+  - AugAssign 已在 canonicalize 时 desugar（TASK-005），rewriter 验证 meta["desugared"] 已设置
+  - 所有 assign node 的 label 显式包含 target 变量名（不是 anonymous）
 
-if result["ok"]:
-    print(f"OK  run_id={result['run_id']}")
-    print(f"    outputs={result['outputs']}")
-else:
-    print("FAIL")
-    for e in result["errors"]:
-        print(f"  {e}")
-    sys.exit(1)
+  rewriter 规则：
+  - 遍历所有 node
+  - 跳过 kind="opaque" 和 safe_level="L3" 的 node
+  - 对 assign node：如果 meta["desugared"] 不存在，检查是否需要补充显式化
+  - 在 ir meta 里记录 "rewrite_applied": ["l1_desugar"]
+
+  注意：v0.5 的 rewriter 主要是验证管道可以通，不要求完整变换所有 case。
+
+验证：
 ```
+python -c "
+import sys; sys.path.insert(0,'project')
+from pathlib import Path
+from compiler.ingest.python_ingest import ingest
+from compiler.macro.expand import expand
+from compiler.canon.python_canon import canonicalize
+from compiler.rewrite.l1_desugar import desugar
 
-验证（最终验证）：
-  cd project && python run.py
-
-  期望输出：
-    OK  run_id=<some_id>
-        outputs={'success': True, 'path': 'io/output/result.json'}
-
-  同时验证：
-    io/output/result.json 文件存在
-    内容是 {"tokens": ["hello", "world", "foo", "bar"]}
-    runtime/traces/<run_id>/node_traces/ 里有 3 个 json 文件
-
----
-
-# 完成标志
-
-TASK-017 的验证全部通过 = Phase 0-3 完成 = 系统活了
-
----
-
-# PHASE 4 — BRANCH primitive
-# 目标：graph 能根据条件选择不同执行路径
-# Macro 规则：节点数 >= 7 软提示，>= 15 强制打包
+p = Path('project/examples/canon_sample.py')
+ir = canonicalize(expand(ingest(str(p))))
+ir2 = desugar(ir)
+assert ir2 is not ir   # 返回副本
+assert 'l1_desugar' in ir2.get('meta',{}).get('rewrite_applied',[])
+print('OK')
+"
+```
 
 ---
 
 ## TASK-018
-状态：未完成
-做什么：在 operator_registry.json 里注册 BRANCH 控制节点
-输入：project/registry/operator_registry.json
-输出：project/registry/operator_registry.json（更新）
+状态：已完成
+做什么：写 round-trip verifier
+输入：original canonical_ir dict，rewritten canonical_ir dict
+输出：project/compiler/rewrite/verify_roundtrip.py
 
-在 templates 数组末尾加入：
-```json
-{
-  "id": "branch",
-  "version": "1.0.0",
-  "location": "templates/control/branch/template.json",
-  "tags": ["control", "condition", "if"]
-}
-```
+要求：
+  函数签名：def verify_roundtrip(original_ir: dict, rewritten_ir: dict) -> dict
+  返回：
+  ```python
+  {
+    "equivalent": bool,
+    "differences": list[dict],  # 如果不等价，列出差异
+    "summary": str,
+  }
+  ```
+
+  等价判断规则（v0 简化版）：
+  - node 数量相同（允许 rewrite 后 node 数量变化，但记录）
+  - 每个 original node 的 kind 在 rewritten ir 里有对应 node（按 source_ref 匹配）
+  - edge 的 from/to kind 关系在 rewrite 前后一致
+  - 不做代码文本比较（代码格式可以变，结构不能变）
+
+  differences 格式：
+  ```python
+  {"kind": "node_missing"|"edge_changed"|"kind_changed", "node_id": str, "detail": str}
+  ```
 
 验证：
-  python -c "
-  import json
-  r = json.load(open('project/registry/operator_registry.json'))
-  ids = [t['id'] for t in r['templates']]
-  assert 'branch' in ids
-  print('OK')
-  "
+```
+python -c "
+import sys; sys.path.insert(0,'project')
+from pathlib import Path
+from compiler.ingest.python_ingest import ingest
+from compiler.macro.expand import expand
+from compiler.canon.python_canon import canonicalize
+from compiler.rewrite.l1_desugar import desugar
+from compiler.rewrite.verify_roundtrip import verify_roundtrip
+
+p = Path('project/examples/canon_sample.py')
+ir = canonicalize(expand(ingest(str(p))))
+ir2 = desugar(ir)
+result = verify_roundtrip(ir, ir2)
+assert 'equivalent' in result
+assert 'differences' in result
+print(f\"equivalent={result['equivalent']}\")
+print('OK')
+"
+```
 
 ---
 
 ## TASK-019
-状态：未完成
-做什么：写 branch 的 template.json
-输入：project/graph/schemas/template.schema.json
-输出：project/templates/control/branch/template.json
+状态：已完成
+做什么：写完整管道的端到端 smoke test
+输入：TASK-001 到 TASK-018
+输出：project/tests/test_smoke.py
 
-内容：
-```json
-{
-  "id": "branch",
-  "version": "1.0.0",
-  "schema_version": "1.0.0",
-  "name": "Branch",
-  "description": "Evaluate a condition and route to true_node or false_node",
-  "tags": ["control", "condition", "if"],
-  "inputs": {
-    "condition": {
-      "id": "condition",
-      "schema": { "shape": "bool" },
-      "required": true,
-      "description": "If true, execute true_branch. If false, execute false_branch."
-    },
-    "value": {
-      "id": "value",
-      "schema": { "shape": "union", "variants": ["string","number","bool","list","dict","null"] },
-      "required": false,
-      "description": "Optional value to pass into whichever branch is taken"
-    }
-  },
-  "outputs": {
-    "result": {
-      "id": "result",
-      "schema": { "shape": "union", "variants": ["string","number","bool","list","dict","null"] },
-      "required": true,
-      "description": "Output from whichever branch was executed"
-    }
-  },
-  "implementations": {
-    "python": { "code_file": "implementations/python/code.py" }
-  },
-  "tests": {
-    "fixed_cases": [
-      {
-        "id": "happy_path_true",
-        "description": "condition true routes to true_branch",
-        "inputs": { "condition": true, "value": "hello" },
-        "expect": { "outputs": { "result": "hello" } },
-        "tags": ["happy_path"]
-      },
-      {
-        "id": "happy_path_false",
-        "description": "condition false routes to false_branch",
-        "inputs": { "condition": false, "value": "hello" },
-        "expect": { "outputs": { "result": null } },
-        "tags": ["happy_path"]
-      },
-      {
-        "id": "null_condition",
-        "description": "null condition should error",
-        "inputs": { "condition": null, "value": "hello" },
-        "expect": { "error": true },
-        "tags": ["null_input"]
-      },
-      {
-        "id": "type_error",
-        "description": "non-bool condition should error",
-        "inputs": { "condition": "yes", "value": "hello" },
-        "expect": { "error": true },
-        "tags": ["type_error"]
-      }
-    ],
-    "generated_rules": {
-      "boundary": false,
-      "null_input": true,
-      "type_error": true,
-      "missing_port": true,
-      "overflow": false
-    }
-  }
-}
+要求：
+  测试两个使用案例对应的 Python 文件：
+
+  Case 1（前端理解简化版）：
+    写一个模拟前端逻辑的 Python 文件：
+    - 有 fetch 函数（调用外部）
+    - 有 transform 函数
+    - 有 if 分支
+    - 有 for 循环
+    跑完整管道，验证：
+    - canonical IR 有 call / branch / loop 节点
+    - pattern matching 识别出至少一个 pattern
+    - projection 输出合法 graph
+    - detect_stage 返回 S2 或 S3
+
+  Case 2（太阳能小组件简化版）：
+    写一个模拟控制逻辑的 Python 文件：
+    - solar_position(lat, lon, timestamp) 函数
+    - 有计算，有 return
+    - 有 print（side effect）
+    跑完整管道，验证：
+    - side_effect node 被正确标记
+    - stage detection 正确
+    - round-trip verify 通过
+
+  不依赖 LLM，不访问网络。
+
+验证：
 ```
-
-验证：json 合法，有 id / inputs / outputs / implementations / tests 字段
+python -m pytest project/tests/test_smoke.py -v
+```
 
 ---
 
 ## TASK-020
-状态：未完成
-做什么：写 execute_branch.py
-输入：TASK-019 的 template.json，compiler/accessor/schema_accessor.py
-输出：project/compiler/runtime/execute_branch.py
+状态：已完成
+做什么：写更新后的 project/V0_SCOPE.md
+输入：project_direction_outline.md，TASK-001 到 TASK-019
+输出：project/V0_SCOPE.md
 
-要求：
-  函数签名：def execute_branch(inputs: dict, meta: dict) -> dict
-  inputs["node"] = 当前 BRANCH control node dict
-    node 必须有：
-      condition_port：哪个 input port 是条件
-      true_branch：条件为 true 时执行的子 node id
-      false_branch：条件为 false 时执行的子 node id（可为 null）
-  meta["graph"] = 完整 graph dict
-  meta["templates"] = {template_id: template dict}
-  meta["context"] = {"run_id", "trace_path", "registry_path"}
-  meta["resolved_inputs"] = 已从 edge 解析好的 input 值 dict
-  逻辑：
-    读 condition_port 对应的值
-    如果不是 bool → raise TypeError
-    如果 true  → 执行 true_branch 子 node，返回其 outputs
-    如果 false → false_branch 存在则执行，否则返回 {"result": null}
-    记录 trace（调用 record_node，记录走了哪条分支）
-  返回：{"result": <branch 执行结果>}
+必须包含：
+- 系统定义（面向认知约束的可逆结构规范化内核）
+- 四层架构（Execution Truth / Structural Truth / Recognition Projection / Probabilistic Assistance）
+- 核心管道（macro expansion → parse → canonicalize → rewrite → project）
+- 安全变换等级（L1/L2/L3/OPAQUE）
+- Recognition limits（soft=7 / hard=15）
+- Progressive materialization stages（S0/S1/S2/S3）
+- 不做的事（semantic guessing / graph runtime / L3 变换 / AI 参与结构）
+- 后续路线（v0.1~v0.5 对应哪些 tasks）
+- 使用案例（Case 1 前端理解 / Case 2 太阳能小组件，内容不变）
+- state 问题的存档说明：
+  "state 是 runtime 概念，canonical IR v0 只标记 mutation capability（meta side_effect），
+   不建模 runtime state 值。完整 Mutation Boundary Theory 是中期问题。"
 
 验证：
-  python -c "
-  import sys; sys.path.insert(0,'project')
-  from compiler.runtime.execute_branch import execute_branch
-  # 构造最小 graph 和 node，condition=True，true_branch 是一个返回 'ok' 的 node
-  # 验证返回 {'result': 'ok'}
-  print('OK')
-  "
-
----
-
-## TASK-021
-状态：未完成
-做什么：在 execute_graph.py 的 dispatch 里加入 BRANCH
-输入：project/compiler/runtime/execute_graph.py，TASK-020
-输出：project/compiler/runtime/execute_graph.py（更新）
-
-要求：
-  找到 dispatch 部分：
-    根据 root node 的 kind dispatch
-  加入：
-    BRANCH → execute_branch
-  其他不变
-
-验证：
-  python -c "
-  import sys; sys.path.insert(0,'project')
-  from compiler.runtime.execute_graph import execute_graph
-  # 构造一个 root=BRANCH 的 graph，condition=True
-  # 验证走了 true_branch
-  print('OK')
-  "
-
----
-
-## TASK-022
-状态：未完成
-做什么：写 BRANCH 的端到端测试 graph
-输入：project/graph/schemas/graph.schema.json
-输出：project/graph/branch_test.json
-
-图结构：
-  INPUT node（提供 text="hello world" 和 condition=True）
-  → BRANCH node（condition_port="condition"）
-    → true_branch：parse_text node
-    → false_branch：null（不执行）
-  → save_json node（保存结果）
-
-验证：
-  python -c "
-  import sys; sys.path.insert(0,'project')
-  from compiler.runtime.execute_graph import execute_graph
-  r = execute_graph({
-    'graph_path':    'graph/branch_test.json',
-    'registry_path': 'registry/operator_registry.json',
-    'trace_dir':     'runtime/traces/'
-  },{})
-  assert r['ok'] == True
-  print('OK')
-  "
-
----
-
-# PHASE 5 — LOOP primitive + accumulator
-# 目标：graph 能对列表迭代执行，用 accumulator 替代 STATE
-
----
-
-## TASK-023
-状态：未完成
-做什么：在 operator_registry.json 里注册 LOOP 控制节点
-输入：project/registry/operator_registry.json
-输出：project/registry/operator_registry.json（更新）
-
-在 templates 数组末尾加入：
-```json
-{
-  "id": "loop",
-  "version": "1.0.0",
-  "location": "templates/control/loop/template.json",
-  "tags": ["control", "loop", "iterate"]
-}
 ```
-
-验证：
-  python -c "
-  import json
-  r = json.load(open('project/registry/operator_registry.json'))
-  ids = [t['id'] for t in r['templates']]
-  assert 'loop' in ids
-  print('OK')
-  "
-
----
-
-## TASK-024
-状态：未完成
-做什么：写 loop 的 template.json
-输入：project/graph/schemas/template.schema.json
-输出：project/templates/control/loop/template.json
-
-内容：
-```json
-{
-  "id": "loop",
-  "version": "1.0.0",
-  "schema_version": "1.0.0",
-  "name": "Loop",
-  "description": "Iterate over a list, executing body for each item. Accumulator carries state between iterations.",
-  "tags": ["control", "loop", "iterate"],
-  "inputs": {
-    "items": {
-      "id": "items",
-      "schema": { "shape": "list", "items": { "shape": "union", "variants": ["string","number","bool","dict","null"] } },
-      "required": true,
-      "description": "List to iterate over"
-    },
-    "initial_accumulator": {
-      "id": "initial_accumulator",
-      "schema": { "shape": "union", "variants": ["string","number","bool","list","dict","null"] },
-      "required": false,
-      "default": null,
-      "description": "Starting value of accumulator"
-    }
-  },
-  "outputs": {
-    "accumulator": {
-      "id": "accumulator",
-      "schema": { "shape": "union", "variants": ["string","number","bool","list","dict","null"] },
-      "required": true,
-      "description": "Final accumulator value after all iterations"
-    },
-    "results": {
-      "id": "results",
-      "schema": { "shape": "list", "items": { "shape": "union", "variants": ["string","number","bool","dict","null"] } },
-      "required": true,
-      "description": "List of each iteration's output"
-    }
-  },
-  "implementations": {
-    "python": { "code_file": "implementations/python/code.py" }
-  },
-  "tests": {
-    "fixed_cases": [
-      {
-        "id": "happy_path_sum",
-        "description": "sum a list of numbers via accumulator",
-        "inputs": { "items": [1, 2, 3], "initial_accumulator": 0 },
-        "expect": {
-          "outputs": { "accumulator": 6, "results": [1, 3, 6] }
-        },
-        "tags": ["happy_path"]
-      },
-      {
-        "id": "happy_path_empty",
-        "description": "empty list returns initial accumulator",
-        "inputs": { "items": [], "initial_accumulator": 0 },
-        "expect": { "outputs": { "accumulator": 0, "results": [] } },
-        "tags": ["boundary"]
-      },
-      {
-        "id": "null_items",
-        "description": "null items should error",
-        "inputs": { "items": null, "initial_accumulator": 0 },
-        "expect": { "error": true },
-        "tags": ["null_input"]
-      }
-    ],
-    "generated_rules": {
-      "boundary": true,
-      "null_input": true,
-      "type_error": true,
-      "missing_port": true,
-      "overflow": false
-    }
-  }
-}
+python -c "
+from pathlib import Path
+text = Path('project/V0_SCOPE.md').read_text(encoding='utf-8')
+required = [
+    'execution truth',
+    'canonical IR',
+    'recognition',
+    'L1', 'L2', 'L3',
+    'S0', 'S1', 'S2', 'S3',
+    'semantic guessing',
+    'state',
+    'Case 1',
+    'Case 2',
+]
+for r in required:
+    assert r in text, f'missing: {r}'
+print('OK')
+"
 ```
-
-验证：json 合法，有 id / inputs / outputs / implementations / tests 字段
-
----
-
-## TASK-025
-状态：未完成
-做什么：写 execute_loop.py
-输入：TASK-024 的 template.json，compiler/accessor/schema_accessor.py，TASK-014
-输出：project/compiler/runtime/execute_loop.py
-
-要求：
-  函数签名：def execute_loop(inputs: dict, meta: dict) -> dict
-  inputs["node"] = 当前 LOOP control node dict
-    node 必须有：
-      iterator_port：哪个 input port 提供迭代列表
-      body：body 子 node 的 id
-      accumulator_port：body 的哪个 output 是 accumulator（默认 "accumulator"）
-  meta["graph"] / meta["templates"] / meta["context"] 同前
-  meta["resolved_inputs"] = 已解析的 input 值 dict
-  逻辑：
-    读 iterator_port 对应的列表
-    如果不是 list → raise TypeError
-    accumulator = initial_accumulator（从 resolved_inputs 读，默认 null）
-    results = []
-    对列表每个 item：
-      把 item 和 accumulator 注入 body node 的 inputs
-      执行 body node
-      accumulator = body outputs["accumulator"]
-      results.append(body outputs 里非 accumulator 的第一个值)
-      记录 trace（此次迭代的 input/output）
-    返回：{"accumulator": accumulator, "results": results}
-
-验证：
-  python -c "
-  import sys; sys.path.insert(0,'project')
-  from compiler.runtime.execute_loop import execute_loop
-  # 构造 items=[1,2,3], body 是一个把 item+accumulator 的 node
-  # 验证 accumulator=6, results=[1,3,6]
-  print('OK')
-  "
-
----
-
-## TASK-026
-状态：未完成
-做什么：在 execute_graph.py 的 dispatch 里加入 LOOP
-输入：project/compiler/runtime/execute_graph.py，TASK-025
-输出：project/compiler/runtime/execute_graph.py（更新）
-
-要求：
-  在 dispatch 部分加入：
-    LOOP → execute_loop
-  其他不变
-
-验证：
-  python -c "
-  import sys; sys.path.insert(0,'project')
-  from compiler.runtime.execute_graph import execute_graph
-  # 构造 root=LOOP 的 graph，items=[1,2,3]，body 做累加
-  # 验证 accumulator=6
-  print('OK')
-  "
-
----
-
-## TASK-027
-状态：未完成
-做什么：写 LOOP 的端到端测试 graph
-输入：project/graph/schemas/graph.schema.json
-输出：project/graph/loop_test.json
-
-图结构：
-  INPUT node（提供 items=["hello world","foo bar","baz"]，initial_accumulator=[]）
-  → LOOP node
-      body：parse_text node（把每个 item 切割成 tokens）
-      accumulator：把每次结果 append 进列表
-  → save_json node（保存最终 accumulator）
-
-验证：
-  python -c "
-  import sys, json; sys.path.insert(0,'project')
-  from compiler.runtime.execute_graph import execute_graph
-  r = execute_graph({
-    'graph_path':    'graph/loop_test.json',
-    'registry_path': 'registry/operator_registry.json',
-    'trace_dir':     'runtime/traces/'
-  },{})
-  assert r['ok'] == True
-  result = json.load(open('io/output/loop_result.json'))
-  assert result['accumulator'] == [['hello','world'],['foo','bar'],['baz']]
-  print('OK')
-  "
-
----
-
-# PHASE 6 — 强制 Macro
-# 目标：graph 层节点数 >= 7 软提示，>= 15 强制，用户手选打包
-
----
-
-## TASK-028
-状态：未完成
-做什么：在 pass_runner 里加入 validate_node_count pass
-输入：project/compiler/passes/pass_runner.py
-输出：project/compiler/passes/003_validate_node_count.py（新文件）
-      project/compiler/passes/pass_runner.py（更新，加入新 pass）
-
-003_validate_node_count.py 要求：
-  函数签名：def validate_node_count(inputs: dict, meta: dict) -> dict
-  inputs["graph"] = graph dict
-  统计当前层（root 的直接 children）的节点数
-  节点数 >= 7 且 < 15：
-    返回 {"graph": graph, "errors": [], "warnings": ["节点数为 N，建议打包部分节点（>=7 时提示）"]}
-  节点数 >= 15：
-    返回 {"graph": graph, "errors": ["节点数为 N，超过 15 个上限，必须打包后才能执行"], "warnings": []}
-  节点数 < 7：
-    返回 {"graph": graph, "errors": [], "warnings": []}
-
-pass_runner.py 更新：
-  在 validate_nodes 和 validate_edges 之后加入 validate_node_count
-  warnings 不中断执行，打印到 stdout
-  errors 中断执行（已有逻辑，不变）
-
-验证：
-  python -c "
-  import sys; sys.path.insert(0,'project')
-  from compiler.passes.validate_node_count_003 import validate_node_count
-
-  # 少于 7 个节点，无 warning
-  graph_small = {'nodes': {str(i): {'id': str(i)} for i in range(5)}, 'edges': {}}
-  r = validate_node_count({'graph': graph_small},{})
-  assert r['errors'] == [] and r['warnings'] == []
-
-  # 7-14 个节点，有 warning
-  graph_mid = {'nodes': {str(i): {'id': str(i)} for i in range(9)}, 'edges': {}}
-  r = validate_node_count({'graph': graph_mid},{})
-  assert r['errors'] == [] and len(r['warnings']) == 1
-
-  # 15+ 个节点，有 error
-  graph_big = {'nodes': {str(i): {'id': str(i)} for i in range(15)}, 'edges': {}}
-  r = validate_node_count({'graph': graph_big},{})
-  assert len(r['errors']) == 1
-
-  print('OK')
-  "
-
----
-
-## TASK-029
-状态：未完成
-做什么：实现 group_nodes operation（手选打包为 MACRO）
-输入：project/graph/schemas/operation.schema.json，compiler/accessor/schema_accessor.py
-输出：project/compiler/operations/apply_operation.py（新文件）
-
-要求：
-  函数签名：def apply_operation(inputs: dict, meta: dict) -> dict
-  inputs["graph"] = graph dict
-  inputs["operation"] = operation dict（格式见 operation.schema.json）
-  现在只处理 op == "group_nodes"：
-    inputs["operation"]["node_ids"] = 要打包的 node id 列表
-    inputs["operation"]["macro_id"] = 新 macro node 的 id
-    inputs["operation"]["macro_name"] = 新 macro node 的名字
-    验证：node_ids 里的所有 node 存在于 graph.nodes
-    验证：node_ids 长度 >= 2
-    创建新的 macro node：
-      id = macro_id
-      type = "control"
-      kind = "MACRO"
-      children = node_ids
-      inputs/outputs：从被打包节点的外部 edge 推断
-        外部 edge = 一端在 node_ids 里，另一端不在
-    从 graph.nodes 里移除 node_ids 里的节点
-    把 macro node 加入 graph.nodes
-    把内部 edge（两端都在 node_ids 里）移入 macro node 的内部 graph
-    把外部 edge 的端点更新为 macro node
-    返回：{"graph": <更新后的 graph>}
-  其他 op 类型：返回 {"graph": graph}（暂不处理）
-
-验证：
-  python -c "
-  import sys; sys.path.insert(0,'project')
-  from compiler.operations.apply_operation import apply_operation
-
-  graph = {
-    'nodes': {
-      'n1': {'id':'n1','type':'functional','template_id':'parse_text','template_version':'1.0.0','inputs':{},'outputs':{'tokens':{'id':'tokens','schema':{'shape':'list','items':{'shape':'string'}}}}},
-      'n2': {'id':'n2','type':'functional','template_id':'save_json','template_version':'1.0.0','inputs':{'data':{'id':'data','schema':{'shape':'dict'}}},'outputs':{}},
-      'n3': {'id':'n3','type':'functional','template_id':'parse_text','template_version':'1.0.0','inputs':{},'outputs':{}}
-    },
-    'edges': {
-      'e1': {'id':'e1','from_node':'n1','from_port':'tokens','to_node':'n2','to_port':'data'}
-    },
-    'root_id': 'root'
-  }
-  op = {'op': 'group_nodes', 'node_ids': ['n1','n2'], 'macro_id': 'macro_1', 'macro_name': 'ParseAndSave'}
-  r = apply_operation({'graph': graph, 'operation': op},{})
-  assert 'macro_1' in r['graph']['nodes']
-  assert 'n1' not in r['graph']['nodes']
-  assert 'n2' not in r['graph']['nodes']
-  print('OK')
-  "
-
----
-
-# PHASE 7 — 操作库
-# 目标：用户可以从列表选操作，不用手写表达式
-
----
-
-## TASK-030
-状态：未完成
-做什么：写 operation_library.json（操作库定义）
-输入：project/registry/type_registry.json（看 shape 定义）
-输出：project/registry/operation_library.json
-
-内容：操作按类别组织，每个操作有 id / name / category / input_shapes / output_shape / expression
-```json
-{
-  "version": "1.0.0",
-  "operations": [
-    {
-      "id": "text_split",
-      "name": "切割文字",
-      "category": "文字",
-      "description": "按分隔符切割文字，返回列表",
-      "input_shapes": ["string", "string"],
-      "input_labels": ["文字", "分隔符"],
-      "output_shape": "list",
-      "expression": "a.split(b)"
-    },
-    {
-      "id": "text_join",
-      "name": "合并文字",
-      "category": "文字",
-      "description": "用分隔符合并列表，返回文字",
-      "input_shapes": ["list", "string"],
-      "input_labels": ["列表", "分隔符"],
-      "output_shape": "string",
-      "expression": "b.join(a)"
-    },
-    {
-      "id": "text_length",
-      "name": "文字长度",
-      "category": "文字",
-      "description": "返回文字的字符数",
-      "input_shapes": ["string"],
-      "input_labels": ["文字"],
-      "output_shape": "number",
-      "expression": "len(a)"
-    },
-    {
-      "id": "text_strip",
-      "name": "去除空白",
-      "category": "文字",
-      "description": "去除文字两端空白字符",
-      "input_shapes": ["string"],
-      "input_labels": ["文字"],
-      "output_shape": "string",
-      "expression": "a.strip()"
-    },
-    {
-      "id": "text_replace",
-      "name": "替换文字",
-      "category": "文字",
-      "description": "把文字里的 A 替换成 B",
-      "input_shapes": ["string", "string", "string"],
-      "input_labels": ["文字", "查找", "替换为"],
-      "output_shape": "string",
-      "expression": "a.replace(b, c)"
-    },
-    {
-      "id": "text_contains",
-      "name": "包含文字",
-      "category": "文字",
-      "description": "判断文字是否包含某个子串",
-      "input_shapes": ["string", "string"],
-      "input_labels": ["文字", "子串"],
-      "output_shape": "bool",
-      "expression": "b in a"
-    },
-    {
-      "id": "num_add",
-      "name": "加",
-      "category": "数字",
-      "input_shapes": ["number", "number"],
-      "input_labels": ["A", "B"],
-      "output_shape": "number",
-      "expression": "a + b"
-    },
-    {
-      "id": "num_subtract",
-      "name": "减",
-      "category": "数字",
-      "input_shapes": ["number", "number"],
-      "input_labels": ["A", "B"],
-      "output_shape": "number",
-      "expression": "a - b"
-    },
-    {
-      "id": "num_multiply",
-      "name": "乘",
-      "category": "数字",
-      "input_shapes": ["number", "number"],
-      "input_labels": ["A", "B"],
-      "output_shape": "number",
-      "expression": "a * b"
-    },
-    {
-      "id": "num_divide",
-      "name": "除",
-      "category": "数字",
-      "input_shapes": ["number", "number"],
-      "input_labels": ["A", "B"],
-      "output_shape": "number",
-      "expression": "a / b"
-    },
-    {
-      "id": "num_greater",
-      "name": "大于",
-      "category": "数字",
-      "input_shapes": ["number", "number"],
-      "input_labels": ["A", "B"],
-      "output_shape": "bool",
-      "expression": "a > b"
-    },
-    {
-      "id": "num_equal",
-      "name": "等于",
-      "category": "数字",
-      "input_shapes": ["number", "number"],
-      "input_labels": ["A", "B"],
-      "output_shape": "bool",
-      "expression": "a == b"
-    },
-    {
-      "id": "list_length",
-      "name": "列表长度",
-      "category": "列表",
-      "input_shapes": ["list"],
-      "input_labels": ["列表"],
-      "output_shape": "number",
-      "expression": "len(a)"
-    },
-    {
-      "id": "list_get",
-      "name": "取第N个",
-      "category": "列表",
-      "input_shapes": ["list", "number"],
-      "input_labels": ["列表", "位置（从0开始）"],
-      "output_shape": "union",
-      "expression": "a[int(b)]"
-    },
-    {
-      "id": "list_append",
-      "name": "追加元素",
-      "category": "列表",
-      "input_shapes": ["list", "union"],
-      "input_labels": ["列表", "元素"],
-      "output_shape": "list",
-      "expression": "a + [b]"
-    },
-    {
-      "id": "list_filter_nonempty",
-      "name": "过滤空值",
-      "category": "列表",
-      "input_shapes": ["list"],
-      "input_labels": ["列表"],
-      "output_shape": "list",
-      "expression": "[x for x in a if x is not None and x != '' and x != []]"
-    },
-    {
-      "id": "logic_and",
-      "name": "且",
-      "category": "逻辑",
-      "input_shapes": ["bool", "bool"],
-      "input_labels": ["A", "B"],
-      "output_shape": "bool",
-      "expression": "a and b"
-    },
-    {
-      "id": "logic_or",
-      "name": "或",
-      "category": "逻辑",
-      "input_shapes": ["bool", "bool"],
-      "input_labels": ["A", "B"],
-      "output_shape": "bool",
-      "expression": "a or b"
-    },
-    {
-      "id": "logic_not",
-      "name": "非",
-      "category": "逻辑",
-      "input_shapes": ["bool"],
-      "input_labels": ["A"],
-      "output_shape": "bool",
-      "expression": "not a"
-    }
-  ]
-}
-```
-
-验证：
-  python -c "
-  import json
-  r = json.load(open('project/registry/operation_library.json'))
-  assert len(r['operations']) >= 19
-  categories = set(op['category'] for op in r['operations'])
-  assert categories == {'文字','数字','列表','逻辑'}
-  print('OK')
-  "
-
----
-
-## TASK-031
-状态：未完成
-做什么：写 execute_operation.py（从操作库执行单个操作）
-输入：project/registry/operation_library.json，compiler/accessor/schema_accessor.py
-输出：project/compiler/runtime/execute_operation.py
-
-要求：
-  函数签名：def execute_operation(inputs: dict, meta: dict) -> dict
-  inputs["operation_id"] = 操作库里的 id（如 "text_split"）
-  inputs["args"] = 按 input_labels 顺序排列的参数列表（如 ["hello world", " "]）
-  inputs["library_path"] = operation_library.json 路径
-  逻辑：
-    从 library 里找到 operation_id 对应的操作
-    如果找不到 → raise ValueError
-    验证 args 数量和 input_shapes 数量一致
-    把 args 按顺序绑定到 a, b, c...（最多3个参数）
-    eval(expression)（受限 eval，只允许内置函数，不允许 import）
-    返回：{"result": <eval 结果>}
-
-受限 eval 实现：
-  allowed_builtins = {len, str, int, float, bool, list, dict, set, sorted, sum, min, max, abs, round}
-  eval(expr, {"__builtins__": allowed_builtins}, {"a":args[0], "b":args[1] if len>1 else None, ...})
-
-验证：
-  python -c "
-  import sys; sys.path.insert(0,'project')
-  from compiler.runtime.execute_operation import execute_operation
-
-  r = execute_operation({
-    'operation_id': 'text_split',
-    'args': ['hello world', ' '],
-    'library_path': 'project/registry/operation_library.json'
-  },{})
-  assert r['result'] == ['hello', 'world']
-
-  r2 = execute_operation({
-    'operation_id': 'num_add',
-    'args': [3, 4],
-    'library_path': 'project/registry/operation_library.json'
-  },{})
-  assert r2['result'] == 7
-
-  print('OK')
-  "
-
----
-
-# PHASE 8 — INPUT / OUTPUT node
-# 目标：graph 有明确的数据入口和出口，用户在 INPUT node 提供数据
-
----
-
-## TASK-032
-状态：未完成
-做什么：在 operator_registry.json 里注册 input / output 内置节点
-输入：project/registry/operator_registry.json
-输出：project/registry/operator_registry.json（更新）
-
-加入：
-```json
-{
-  "id": "input",
-  "version": "1.0.0",
-  "location": "templates/functional/input/template.json",
-  "tags": ["io", "input", "source"]
-},
-{
-  "id": "output",
-  "version": "1.0.0",
-  "location": "templates/functional/output/template.json",
-  "tags": ["io", "output", "sink"]
-}
-```
-
-验证：
-  python -c "
-  import json
-  r = json.load(open('project/registry/operator_registry.json'))
-  ids = [t['id'] for t in r['templates']]
-  assert 'input' in ids and 'output' in ids
-  print('OK')
-  "
-
----
-
-## TASK-033
-状态：未完成
-做什么：写 input node 的 template.json 和 code.py
-输入：project/graph/schemas/template.schema.json
-输出：project/templates/functional/input/template.json
-      project/templates/functional/input/implementations/python/code.py
-
-template.json 内容：
-```json
-{
-  "id": "input",
-  "version": "1.0.0",
-  "schema_version": "1.0.0",
-  "name": "Input",
-  "description": "Graph entry point. Provides a value from params into the graph.",
-  "tags": ["io", "input", "source"],
-  "inputs": {},
-  "outputs": {
-    "value": {
-      "id": "value",
-      "schema": { "shape": "union", "variants": ["string","number","bool","list","dict","null"] },
-      "required": true,
-      "description": "The value provided by the user via params"
-    }
-  },
-  "implementations": {
-    "python": { "code_file": "implementations/python/code.py" }
-  },
-  "tests": {
-    "fixed_cases": [
-      {
-        "id": "happy_path_string",
-        "description": "provide a string value",
-        "inputs": {},
-        "expect": { "outputs": { "value": "hello" } },
-        "tags": ["happy_path"]
-      }
-    ],
-    "generated_rules": {
-      "boundary": false,
-      "null_input": false,
-      "type_error": false,
-      "missing_port": false,
-      "overflow": false
-    }
-  }
-}
-```
-
-code.py 内容：
-```python
-def input(inputs: dict, meta: dict) -> dict:
-    # params["value"] 是用户在 graph 里直接填写的字面量
-    params = meta.get("params", {})
-    value = params.get("value")
-    return {"value": value}
-```
-
-验证：
-  python -c "
-  import sys; sys.path.insert(0,'project')
-  # 直接调用
-  import importlib.util, os
-  spec = importlib.util.spec_from_file_location('input_code',
-    'project/templates/functional/input/implementations/python/code.py')
-  mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
-  r = mod.input({}, {'params': {'value': 'hello'}})
-  assert r == {'value': 'hello'}
-  print('OK')
-  "
-
----
-
-## TASK-034
-状态：未完成
-做什么：写 output node 的 template.json 和 code.py
-输入：project/graph/schemas/template.schema.json
-输出：project/templates/functional/output/template.json
-      project/templates/functional/output/implementations/python/code.py
-
-template.json 内容：
-```json
-{
-  "id": "output",
-  "version": "1.0.0",
-  "schema_version": "1.0.0",
-  "name": "Output",
-  "description": "Graph exit point. Collects the final value and labels it.",
-  "tags": ["io", "output", "sink"],
-  "inputs": {
-    "value": {
-      "id": "value",
-      "schema": { "shape": "union", "variants": ["string","number","bool","list","dict","null"] },
-      "required": true,
-      "description": "Final value to output"
-    }
-  },
-  "outputs": {
-    "value": {
-      "id": "value",
-      "schema": { "shape": "union", "variants": ["string","number","bool","list","dict","null"] },
-      "required": true,
-      "description": "Pass-through of the input value"
-    }
-  },
-  "implementations": {
-    "python": { "code_file": "implementations/python/code.py" }
-  },
-  "tests": {
-    "fixed_cases": [
-      {
-        "id": "happy_path",
-        "description": "pass through a value",
-        "inputs": { "value": "hello" },
-        "expect": { "outputs": { "value": "hello" } },
-        "tags": ["happy_path"]
-      }
-    ],
-    "generated_rules": {
-      "boundary": false,
-      "null_input": true,
-      "type_error": false,
-      "missing_port": true,
-      "overflow": false
-    }
-  }
-}
-```
-
-code.py 内容：
-```python
-def output(inputs: dict, meta: dict) -> dict:
-    value = inputs.get("value")
-    return {"value": value}
-```
-
-验证：
-  python -c "
-  import importlib.util
-  spec = importlib.util.spec_from_file_location('output_code',
-    'project/templates/functional/output/implementations/python/code.py')
-  mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
-  r = mod.output({'value': 42}, {})
-  assert r == {'value': 42}
-  print('OK')
-  "
-
----
-
-## TASK-035
-状态：未完成
-做什么：把 graph/latest.json 更新为使用正式 input/output node
-输入：project/graph/latest.json（TASK-008 的版本），TASK-033，TASK-034
-输出：project/graph/latest.json（更新）
-
-要求：
-  node_input 的 template_id 改为 "input"
-  在 graph 末尾加一个 node_output（template_id = "output"）
-  加一条 edge：node_save.success → node_output.value
-  SEQ children 末尾加入 node_output
-
-验证：
-  python -c "
-  import sys; sys.path.insert(0,'project')
-  from compiler.runtime.execute_graph import execute_graph
-  r = execute_graph({
-    'graph_path':    'graph/latest.json',
-    'registry_path': 'registry/operator_registry.json',
-    'trace_dir':     'runtime/traces/'
-  },{})
-  assert r['ok'] == True
-  assert r['outputs']['value'] == True
-  print('OK')
-  "
 
 ---
 
 # 完成标志
 
-TASK-035 验证通过 = Phase 4-8 完成
+TASK-020 验证通过 = v0 完成
 
-之后的 PHASE（等 TASK-035 通过后再写）：
+v0 交付物：
+  - canonical IR pipeline（Python source → IR → projection）
+  - structural pattern matching（5 个内置 pattern）
+  - recognition-constrained graph projection（点/线/面限制）
+  - progressive materialization（S0/S1/S2/S3 stage detection）
+  - L1 reversible rewriting + round-trip verification
+  - 两个 use case 的 smoke test
 
-PHASE 9：Python 表达式 TRANSFORM node（用操作库执行单步计算）
-PHASE 10：LaTeX 表达式支持（前端渲染，内部同一 AST）
-PHASE 11：PARALLEL primitive
-PHASE 12：FEEDBACK edge
-PHASE 13：Editor 前端（React Flow）
-PHASE 14：多人协作
-PHASE 15：权限系统
+---
+
+# 未解决问题（中期处理，不阻塞 v0）
+
+state / Mutation Boundary Theory
+  canonical IR v0 只标记 mutation capability
+  完整 state 建模等待 Mutation Topology 设计
+
+Canonical Equivalence Classes
+  等价结构是否收敛到同一 IR，v0 不强制
+
+Recognition Metric / Cognitive Cost Function
+  recognition 限制 v0 用固定值
+  自动化 cognitive cost 是中期问题
+
+Projection Style Stability
+  同一 IR → 多种代码风格的稳定性，v0 不处理
+
+Partial Structure Legality 完整定义
+  v0 只做最小 check_legality，完整 constraint satisfaction layer 是中期

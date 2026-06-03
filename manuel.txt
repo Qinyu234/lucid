@@ -1,0 +1,71 @@
+# Static Generator - 使用手册
+
+## 验证脚本使用方法
+
+所有验证脚本位于 `project/tests/` 目录中。
+
+### 运行验证脚本
+
+每个任务都有对应的验证脚本，用于验证该任务的实现是否正确。
+
+运行方式：
+```bash
+python project/tests/verify_task001.py
+python project/tests/verify_task002.py
+# ... 依此类推
+```
+
+### 调试脚本
+
+调试脚本用于调试特定问题：
+- `debug_ir.py`: 调试 IR 结构
+- `debug_task010.py`: 调试 TASK-010 模式匹配
+- `debug_smoke.py`: 调试 smoke test
+
+运行方式：
+```bash
+python project/tests/debug_ir.py
+python project/tests/debug_task010.py
+python project/tests/debug_smoke.py
+```
+
+### 运行 smoke test
+
+端到端 smoke test：
+```bash
+python project/tests/test_smoke.py
+```
+
+### CLI 使用
+
+完整的编译管道可以通过 CLI 使用：
+
+```bash
+# 设置 PYTHONPATH
+$env:PYTHONPATH="d:\10_projects\static_generator\project"
+
+# 运行编译器
+python -m compiler.cli project/examples/sample.py --out project/examples/sample.ir.json
+```
+
+### 项目结构
+
+```
+project/
+├── compiler/
+│   ├── ingest/          # 源代码读取
+│   ├── macro/           # 宏展开（v0 stub）
+│   ├── canon/           # 规范化
+│   ├── ir/              # IR 定义
+│   ├── projection/      # 图投影
+│   ├── pattern/         # 模式匹配
+│   ├── rewrite/         # 重写
+│   ├── validation/      # 验证
+│   └── trace/           # 追踪
+├── examples/            # 示例文件
+└── tests/               # 测试
+```
+
+### 完成状态
+
+所有 18 个任务（TASK-001 到 TASK-018）已完成并验证通过。

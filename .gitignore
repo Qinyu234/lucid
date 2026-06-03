@@ -1,1 +1,5 @@
-.venv/
+*
+!TODO.txt
+!manuel.txt
+!project/
+!.gitignore
