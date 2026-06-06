@@ -1,0 +1,973 @@
+# CSF Expansion Engine 未完成事项技术提案
+
+## 概述
+
+本文档针对 CSF Expansion Engine 当前未完成或简化实现的功能，提供深度技术提案。每项提案包含多轮思考、技术方案、自我评估和技术成熟度标注。
+
+---
+
+## 提案一：CSF 增量同步完整算法
+
+### 1.1 问题背景
+
+当前 v0.2 实现的增量同步（incremental_update）采用简化的匹配策略：通过 (kind, label, line_start) 三元组匹配新旧节点。这种策略存在以下局限性：
+
+1. **匹配精度不足**：当函数重命名或移动位置时，匹配失败导致 expansion_state 丢失
+2. **无法处理复杂重构**：如函数拆分、合并、参数变更等
+3. **缺乏语义理解**：仅基于语法特征，无法识别语义等价的变化
+4. **元数据丢失**：复杂的 meta 信息（如 guard_chain, dependency_span_warning）在重构后难以保留
+
+### 1.2 第一轮提案：基于 AST 指纹的精确匹配
+
+**核心思想**：为每个 AST 节点计算结构指纹，包括：
+- 节点类型和子节点结构
+- 控制流特征（if/for/while 嵌套模式）
+- 数据流特征（变量读写模式）
+- 代码哈希（标准化后的代码）
+
+**技术方案**：
+```python
+def compute_node_fingerprint(node: ast.AST) -> str:
+    """计算节点指纹"""
+    # 1. 结构特征
+    structure = _extract_structure(node)
+    
+    # 2. 控制流特征
+    control_flow = _extract_control_flow(node)
+    
+    # 3. 数据流特征
+    data_flow = _extract_data_flow(node)
+    
+    # 4. 标准化代码哈希
+    normalized_code = _normalize_code(node)
+    code_hash = hashlib.sha256(normalized_code.encode()).hexdigest()[:16]
+    
+    return f"{structure}:{control_flow}:{data_flow}:{code_hash}"
+```
+
+**优势**：
+- 提高匹配精度，能识别语义等价的重构
+- 支持函数重命名（通过结构匹配）
+- 保留更多元数据
+
+**劣势**：
+- 计算复杂度高，可能影响性能
+- 指纹冲突概率虽低但存在
+- 标准化代码可能丢失某些语义信息
+
+**技术成熟度**：中等（需要大量测试验证指纹稳定性）
+
+**自我评估**：
+- **服务项目目标**：✓ 是。增量同步是核心功能，提升用户体验
+- **优先级**：高。直接影响用户编辑体验
+- **风险**：中等。可能引入新的 bug
+
+### 1.3 第二轮提案：基于语义图的最优匹配
+
+**核心思想**：将 CSF 视为图结构，使用图匹配算法找到新旧版本之间的最优映射。
+
+**技术方案**：
+```python
+def incremental_update_graph_matching(old_csf: dict, new_csf: dict) -> dict:
+    """基于图匹配的增量更新"""
+    # 1. 构建相似度矩阵
+    similarity_matrix = _build_similarity_matrix(old_csf, new_csf)
+    
+    # 2. 使用匈牙利算法找到最优匹配
+    matching = _hungarian_algorithm(similarity_matrix)
+    
+    # 3. 传播 expansion_state 和 meta
+    for old_id, new_id in matching.items():
+        if similarity_matrix[old_id][new_id] > THRESHOLD:
+            _propagate_state(old_csf['nodes'][old_id], new_csf['nodes'][new_id])
+    
+    return new_csf
+```
+
+**相似度计算**：
+- 结构相似度：子节点结构、控制流模式
+- 语义相似度：变量名相似度、注释相似度
+- 位置相似度：行号变化、相对位置
+
+**优势**：
+- 全局最优匹配，避免局部次优解
+- 能处理复杂的重构场景
+- 理论基础扎实（图匹配算法）
+
+**劣势**：
+- 计算复杂度为 O(n³)，大文件性能差
+- 需要调优相似度权重
+- 实现复杂度高
+
+**技术成熟度**：低（需要大量工程优化）
+
+**自我评估**：
+- **服务项目目标**：✓ 是。提供最准确的增量同步
+- **优先级**：中。第一轮提案可能已足够
+- **风险**：高。性能和正确性都需要验证
+
+### 1.4 第三轮提案：混合策略
+
+**核心思想**：结合第一轮和第二轮提案，根据文件大小和变化程度动态选择策略。
+
+**技术方案**：
+```python
+def incremental_update_hybrid(old_csf: dict, new_csf: dict) -> dict:
+    """混合策略增量更新"""
+    # 1. 评估变化程度
+    change_score = _assess_change_degree(old_csf, new_csf)
+    
+    # 2. 根据文件大小和变化程度选择策略
+    node_count = len(old_csf['nodes'])
+    
+    if node_count < 50 or change_score < 0.3:
+        # 小文件或小变化：使用图匹配
+        return incremental_update_graph_matching(old_csf, new_csf)
+    else:
+        # 大文件或大变化：使用指纹匹配
+        return incremental_update_fingerprint(old_csf, new_csf)
+```
+
+**优势**：
+- 平衡准确性和性能
+- 适应不同场景
+- 逐步迁移风险低
+
+**劣势**：
+- 策略切换可能产生不一致结果
+- 需要维护两套实现
+- 阈值需要调优
+
+**技术成熟度**：中等（需要实际使用数据调优）
+
+**自我评估**：
+- **服务项目目标**：✓ 是。提供最佳用户体验
+- **优先级**：高。推荐作为最终方案
+- **风险**：中。需要充分的 A/B 测试
+
+### 1.5 最终推荐
+
+**推荐方案**：第三轮提案（混合策略）
+
+**实施路径**：
+1. 先实现第一轮提案（指纹匹配），替换当前简化版本
+2. 收集用户反馈和性能数据
+3. 实现第二轮提案（图匹配）
+4. 实现混合策略
+5. 灰度发布，监控指标
+
+**技术成熟度**：中等（需要生产验证）
+
+---
+
+## 提案二：Projection Hysteresis（防抖动）
+
+### 2.1 问题背景
+
+当前 Projection Scheduler 在每次代码变化时都重新计算调度决策，可能导致：
+1. **视图抖动**：用户编辑时，节点频繁展开/折叠
+2. **注意力分散**：用户难以专注于当前编辑区域
+3. **性能浪费**：不必要的调度计算
+
+### 2.2 第一轮提案：时间窗口防抖
+
+**核心思想**：引入时间窗口，只有当调度决策稳定一定时间后才执行。
+
+**技术方案**：
+```python
+class HysteresisScheduler:
+    def __init__(self, window_ms: int = 1000):
+        self.window_ms = window_ms
+        self.pending_decisions = {}
+        self.last_decision_time = {}
+    
+    def schedule_with_hysteresis(self, csf: dict) -> dict:
+        """带防抖的调度"""
+        current_decisions = self._compute_decisions(csf)
+        
+        # 检查每个决策是否稳定
+        stable_decisions = {}
+        for node_id, decision in current_decisions.items():
+            if node_id in self.pending_decisions:
+                if self.pending_decisions[node_id] == decision:
+                    # 决策稳定，检查时间窗口
+                    if time.time() - self.last_decision_time[node_id] > self.window_ms / 1000:
+                        stable_decisions[node_id] = decision
+                else:
+                    # 决策变化，重置计时
+                    self.pending_decisions[node_id] = decision
+                    self.last_decision_time[node_id] = time.time()
+            else:
+                # 新决策
+                self.pending_decisions[node_id] = decision
+                self.last_decision_time[node_id] = time.time()
+        
+        return self._apply_decisions(csf, stable_decisions)
+```
+
+**优势**：
+- 实现简单
+- 有效减少抖动
+- 可配置窗口大小
+
+**劣势**：
+- 固定窗口可能不适合所有场景
+- 延迟响应可能影响用户体验
+- 不考虑编辑上下文
+
+**技术成熟度**：高（常见 UI 模式）
+
+**自我评估**：
+- **服务项目目标**：✓ 是。提升用户体验
+- **优先级**：中。当前问题不严重
+- **风险**：低
+
+### 2.3 第二轮提案：基于编辑上下文的智能防抖
+
+**核心思想**：根据用户编辑行为动态调整防抖策略。
+
+**技术方案**：
+```python
+class ContextAwareHysteresis:
+    def __init__(self):
+        self.edit_history = []
+        self.focus_region = None
+    
+    def schedule_with_context(self, csf: dict, edit_event: dict) -> dict:
+        """基于上下文的调度"""
+        # 1. 记录编辑历史
+        self.edit_history.append(edit_event)
+        
+        # 2. 检测编辑模式
+        edit_mode = self._detect_edit_mode()
+        
+        # 3. 根据编辑模式调整策略
+        if edit_mode == 'refactoring':
+            # 重构模式：快速响应
+            window_ms = 200
+        elif edit_mode == 'typing':
+            # 输入模式：较长延迟
+            window_ms = 2000
+        else:
+            # 默认模式
+            window_ms = 1000
+        
+        # 4. 保护焦点区域
+        if self.focus_region:
+            self._protect_focus_region(csf, self.focus_region)
+        
+        return self._schedule_with_window(csf, window_ms)
+```
+
+**编辑模式识别**：
+- 重构模式：批量修改、函数移动
+- 输入模式：连续字符输入
+- 浏览模式：光标移动、滚动
+
+**优势**：
+- 自适应不同编辑场景
+- 保护用户焦点
+- 更智能的响应
+
+**劣势**：
+- 需要编辑历史跟踪
+- 模式识别可能不准确
+- 实现复杂度高
+
+**技术成熟度**：低（需要大量用户行为数据）
+
+**自我评估**：
+- **服务项目目标**：✓ 是。提供更智能的体验
+- **优先级**：低。第一轮提案可能已足够
+- **风险**：中。模式识别可能引入误判
+
+### 2.4 第三轮提案：基于用户意图的预测性调度
+
+**核心思想**：使用机器学习预测用户下一步操作，提前调度。
+
+**技术方案**：
+```python
+class PredictiveScheduler:
+    def __init__(self):
+        self.model = self._load_model()
+        self.user_profile = {}
+    
+    def schedule_predictive(self, csf: dict, user_context: dict) -> dict:
+        """预测性调度"""
+        # 1. 提取特征
+        features = self._extract_features(csf, user_context)
+        
+        # 2. 预测用户意图
+        intent = self.model.predict(features)
+        
+        # 3. 根据意图预调度
+        if intent == 'expand_region':
+            return self._pre_expand(csf, user_context['focus'])
+        elif intent == 'collapse_region':
+            return self._pre_collapse(csf, user_context['focus'])
+        else:
+            return self._schedule_normal(csf)
+```
+
+**特征提取**：
+- 编辑位置、频率
+- 时间模式
+- 文件类型
+- 历史行为
+
+**优势**：
+- 提前响应，零延迟
+- 个性化体验
+- 理论上最优
+
+**劣势**：
+- 需要大量训练数据
+- 模型维护成本高
+- 冷启动问题
+- 隐私考虑
+
+**技术成熟度**：极低（研究阶段）
+
+**自我评估**：
+- **服务项目目标**：? 不确定。可能过度设计
+- **优先级**：极低。当前不需要
+- **风险**：高。投入产出比低
+
+### 2.5 最终推荐
+
+**推荐方案**：第一轮提案（时间窗口防抖）
+
+**理由**：
+- 实现简单，风险低
+- 解决主要问题
+- 可作为基础，后续迭代
+
+**技术成熟度**：高
+
+---
+
+## 提案三：Recognition Matrix 阈值校准
+
+### 3.1 问题背景
+
+当前 RPCM 的阈值（WS_THRESHOLDS）是硬编码的启发式值：
+```python
+WS_THRESHOLDS = {
+    "R0_nesting_depth":   {"load": 2, "compress": 3},
+    "R0_visible_chunks":  {"load": 5, "compress": 7},
+    "R1_dependency_span": {"load": 1, "compress": 2},
+    "R2_mutation_fanout": {"load": 3, "compress": 5},
+    "R3_opaque_count":    {"load": 1, "compress": 3},
+}
+```
+
+这些值缺乏数据支持，可能导致：
+1. 过于激进：频繁触发调度，用户感觉系统"太敏感"
+2. 过于保守：该展开时不展开，用户需要手动操作
+3. 不适应不同场景：不同项目、不同用户可能有不同偏好
+
+### 3.2 第一轮提案：基于用户反馈的在线学习
+
+**核心思想**：收集用户手动展开/折叠操作，作为反馈信号，动态调整阈值。
+
+**技术方案**：
+```python
+class AdaptiveThresholds:
+    def __init__(self):
+        self.thresholds = WS_THRESHOLDS.copy()
+        self.feedback_history = []
+        self.learning_rate = 0.1
+    
+    def update_from_feedback(self, action: str, context: dict):
+        """根据用户反馈更新阈值"""
+        # action: 'manual_expand' 或 'manual_collapse'
+        # context: 当时的 WS 状态
+        
+        if action == 'manual_expand':
+            # 用户手动展开，说明阈值太高
+            self._decrease_threshold(context)
+        elif action == 'manual_collapse':
+            # 用户手动折叠，说明阈值太低
+            self._increase_threshold(context)
+        
+        self.feedback_history.append((action, context))
+    
+    def _decrease_threshold(self, context: dict):
+        """降低阈值"""
+        dimension = context['dimension']
+        current_value = self.thresholds[dimension]['compress']
+        self.thresholds[dimension]['compress'] = max(1, current_value - 1)
+```
+
+**优势**：
+- 自适应不同用户
+- 持续优化
+- 实现相对简单
+
+**劣势**：
+- 冷启动问题
+- 可能过度拟合
+- 需要长期运行才能见效
+
+**技术成熟度**：中等（需要实际用户数据）
+
+**自我评估**：
+- **服务项目目标**：✓ 是。提升个性化体验
+- **优先级**：中。当前硬编码值可能已足够
+- **风险**：中。需要监控避免阈值漂移
+
+### 3.3 第二轮提案：基于项目特征的预训练模型
+
+**核心思想**：分析不同类型项目的特征，预训练阈值推荐模型。
+
+**技术方案**：
+```python
+class ProjectAwareThresholds:
+    def __init__(self):
+        self.project_profiles = {}
+        self.threshold_recommender = self._train_recommender()
+    
+    def recommend_thresholds(self, project_features: dict) -> dict:
+        """推荐项目特定的阈值"""
+        # project_features: 项目大小、语言特征、团队规模等
+        return self.threshold_recommender.predict(project_features)
+    
+    def _train_recommender(self):
+        """训练推荐模型"""
+        # 从开源项目收集数据
+        # 分析项目特征和最优阈值的关系
+        # 训练回归模型
+        pass
+```
+
+**项目特征**：
+- 代码规模（LOC、文件数）
+- 平均函数长度
+- 嵌套深度分布
+- 团队规模
+- 领域（Web、数据科学、系统编程）
+
+**优势**：
+- 冷启动友好
+- 基于真实数据
+- 可解释性强
+
+**劣势**：
+- 需要大量项目数据
+- 模型训练成本高
+- 可能过拟合特定项目类型
+
+**技术成熟度**：低（需要数据收集和模型训练）
+
+**自我评估**：
+- **服务项目目标**：✓ 是。提供开箱即用的体验
+- **优先级**：低。当前用户量少，不需要
+- **风险**：中。数据收集和模型维护成本
+
+### 3.4 第三轮提案：A/B 测试框架
+
+**核心思想**：构建 A/B 测试框架，系统性地评估不同阈值配置的效果。
+
+**技术方案**：
+```python
+class ThresholdABTest:
+    def __init__(self):
+        self.variants = [
+            {'name': 'conservative', 'thresholds': CONSERVATIVE_THRESHOLDS},
+            {'name': 'aggressive', 'thresholds': AGGRESSIVE_THRESHOLDS},
+            {'name': 'default', 'thresholds': DEFAULT_THRESHOLDS},
+        ]
+        self.user_assignments = {}
+        self.metrics = {}
+    
+    def assign_variant(self, user_id: str) -> dict:
+        """分配测试变体"""
+        variant = self._hash_assign(user_id, self.variants)
+        self.user_assignments[user_id] = variant['name']
+        return variant['thresholds']
+    
+    def record_metric(self, user_id: str, metric: str, value: float):
+        """记录指标"""
+        variant = self.user_assignments.get(user_id)
+        if variant:
+            if variant not in self.metrics:
+                self.metrics[variant] = {}
+            if metric not in self.metrics[variant]:
+                self.metrics[variant][metric] = []
+            self.metrics[variant][metric].append(value)
+```
+
+**指标**：
+- 手动操作频率
+- 用户满意度
+- 任务完成时间
+- 系统响应时间
+
+**优势**：
+- 数据驱动决策
+- 可量化效果
+- 风险可控
+
+**劣势**：
+- 需要足够用户量
+- 测试周期长
+- 实现复杂
+
+**技术成熟度**：中等（需要产品支持）
+
+**自我评估**：
+- **服务项目目标**：✓ 是。科学决策
+- **优先级**：低。当前用户量不足
+- **风险**：低。可以逐步实施
+
+### 3.5 最终推荐
+
+**推荐方案**：第一轮提案（基于用户反馈的在线学习）
+
+**理由**：
+- 实现简单，可快速见效
+- 适合当前用户量
+- 可作为后续方案的基础
+
+**技术成熟度**：中等
+
+---
+
+## 提案四：Structural Operation 完整可逆性
+
+### 4.1 问题背景
+
+当前 writer.py 中的 extract_function 和 add_early_return 返回空结果，未实现真正的代码变换。即使实现后，也存在以下问题：
+
+1. **不可逆**：用户无法撤销操作
+2. **无预览**：用户无法预览变换结果
+3. **无冲突检测**：可能破坏代码逻辑
+4. **无版本控制集成**：无法与 Git 等工具集成
+
+### 4.2 第一轮提案：基于操作日志的撤销系统
+
+**核心思想**：记录所有 Structural Operation 的操作日志，支持撤销和重做。
+
+**技术方案**：
+```python
+class OperationLog:
+    def __init__(self):
+        self.operations = []
+        self.current_index = -1
+    
+    def record_operation(self, op: dict):
+        """记录操作"""
+        # op: {'type': 'extract_function', 'node_ids': [...], 'patch': '...'}
+        self.operations = self.operations[:self.current_index + 1]
+        self.operations.append(op)
+        self.current_index += 1
+    
+    def undo(self) -> dict:
+        """撤销操作"""
+        if self.current_index >= 0:
+            op = self.operations[self.current_index]
+            self.current_index -= 1
+            return {'reverse_patch': op['reverse_patch']}
+        return None
+    
+    def redo(self) -> dict:
+        """重做操作"""
+        if self.current_index < len(self.operations) - 1:
+            self.current_index += 1
+            op = self.operations[self.current_index]
+            return {'patch': op['patch']}
+        return None
+```
+
+**优势**：
+- 实现简单
+- 符合用户直觉
+- 可扩展
+
+**劣势**：
+- 日志可能很大
+- 不处理冲突
+- 不支持分支
+
+**技术成熟度**：高（常见模式）
+
+**自我评估**：
+- **服务项目目标**：✓ 是。基本功能
+- **优先级**：高。用户期望
+- **风险**：低
+
+### 4.3 第二轮提案：基于 Git 的版本集成
+
+**核心思想**：将 Structural Operation 与 Git commit 关联，支持基于 Git 的撤销。
+
+**技术方案**：
+```python
+class GitIntegratedOperations:
+    def __init__(self, repo_path: str):
+        self.repo = git.Repo(repo_path)
+        self.operation_commits = {}
+    
+    def apply_operation(self, op: dict, message: str) -> str:
+        """应用操作并创建 commit"""
+        # 1. 应用操作
+        patch = self._apply_operation(op)
+        
+        # 2. 创建 commit
+        commit = self.repo.index.commit(message)
+        
+        # 3. 记录关联
+        self.operation_commits[commit.hexsha] = op
+        
+        return commit.hexsha
+    
+    def revert_operation(self, commit_hash: str) -> bool:
+        """撤销操作"""
+        op = self.operation_commits.get(commit_hash)
+        if op:
+            # 使用 git revert
+            self.repo.git.revert(commit_hash)
+            return True
+        return False
+```
+
+**优势**：
+- 与现有工具集成
+- 支持分支和合并
+- 历史记录完整
+
+**劣势**：
+- 依赖 Git
+- commit 频繁可能影响工作流
+- 复杂度高
+
+**技术成熟度**：中等（需要 Git 集成经验）
+
+**自我评估**：
+- **服务项目目标**：✓ 是。专业工具应该有
+- **优先级**：中。第一轮提案可能已足够
+- **风险**：中。Git 集成可能引入问题
+
+### 4.4 第三轮提案：基于 AST 的智能冲突检测和解决
+
+**核心思想**：在应用操作前，检测潜在冲突并提供解决方案。
+
+**技术方案**：
+```python
+class ConflictAwareOperations:
+    def __init__(self):
+        self.conflict_resolver = ConflictResolver()
+    
+    def apply_operation_safe(self, op: dict, csf: dict) -> dict:
+        """安全应用操作"""
+        # 1. 检测冲突
+        conflicts = self._detect_conflicts(op, csf)
+        
+        if conflicts:
+            # 2. 提供解决方案
+            solutions = self.conflict_resolver.resolve(conflicts, csf)
+            
+            # 3. 用户选择或自动解决
+            solution = self._select_solution(solutions)
+            
+            if solution:
+                return self._apply_with_solution(op, solution)
+            else:
+                return None  # 用户取消
+        else:
+            return self._apply_operation(op, csf)
+    
+    def _detect_conflicts(self, op: dict, csf: dict) -> list:
+        """检测冲突"""
+        conflicts = []
+        
+        # 检测命名冲突
+        if op['type'] == 'extract_function':
+            new_name = op['new_name']
+            if any(n['label'] == new_name for n in csf['nodes'].values()):
+                conflicts.append({'type': 'name_conflict', 'name': new_name})
+        
+        # 检测依赖冲突
+        # ...
+        
+        return conflicts
+```
+
+**冲突类型**：
+- 命名冲突
+- 依赖冲突
+- 作用域冲突
+- 类型冲突
+
+**优势**：
+- 提高安全性
+- 减少用户错误
+- 更专业
+
+**劣势**：
+- 实现复杂
+- 可能误报
+- 需要用户理解
+
+**技术成熟度**：低（需要大量测试）
+
+**自我评估**：
+- **服务项目目标**：✓ 是。提升可靠性
+- **优先级**：中。可以先实现基础功能
+- **风险**：高。冲突检测可能不准确
+
+### 4.5 最终推荐
+
+**推荐方案**：分阶段实施
+
+**阶段 1**：第一轮提案（操作日志）
+- 实现基本的撤销/重做
+- 验证用户需求
+
+**阶段 2**：实现真正的代码变换
+- 完善 extract_function 和 add_early_return
+- 添加预览功能
+
+**阶段 3**：第二或第三轮提案
+- 根据用户反馈选择
+- 可能先实现 Git 集成
+
+**技术成熟度**：中等（分阶段降低风险）
+
+---
+
+## 提案五：多语言支持
+
+### 5.1 问题背景
+
+当前 v0 仅支持 Python，限制了工具的适用范围。多语言支持需要考虑：
+
+1. **语言特性差异**：不同语言的 AST 结构、语法特性
+2. **工具链差异**：不同语言的解析器、格式化工具
+3. **CSF 通用性**：CSF schema 是否需要语言特定扩展
+4. **维护成本**：多语言支持显著增加维护负担
+
+### 5.2 第一轮提案：语言插件架构
+
+**核心思想**：设计插件架构，每种语言作为独立插件实现。
+
+**技术方案**：
+```python
+class LanguagePlugin:
+    """语言插件基类"""
+    
+    @abstractmethod
+    def parse(self, source: str, path: str) -> dict:
+        """解析源码为 CSF"""
+        pass
+    
+    @abstractmethod
+    def write(self, csf: dict, patch: str) -> str:
+        """应用 patch 写回源码"""
+        pass
+    
+    @abstractmethod
+    def get_language_features(self) -> dict:
+        """返回语言特性"""
+        pass
+
+class PythonPlugin(LanguagePlugin):
+    """Python 插件"""
+    def parse(self, source: str, path: str) -> dict:
+        # 使用 ast 模块
+        pass
+
+class JavaScriptPlugin(LanguagePlugin):
+    """JavaScript 插件"""
+    def parse(self, source: str, path: str) -> dict:
+        # 使用 Babel/TypeScript
+        pass
+```
+
+**插件注册**：
+```python
+class PluginManager:
+    def __init__(self):
+        self.plugins = {}
+    
+    def register(self, language: str, plugin: LanguagePlugin):
+        """注册插件"""
+        self.plugins[language] = plugin
+    
+    def get_plugin(self, path: str) -> LanguagePlugin:
+        """根据文件路径获取插件"""
+        ext = Path(path).suffix
+        language = self._ext_to_language(ext)
+        return self.plugins.get(language)
+```
+
+**优势**：
+- 架构清晰，易于扩展
+- 语言解耦
+- 社区可贡献插件
+
+**劣势**：
+- 需要设计通用接口
+- 插件质量参差不齐
+- 增加测试负担
+
+**技术成熟度**：高（常见模式）
+
+**自我评估**：
+- **服务项目目标**：✓ 是。扩大适用范围
+- **优先级**：低。当前专注 Python
+- **风险**：中。架构设计需要深思熟虑
+
+### 5.3 第二轮提案：基于 Tree-sitter 的通用解析
+
+**核心思想**：使用 Tree-sitter 作为统一解析器，支持多种语言。
+
+**技术方案**：
+```python
+class TreeSitterParser:
+    def __init__(self):
+        self.parsers = {}
+        self._load_parsers()
+    
+    def parse(self, source: str, language: str) -> dict:
+        """使用 Tree-sitter 解析"""
+        parser = self.parsers.get(language)
+        if not parser:
+            raise ValueError(f"Unsupported language: {language}")
+        
+        tree = parser.parse(source.encode())
+        return self._tree_to_csf(tree, language)
+    
+    def _tree_to_csf(self, tree: Tree, language: str) -> dict:
+        """将 Tree-sitter 树转换为 CSF"""
+        # 语言特定的转换逻辑
+        pass
+```
+
+**优势**：
+- 统一解析器
+- 支持语言多（Tree-sitter 支持 40+ 语言）
+- 性能好
+
+**劣势**：
+- Tree-sitter AST 与 CSF 映射复杂
+- 某些语言特性可能不支持
+- 依赖外部库
+
+**技术成熟度**：中等（Tree-sitter 成熟但映射复杂）
+
+**自我评估**：
+- **服务项目目标**：✓ 是。快速支持多语言
+- **优先级**：低。当前专注 Python
+- **风险**：中。映射可能不准确
+
+### 5.4 第三轮提案：渐进式多语言支持
+
+**核心思想**：先支持与 Python 相似的语言（如 JavaScript、TypeScript），逐步扩展。
+
+**技术方案**：
+```python
+# 阶段 1: JavaScript
+class JavaScriptPlugin(LanguagePlugin):
+    def parse(self, source: str, path: str) -> dict:
+        # 使用 Babel 解析
+        # 转换为类似 Python 的 CSF 结构
+        pass
+
+# 阶段 2: TypeScript
+class TypeScriptPlugin(JavaScriptPlugin):
+    def parse(self, source: str, path: str) -> dict:
+        # 添加类型信息
+        pass
+
+# 阶段 3: Go, Rust 等
+```
+
+**优先级排序**：
+1. JavaScript/TypeScript（前端生态）
+2. Go（系统编程）
+3. Rust（系统编程）
+4. Java（企业级）
+
+**优势**：
+- 风险可控
+- 逐步积累经验
+- 优先支持高需求语言
+
+**劣势**：
+- 周期长
+- 每种语言都需要适配
+- 可能错过某些语言
+
+**技术成熟度**：高（渐进式是常见策略）
+
+**自我评估**：
+- **服务项目目标**：✓ 是。务实路线
+- **优先级**：低。当前专注 Python
+- **风险**：低
+
+### 5.5 最终推荐
+
+**推荐方案**：暂不实施
+
+**理由**：
+- 当前 Python 支持还不够完善
+- 多语言支持需要大量资源
+- 市场需求不明确
+
+**未来时机**：
+- Python 版本稳定且有大量用户
+- 明确的多语言需求
+- 有足够的开发资源
+
+**技术成熟度**：高（架构设计可提前进行）
+
+---
+
+## 总结
+
+### 优先级排序
+
+1. **高优先级**：
+   - CSF 增量同步完整算法（混合策略）
+   - Structural Operation 完整可逆性（操作日志）
+
+2. **中优先级**：
+   - Recognition Matrix 阈值校准（在线学习）
+   - Projection Hysteresis（时间窗口防抖）
+
+3. **低优先级**：
+   - 多语言支持（暂不实施）
+
+### 实施建议
+
+1. **短期（1-2 个月）**：
+   - 实现增量同步的指纹匹配
+   - 实现操作日志系统
+   - 实现时间窗口防抖
+
+2. **中期（3-6 个月）**：
+   - 实现增量同步的图匹配和混合策略
+   - 实现真正的代码变换（extract_function, add_early_return）
+   - 实现在线学习阈值调整
+
+3. **长期（6-12 个月）**：
+   - 考虑 Git 集成
+   - 考虑冲突检测
+   - 评估多语言支持需求
+
+### 风险管理
+
+1. **技术风险**：
+   - 所有提案都应先在小规模测试
+   - 保留回滚机制
+   - 充分的单元测试和集成测试
+
+2. **产品风险**：
+   - 收集用户反馈
+   - A/B 测试验证效果
+   - 监控关键指标
+
+3. **资源风险**：
+   - 优先级排序，聚焦高价值功能
+   - 分阶段实施，控制范围
+   - 定期评估投入产出比

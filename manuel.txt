@@ -1,71 +1,344 @@
-# Static Generator - 使用手册
+# CSF Expansion Engine 操作手册
 
-## 验证脚本使用方法
+## 概述
 
-所有验证脚本位于 `project/tests/` 目录中。
+CSF (Canonical Structural Form) Expansion Engine 是一个用于分析和展开 Python 代码隐式结构的工具。它将代码的隐式结构关系显式化，提供结构化视图。
 
-### 运行验证脚本
+## 环境要求
 
-每个任务都有对应的验证脚本，用于验证该任务的实现是否正确。
+- Python 3.11+
+- 虚拟环境：.venv/
 
-运行方式：
-```bash
-python project/tests/verify_task001.py
-python project/tests/verify_task002.py
-# ... 依此类推
-```
-
-### 调试脚本
-
-调试脚本用于调试特定问题：
-- `debug_ir.py`: 调试 IR 结构
-- `debug_task010.py`: 调试 TASK-010 模式匹配
-- `debug_smoke.py`: 调试 smoke test
-
-运行方式：
-```bash
-python project/tests/debug_ir.py
-python project/tests/debug_task010.py
-python project/tests/debug_smoke.py
-```
-
-### 运行 smoke test
-
-端到端 smoke test：
-```bash
-python project/tests/test_smoke.py
-```
-
-### CLI 使用
-
-完整的编译管道可以通过 CLI 使用：
+## 安装依赖
 
 ```bash
-# 设置 PYTHONPATH
-$env:PYTHONPATH="d:\10_projects\static_generator\project"
+# 激活虚拟环境
+.venv\Scripts\python.exe -m pip install --upgrade pip
 
-# 运行编译器
-python -m compiler.cli project/examples/sample.py --out project/examples/sample.ir.json
+# 安装依赖
+.venv\Scripts\python.exe -m pip install -r project/requirements.txt
 ```
 
-### 项目结构
+依赖包括：
+- libcst>=1.1.0 - 结构化代码写回，保留格式/注释
+- pydeps>=1.12.0 - 跨文件 module 依赖图
+- pytest>=7.0.0 - 测试框架
+
+## 目录结构
 
 ```
 project/
-├── compiler/
-│   ├── ingest/          # 源代码读取
-│   ├── macro/           # 宏展开（v0 stub）
-│   ├── canon/           # 规范化
-│   ├── ir/              # IR 定义
-│   ├── projection/      # 图投影
-│   ├── pattern/         # 模式匹配
-│   ├── rewrite/         # 重写
-│   ├── validation/      # 验证
-│   └── trace/           # 追踪
-├── examples/            # 示例文件
-└── tests/               # 测试
+├── PROJECT_CORE.md          # 项目核心文档
+├── cli.py                   # 命令行入口
+├── requirements.txt         # 依赖列表
+├── core/
+│   ├── csf/                 # Canonical Structural Form
+│   │   ├── schema.py        # CSF 数据结构定义
+│   │   └── builder.py       # 从 AST 构建 CSF
+│   ├── expansion/           # Structural Expansion Engine
+│   │   ├── inheritance.py   # 继承关系展开
+│   │   ├── dependency.py    # 依赖链展开
+│   │   ├── nesting.py      # Nesting flatten
+│   │   └── mutation.py     # Mutation 传播标注
+│   ├── sync/                # CSF ↔ Code 同步
+│   │   ├── parser.py        # Code → CSF
+│   │   └── writer.py        # CSF patch → Code
+│   ├── projection/          # Recognition Projection
+│   │   ├── scheduler.py     # 决定什么展开什么折叠
+│   │   └── workspace.py     # Human Structural Workspace
+│   ├── pattern/             # Structural Pattern Matching
+│   │   ├── patterns.py      # 内置 pattern 定义
+│   │   └── matcher.py       # 确定性匹配
+│   ├── recognition/         # Recognition Matrix
+│   │   └── rpcm.py         # Working Set 状态计算
+│   └── template/           # 模板系统
+│       ├── registry.py      # 模板注册
+│       └── generator.py     # 代码生成
+├── examples/               # 示例文件
+└── tests/                  # 测试文件
 ```
 
-### 完成状态
+## CLI 命令
 
-所有 18 个任务（TASK-001 到 TASK-018）已完成并验证通过。
+### 1. expand - 展开源文件结构
+
+```bash
+.venv\Scripts\python.exe project/cli.py expand <source_path>
+```
+
+选项：
+- `--show-mutations` - 显示 mutation_affects
+- `--show-inherited` - 显示继承的虚拟节点
+
+示例：
+```bash
+.venv\Scripts\python.exe project/cli.py expand project/examples/frontend_sample.py
+.venv\Scripts\python.exe project/cli.py expand project/examples/frontend_sample.py --show-mutations
+.venv\Scripts\python.exe project/cli.py expand project/examples/frontend_sample.py --show-inherited
+```
+
+输出格式（文本树）：
+```
+UserService [class] (lines 1-12)
+  login [function] (lines 2-7)
+    assign [statement] (lines 3-3)
+    if user [block, depth=1]
+      assign [statement] (lines 5-5)
+  validate [function] (lines 9-11)
+    return [statement] (lines 10-10)
+```
+
+### 2. heatmap - 显示模板约束热力图
+
+```bash
+.venv\Scripts\python.exe project/cli.py heatmap <source_path> --template <template_id>
+```
+
+可用模板：
+- `pipeline_template` - Pipeline 模板
+- `fetch_transform_cache_template` - Fetch-Transform-Cache 模板
+
+示例：
+```bash
+.venv\Scripts\python.exe project/cli.py heatmap project/examples/pattern_sample.py --template fetch_transform_cache_template
+```
+
+输出格式：
+```
+Template: Fetch-Transform-Cache
+
+Constraints:
+  ✓ has_fetch       fetch()        [green]
+  ✓ has_transform   transform()    [green]
+  ✗ has_cache_key   缺失           [red]
+  ✗ has_cache_store 缺失           [red]
+
+Ready: NO（还差 2 个约束）
+```
+
+### 3. generate - 从模板生成代码
+
+```bash
+.venv\Scripts\python.exe project/cli.py generate <source_path> --template <template_id>
+```
+
+示例：
+```bash
+.venv\Scripts\python.exe project/cli.py generate project/examples/pattern_sample.py --template fetch_transform_cache_template
+```
+
+输出格式：
+```
+Generated code:
+def process(key):
+    data = fetch(key)
+    result = transform(data)
+    cache[key] = result
+    return result
+```
+
+## Python API 使用
+
+### 基础展开
+
+```python
+from core.expansion import expand
+
+# 展开源文件
+csf = expand('path/to/file.py')
+
+# 访问节点
+for node_id, node in csf['nodes'].items():
+    print(f"{node['label']} [{node['kind']}]")
+```
+
+### Working Set 状态计算
+
+```python
+from core.expansion import expand
+from core.recognition.rpcm import compute_ws_state
+
+csf = expand('path/to/file.py')
+ws = compute_ws_state(csf)
+
+print(f"R0: {ws['R0']['ws_op']}")
+print(f"R1: {ws['R1']['ws_op']}")
+print(f"R2: {ws['R2']['ws_op']}")
+print(f"R3: {ws['R3']['ws_op']}")
+print(f"Thrash risk: {ws['thrash_risk']}")
+```
+
+### 投影调度
+
+```python
+from core.expansion import expand
+from core.projection.scheduler import schedule
+
+csf = expand('path/to/file.py')
+csf_scheduled = schedule(csf)
+
+# 检查被调度的节点
+for node_id, node in csf_scheduled['nodes'].items():
+    if node.get('meta', {}).get('scheduled_collapse'):
+        print(f"Scheduled to collapse: {node['label']}")
+```
+
+### 模式匹配
+
+```python
+from core.expansion import expand
+from core.pattern.matcher import match_patterns
+
+csf = expand('path/to/file.py')
+matches = match_patterns(csf)
+
+for match in matches:
+    print(f"Pattern: {match['pattern_id']}")
+    print(f"Node: {match['node_id']}")
+    print(f"Confidence: {match['confidence']}")
+    print(f"Evidence: {match['evidence']}")
+```
+
+### 模板约束检查
+
+```python
+from core.expansion import expand
+from core.template.registry import check_constraints
+
+csf = expand('path/to/file.py')
+result = check_constraints('fetch_transform_cache_template', csf)
+
+print(f"Satisfied: {result['satisfied']}")
+print(f"Missing: {result['missing']}")
+print(f"Ready: {result['ready']}")
+```
+
+### 代码生成
+
+```python
+from core.expansion import expand
+from core.template.generator import generate
+
+csf = expand('path/to/file.py')
+result = generate('fetch_transform_cache_template', csf)
+
+if result['ok']:
+    print(result['code'])
+    if result['llm_needed']:
+        print(f"LLM needed for: {result['llm_needed']}")
+```
+
+### 增量更新
+
+```python
+from core.sync.parser import parse, incremental_update
+
+# 初始解析
+csf = parse('path/to/file.py')
+
+# 用户展开某个节点
+csf['nodes'][some_id]['expansion_state'] = 'expanded'
+
+# 代码修改后增量更新
+new_source = open('path/to/file.py').read()
+csf_updated = incremental_update(csf, new_source, 'path/to/file.py')
+
+# expansion_state 被保留
+```
+
+## 运行测试
+
+### Smoke Tests
+
+```bash
+.venv\Scripts\python.exe -m pytest project/tests/test_smoke.py -v
+```
+
+### Integration Tests
+
+```bash
+.venv\Scripts\python.exe -m pytest project/tests/test_integration.py -v
+```
+
+### 所有测试
+
+```bash
+.venv\Scripts\python.exe -m pytest project/tests/ -v
+```
+
+## 验证脚本
+
+项目包含验证脚本用于验证各个任务的实现：
+
+```bash
+.venv\Scripts\python.exe project/verify_task003.py  # Parser
+.venv\Scripts\python.exe project/verify_task004.py  # Inheritance expansion
+.venv\Scripts\python.exe project/verify_task005.py  # Dependency expansion
+.venv\Scripts\python.exe project/verify_task006.py  # Nesting flatten
+.venv\Scripts\python.exe project/verify_task007.py  # Mutation annotation
+.venv\Scripts\python.exe project/verify_task008.py  # Expansion engine integration
+```
+
+## 功能特性
+
+### v0.1 - Structural Expansion Engine
+- 继承关系展开（inheritance expansion）
+- 依赖链展开（dependency inline）
+- Nesting flatten
+- Mutation 传播标注
+- CLI 基础功能
+
+### v0.2 - CSF ↔ Code 增量同步
+- CSF → Code patch（extract_function, add_early_return）
+- Code → CSF 增量更新（incremental_update）
+
+### v0.3 - Recognition Projection
+- RPCM Working Set 状态计算
+- Projection Scheduler 自动调度
+
+### v0.4 - Structural Pattern Matching
+- 5 个内置 pattern（pipeline, branch, fetch_transform_cache, validation_chain, event_handler）
+- 确定性匹配（不用 LLM）
+
+### v0.5 - 热力图 + 开发引导
+- 模板约束检查
+- 代码骨架生成
+- CLI heatmap 和 generate 命令
+
+## 故障排除
+
+### 缓存问题
+
+如果遇到 pip 缓存错误：
+
+```bash
+.venv\Scripts\python.exe -m pip cache purge
+.venv\Scripts\python.exe -m pip install --no-cache-dir -r project/requirements.txt
+```
+
+### 模块未找到
+
+确保使用虚拟环境运行：
+
+```bash
+.venv\Scripts\python.exe <command>
+```
+
+而不是：
+
+```bash
+python <command>
+```
+
+## 项目状态
+
+所有 20 个任务（TASK-001 到 TASK-020）已完成并通过验证：
+- v0.1: TASK-001 ~ TASK-010 ✓
+- v0.2: TASK-011 ~ TASK-012 ✓
+- v0.3: TASK-013 ~ TASK-014 ✓
+- v0.4: TASK-015 ~ TASK-016 ✓
+- v0.5: TASK-017 ~ TASK-020 ✓
+
+测试结果：
+- Smoke tests: 2/2 通过
+- Integration tests: 3/3 通过
