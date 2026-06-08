@@ -1,925 +1,661 @@
-# CSF Expansion Engine 未完成事项技术提案
+# CSF Expansion Engine - Projection Runtime Proposals
 
 ## 概述
 
-本文档针对 CSF Expansion Engine 当前未完成或简化实现的功能，提供深度技术提案。每项提案包含多轮思考、技术方案、自我评估和技术成熟度标注。
+本文档基于 prompt.txt 中的指导思想，提出将当前系统从 "structure-aware analyzer" 转换为 "working-set-aware projection runtime" 的技术提案。
+
+当前系统问题：
+- 虽然有 projection 概念，但实际上只是把结构换一种格式打印出来
+- 没有真正控制 working set
+- Cognitive Matrix 被当作 metadata，而不是驱动 projection runtime
+
+目标架构：
+```
+Structural Truth Layer
+    ↓
+Canonical IR
+    ↓
+Recognition Graph
+    ↓
+RPCM Scheduler
+    ↓
+Stable Projection View
+```
 
 ---
 
-## 提案一：CSF 增量同步完整算法
+## 提案一：Projection Scheduler 核心层
 
 ### 1.1 问题背景
 
-当前 v0.2 实现的增量同步（incremental_update）采用简化的匹配策略：通过 (kind, label, line_start) 三元组匹配新旧节点。这种策略存在以下局限性：
+当前系统流程：
+```text
+AST → CSF → projection → dump
+```
 
-1. **匹配精度不足**：当函数重命名或移动位置时，匹配失败导致 expansion_state 丢失
-2. **无法处理复杂重构**：如函数拆分、合并、参数变更等
-3. **缺乏语义理解**：仅基于语法特征，无法识别语义等价的变化
-4. **元数据丢失**：复杂的 meta 信息（如 guard_chain, dependency_span_warning）在重构后难以保留
+问题：
+- projection 是 static 的，不是 working-set-reactive 的
+- 系统输出所有 state、mutation、causal effect、fanout
+- working set 直接爆炸，用户无法处理
+- Cognitive Matrix 只用于 observation，不用于 action
 
-### 1.2 第一轮提案：基于 AST 指纹的精确匹配
+### 1.2 第一轮提案：WS Budget 控制
 
-**核心思想**：为每个 AST 节点计算结构指纹，包括：
-- 节点类型和子节点结构
-- 控制流特征（if/for/while 嵌套模式）
-- 数据流特征（变量读写模式）
-- 代码哈希（标准化后的代码）
+**核心思想**：为每个 Recognition Region 设置预算，超过自动 compress。
 
 **技术方案**：
 ```python
-def compute_node_fingerprint(node: ast.AST) -> str:
-    """计算节点指纹"""
-    # 1. 结构特征
-    structure = _extract_structure(node)
-    
-    # 2. 控制流特征
-    control_flow = _extract_control_flow(node)
-    
-    # 3. 数据流特征
-    data_flow = _extract_data_flow(node)
-    
-    # 4. 标准化代码哈希
-    normalized_code = _normalize_code(node)
-    code_hash = hashlib.sha256(normalized_code.encode()).hexdigest()[:16]
-    
-    return f"{structure}:{control_flow}:{data_flow}:{code_hash}"
+class WSBudget:
+    MAX_R0 = 12  # 最大结构节点数
+    MAX_R1_CHAIN = 5  # 最大执行链长度
+    MAX_R2_PROPAGATION = 4  # 最大传播深度
+
+    def check_budget(self, ws_state: dict) -> dict:
+        """检查 WS 预算并返回压缩建议"""
+        violations = []
+
+        if ws_state['R0']['node_count'] > self.MAX_R0:
+            violations.append({
+                'region': 'R0',
+                'current': ws_state['R0']['node_count'],
+                'limit': self.MAX_R0,
+                'action': 'compress_low_priority_nodes'
+            })
+
+        if ws_state['R1']['chain_length'] > self.MAX_R1_CHAIN:
+            violations.append({
+                'region': 'R1',
+                'current': ws_state['R1']['chain_length'],
+                'limit': self.MAX_R1_CHAIN,
+                'action': 'split_execution_chain'
+            })
+
+        if ws_state['R2']['propagation_depth'] > self.MAX_R2_PROPAGATION:
+            violations.append({
+                'region': 'R2',
+                'current': ws_state['R2']['propagation_depth'],
+                'limit': self.MAX_R2_PROPAGATION,
+                'action': 'compress_propagation_region'
+            })
+
+        return violations
 ```
 
 **优势**：
-- 提高匹配精度，能识别语义等价的重构
-- 支持函数重命名（通过结构匹配）
-- 保留更多元数据
+- 实现简单，直接控制认知负载
+- 可配置预算参数
+- 自动触发压缩
 
 **劣势**：
-- 计算复杂度高，可能影响性能
-- 指纹冲突概率虽低但存在
-- 标准化代码可能丢失某些语义信息
+- 固定预算可能不适合所有场景
+- 需要定义优先级规则
 
-**技术成熟度**：中等（需要大量测试验证指纹稳定性）
+**技术成熟度**：高（常见资源管理模式）
 
 **自我评估**：
-- **服务项目目标**：✓ 是。增量同步是核心功能，提升用户体验
-- **优先级**：高。直接影响用户编辑体验
-- **风险**：中等。可能引入新的 bug
+- **服务项目目标**：✓ 是。核心功能
+- **优先级**：高。必须实现
+- **风险**：低
 
-### 1.3 第二轮提案：基于语义图的最优匹配
+### 1.3 第二轮提案：Projection Mode 切换
 
-**核心思想**：将 CSF 视为图结构，使用图匹配算法找到新旧版本之间的最优映射。
+**核心思想**：根据用户目标自动切换 projection mode，只显示相关 graph。
 
 **技术方案**：
 ```python
-def incremental_update_graph_matching(old_csf: dict, new_csf: dict) -> dict:
-    """基于图匹配的增量更新"""
-    # 1. 构建相似度矩阵
-    similarity_matrix = _build_similarity_matrix(old_csf, new_csf)
-    
-    # 2. 使用匈牙利算法找到最优匹配
-    matching = _hungarian_algorithm(similarity_matrix)
-    
-    # 3. 传播 expansion_state 和 meta
-    for old_id, new_id in matching.items():
-        if similarity_matrix[old_id][new_id] > THRESHOLD:
-            _propagate_state(old_csf['nodes'][old_id], new_csf['nodes'][new_id])
-    
-    return new_csf
+class ProjectionMode:
+    MODES = ['execution', 'mutation', 'architecture']
+
+    def detect_mode(self, user_goal: str, csf: dict) -> str:
+        """根据用户目标检测 projection mode"""
+        if 'async' in user_goal or 'await' in user_goal:
+            return 'execution'
+        elif 'refactor' in user_goal or 'extract' in user_goal:
+            return 'mutation'
+        elif 'structure' in user_goal or 'architecture' in user_goal:
+            return 'architecture'
+        else:
+            return 'execution'  # 默认
+
+    def apply_mode(self, csf: dict, mode: str) -> dict:
+        """应用 projection mode 过滤"""
+        if mode == 'execution':
+            return self._filter_execution_graph(csf)
+        elif mode == 'mutation':
+            return self._filter_mutation_graph(csf)
+        elif mode == 'architecture':
+            return self._filter_architecture_graph(csf)
+
+    def _filter_execution_graph(self, csf: dict) -> dict:
+        """只保留执行相关节点"""
+        # 隐藏：inheritance, low-risk nodes, unrelated mutation region, static structure
+        # 显示：async chain, await boundary, call continuation, event propagation
+        pass
+
+    def _filter_mutation_graph(self, csf: dict) -> dict:
+        """只保留变异相关节点"""
+        pass
+
+    def _filter_architecture_graph(self, csf: dict) -> dict:
+        """只保留架构相关节点"""
+        pass
 ```
 
-**相似度计算**：
-- 结构相似度：子节点结构、控制流模式
-- 语义相似度：变量名相似度、注释相似度
-- 位置相似度：行号变化、相对位置
-
 **优势**：
-- 全局最优匹配，避免局部次优解
-- 能处理复杂的重构场景
-- 理论基础扎实（图匹配算法）
+- 自适应不同用户目标
+- 减少无关信息干扰
+- 提升认知聚焦
 
 **劣势**：
-- 计算复杂度为 O(n³)，大文件性能差
-- 需要调优相似度权重
-- 实现复杂度高
+- 需要定义不同模式的过滤规则
+- 模式检测可能不准确
 
-**技术成熟度**：低（需要大量工程优化）
+**技术成熟度**：中等（需要模式识别经验）
 
 **自我评估**：
-- **服务项目目标**：✓ 是。提供最准确的增量同步
-- **优先级**：中。第一轮提案可能已足够
-- **风险**：高。性能和正确性都需要验证
+- **服务项目目标**：✓ 是。核心功能
+- **优先级**：高。必须实现
+- **风险**：中
 
-### 1.4 第三轮提案：混合策略
+### 1.4 第三轮提案：Thrash Detection
 
-**核心思想**：结合第一轮和第二轮提案，根据文件大小和变化程度动态选择策略。
+**核心思想**：检测用户认知抖动行为，自动 regroup。
 
 **技术方案**：
 ```python
-def incremental_update_hybrid(old_csf: dict, new_csf: dict) -> dict:
-    """混合策略增量更新"""
-    # 1. 评估变化程度
-    change_score = _assess_change_degree(old_csf, new_csf)
-    
-    # 2. 根据文件大小和变化程度选择策略
-    node_count = len(old_csf['nodes'])
-    
-    if node_count < 50 or change_score < 0.3:
-        # 小文件或小变化：使用图匹配
-        return incremental_update_graph_matching(old_csf, new_csf)
-    else:
-        # 大文件或大变化：使用指纹匹配
-        return incremental_update_fingerprint(old_csf, new_csf)
+class ThrashDetector:
+    def __init__(self):
+        self.expand_history = []
+        self.retrace_history = []
+        self.scope_history = []
+
+    def detect_thrash(self) -> dict:
+        """检测 thrash 行为"""
+        thrash_types = []
+
+        # 检测 expand/collapse loop
+        if self._detect_expand_collapse_loop():
+            thrash_types.append('expand_collapse_loop')
+
+        # 检测 retrace loop
+        if self._detect_retrace_loop():
+            thrash_types.append('retrace_loop')
+
+        # 检测 scope jumping
+        if self._detect_scope_jumping():
+            thrash_types.append('scope_jumping')
+
+        return {
+            'has_thrash': len(thrash_types) > 0,
+            'thrash_types': thrash_types,
+            'action': 'regroup_projection'
+        }
+
+    def _detect_expand_collapse_loop(self) -> bool:
+        """检测 expand/collapse 循环"""
+        # 分析最近 10 次操作是否有循环模式
+        pass
+
+    def _detect_retrace_loop(self) -> bool:
+        """检测 retrace 循环"""
+        pass
+
+    def _detect_scope_jumping(self) -> bool:
+        """检测 scope 跳跃"""
+        pass
 ```
 
 **优势**：
-- 平衡准确性和性能
-- 适应不同场景
-- 逐步迁移风险低
+- 识别用户认知困难
+- 自动调整 projection
+- 提升用户体验
 
 **劣势**：
-- 策略切换可能产生不一致结果
-- 需要维护两套实现
-- 阈值需要调优
+- 需要收集用户行为数据
+- 检测算法可能误报
 
-**技术成熟度**：中等（需要实际使用数据调优）
+**技术成熟度**：低（需要用户行为研究）
 
 **自我评估**：
-- **服务项目目标**：✓ 是。提供最佳用户体验
-- **优先级**：高。推荐作为最终方案
-- **风险**：中。需要充分的 A/B 测试
+- **服务项目目标**：✓ 是。提升用户体验
+- **优先级**：中。可以先实现基础版本
+- **风险**：中
 
 ### 1.5 最终推荐
 
-**推荐方案**：第三轮提案（混合策略）
+**推荐方案**：分阶段实施
 
-**实施路径**：
-1. 先实现第一轮提案（指纹匹配），替换当前简化版本
-2. 收集用户反馈和性能数据
-3. 实现第二轮提案（图匹配）
-4. 实现混合策略
-5. 灰度发布，监控指标
+**阶段 1**：WS Budget 控制
+- 实现基础的预算检查
+- 实现自动压缩逻辑
 
-**技术成熟度**：中等（需要生产验证）
+**阶段 2**：Projection Mode 切换
+- 实现模式检测
+- 实现基础过滤规则
+
+**阶段 3**：Thrash Detection
+- 收集用户行为数据
+- 实现检测算法
+
+**技术成熟度**：中等（分阶段降低风险）
 
 ---
 
-## 提案二：Projection Hysteresis（防抖动）
+## 提案二：Focus Lock 机制
 
 ### 2.1 问题背景
 
-当前 Projection Scheduler 在每次代码变化时都重新计算调度决策，可能导致：
-1. **视图抖动**：用户编辑时，节点频繁展开/折叠
-2. **注意力分散**：用户难以专注于当前编辑区域
-3. **性能浪费**：不必要的调度计算
+用户在编辑时 focus 某个函数，但系统仍然显示所有无关分支，导致认知负载过高。
 
-### 2.2 第一轮提案：时间窗口防抖
+### 2.2 第一轮提案：Focus Lock 冻结无关分支
 
-**核心思想**：引入时间窗口，只有当调度决策稳定一定时间后才执行。
+**核心思想**：用户 focus 时，自动冻结无关分支。
 
 **技术方案**：
 ```python
-class HysteresisScheduler:
-    def __init__(self, window_ms: int = 1000):
-        self.window_ms = window_ms
-        self.pending_decisions = {}
-        self.last_decision_time = {}
-    
-    def schedule_with_hysteresis(self, csf: dict) -> dict:
-        """带防抖的调度"""
-        current_decisions = self._compute_decisions(csf)
-        
-        # 检查每个决策是否稳定
-        stable_decisions = {}
-        for node_id, decision in current_decisions.items():
-            if node_id in self.pending_decisions:
-                if self.pending_decisions[node_id] == decision:
-                    # 决策稳定，检查时间窗口
-                    if time.time() - self.last_decision_time[node_id] > self.window_ms / 1000:
-                        stable_decisions[node_id] = decision
-                else:
-                    # 决策变化，重置计时
-                    self.pending_decisions[node_id] = decision
-                    self.last_decision_time[node_id] = time.time()
-            else:
-                # 新决策
-                self.pending_decisions[node_id] = decision
-                self.last_decision_time[node_id] = time.time()
-        
-        return self._apply_decisions(csf, stable_decisions)
+class FocusLock:
+    def lock_focus(self, csf: dict, focus_node_id: str) -> dict:
+        """锁定 focus，冻结无关分支"""
+        focus_node = csf['nodes'][focus_node_id]
+
+        # 计算相关节点（focus 节点的依赖链和被依赖链）
+        related_nodes = self._compute_related_nodes(csf, focus_node_id)
+
+        # 冻结无关节点
+        frozen_nodes = []
+        for node_id, node in csf['nodes'].items():
+            if node_id not in related_nodes:
+                node['frozen'] = True
+                frozen_nodes.append(node_id)
+
+        return {
+            'focus_node': focus_node_id,
+            'related_count': len(related_nodes),
+            'frozen_count': len(frozen_nodes)
+        }
+
+    def _compute_related_nodes(self, csf: dict, focus_node_id: str) -> set:
+        """计算相关节点"""
+        related = set()
+
+        # 上游依赖
+        related.update(self._get_upstream_dependencies(csf, focus_node_id))
+
+        # 下游影响
+        related.update(self._get_downstream_affects(csf, focus_node_id))
+
+        # 同级兄弟节点
+        related.update(self._get_siblings(csf, focus_node_id))
+
+        return related
 ```
 
 **优势**：
 - 实现简单
-- 有效减少抖动
-- 可配置窗口大小
+- 直接减少认知负载
+- 符合用户直觉
 
 **劣势**：
-- 固定窗口可能不适合所有场景
-- 延迟响应可能影响用户体验
-- 不考虑编辑上下文
+- 可能过度隐藏
+- 需要定义"相关"的标准
 
-**技术成熟度**：高（常见 UI 模式）
+**技术成熟度**：高（常见 IDE 功能）
 
 **自我评估**：
-- **服务项目目标**：✓ 是。提升用户体验
-- **优先级**：中。当前问题不严重
+- **服务项目目标**：✓ 是。核心功能
+- **优先级**：高。必须实现
 - **风险**：低
 
-### 2.3 第二轮提案：基于编辑上下文的智能防抖
+### 2.3 最终推荐
 
-**核心思想**：根据用户编辑行为动态调整防抖策略。
-
-**技术方案**：
-```python
-class ContextAwareHysteresis:
-    def __init__(self):
-        self.edit_history = []
-        self.focus_region = None
-    
-    def schedule_with_context(self, csf: dict, edit_event: dict) -> dict:
-        """基于上下文的调度"""
-        # 1. 记录编辑历史
-        self.edit_history.append(edit_event)
-        
-        # 2. 检测编辑模式
-        edit_mode = self._detect_edit_mode()
-        
-        # 3. 根据编辑模式调整策略
-        if edit_mode == 'refactoring':
-            # 重构模式：快速响应
-            window_ms = 200
-        elif edit_mode == 'typing':
-            # 输入模式：较长延迟
-            window_ms = 2000
-        else:
-            # 默认模式
-            window_ms = 1000
-        
-        # 4. 保护焦点区域
-        if self.focus_region:
-            self._protect_focus_region(csf, self.focus_region)
-        
-        return self._schedule_with_window(csf, window_ms)
-```
-
-**编辑模式识别**：
-- 重构模式：批量修改、函数移动
-- 输入模式：连续字符输入
-- 浏览模式：光标移动、滚动
-
-**优势**：
-- 自适应不同编辑场景
-- 保护用户焦点
-- 更智能的响应
-
-**劣势**：
-- 需要编辑历史跟踪
-- 模式识别可能不准确
-- 实现复杂度高
-
-**技术成熟度**：低（需要大量用户行为数据）
-
-**自我评估**：
-- **服务项目目标**：✓ 是。提供更智能的体验
-- **优先级**：低。第一轮提案可能已足够
-- **风险**：中。模式识别可能引入误判
-
-### 2.4 第三轮提案：基于用户意图的预测性调度
-
-**核心思想**：使用机器学习预测用户下一步操作，提前调度。
-
-**技术方案**：
-```python
-class PredictiveScheduler:
-    def __init__(self):
-        self.model = self._load_model()
-        self.user_profile = {}
-    
-    def schedule_predictive(self, csf: dict, user_context: dict) -> dict:
-        """预测性调度"""
-        # 1. 提取特征
-        features = self._extract_features(csf, user_context)
-        
-        # 2. 预测用户意图
-        intent = self.model.predict(features)
-        
-        # 3. 根据意图预调度
-        if intent == 'expand_region':
-            return self._pre_expand(csf, user_context['focus'])
-        elif intent == 'collapse_region':
-            return self._pre_collapse(csf, user_context['focus'])
-        else:
-            return self._schedule_normal(csf)
-```
-
-**特征提取**：
-- 编辑位置、频率
-- 时间模式
-- 文件类型
-- 历史行为
-
-**优势**：
-- 提前响应，零延迟
-- 个性化体验
-- 理论上最优
-
-**劣势**：
-- 需要大量训练数据
-- 模型维护成本高
-- 冷启动问题
-- 隐私考虑
-
-**技术成熟度**：极低（研究阶段）
-
-**自我评估**：
-- **服务项目目标**：? 不确定。可能过度设计
-- **优先级**：极低。当前不需要
-- **风险**：高。投入产出比低
-
-### 2.5 最终推荐
-
-**推荐方案**：第一轮提案（时间窗口防抖）
+**推荐方案**：第一轮提案（Focus Lock 冻结无关分支）
 
 **理由**：
 - 实现简单，风险低
-- 解决主要问题
+- 直接解决认知负载问题
 - 可作为基础，后续迭代
 
 **技术成熟度**：高
 
 ---
 
-## 提案三：Recognition Matrix 阈值校准
+## 提案三：Progressive Reveal 渐进式揭示
 
 ### 3.1 问题背景
 
-当前 RPCM 的阈值（WS_THRESHOLDS）是硬编码的启发式值：
-```python
-WS_THRESHOLDS = {
-    "R0_nesting_depth":   {"load": 2, "compress": 3},
-    "R0_visible_chunks":  {"load": 5, "compress": 7},
-    "R1_dependency_span": {"load": 1, "compress": 2},
-    "R2_mutation_fanout": {"load": 3, "compress": 5},
-    "R3_opaque_count":    {"load": 1, "compress": 3},
-}
-```
+当前系统一次性打印所有信息，导致 working set 爆炸。
 
-这些值缺乏数据支持，可能导致：
-1. 过于激进：频繁触发调度，用户感觉系统"太敏感"
-2. 过于保守：该展开时不展开，用户需要手动操作
-3. 不适应不同场景：不同项目、不同用户可能有不同偏好
+### 3.2 第一轮提案：按 WS 预算逐层揭示
 
-### 3.2 第一轮提案：基于用户反馈的在线学习
-
-**核心思想**：收集用户手动展开/折叠操作，作为反馈信号，动态调整阈值。
+**核心思想**：不要一次全打印，而是按 WS 预算逐层 reveal。
 
 **技术方案**：
 ```python
-class AdaptiveThresholds:
-    def __init__(self):
-        self.thresholds = WS_THRESHOLDS.copy()
-        self.feedback_history = []
-        self.learning_rate = 0.1
-    
-    def update_from_feedback(self, action: str, context: dict):
-        """根据用户反馈更新阈值"""
-        # action: 'manual_expand' 或 'manual_collapse'
-        # context: 当时的 WS 状态
-        
-        if action == 'manual_expand':
-            # 用户手动展开，说明阈值太高
-            self._decrease_threshold(context)
-        elif action == 'manual_collapse':
-            # 用户手动折叠，说明阈值太低
-            self._increase_threshold(context)
-        
-        self.feedback_history.append((action, context))
-    
-    def _decrease_threshold(self, context: dict):
-        """降低阈值"""
-        dimension = context['dimension']
-        current_value = self.thresholds[dimension]['compress']
-        self.thresholds[dimension]['compress'] = max(1, current_value - 1)
-```
+class ProgressiveReveal:
+    def __init__(self, ws_budget: WSBudget):
+        self.ws_budget = ws_budget
+        self.revealed_layers = 0
 
-**优势**：
-- 自适应不同用户
-- 持续优化
-- 实现相对简单
+    def reveal_next_layer(self, csf: dict) -> dict:
+        """揭示下一层"""
+        if self._can_reveal_more():
+            self.revealed_layers += 1
+            return self._get_layer(csf, self.revealed_layers)
+        else:
+            return {'message': 'WS budget exhausted'}
 
-**劣势**：
-- 冷启动问题
-- 可能过度拟合
-- 需要长期运行才能见效
+    def _can_reveal_more(self) -> bool:
+        """检查是否可以揭示更多"""
+        # 根据 WS 预算判断
+        pass
 
-**技术成熟度**：中等（需要实际用户数据）
-
-**自我评估**：
-- **服务项目目标**：✓ 是。提升个性化体验
-- **优先级**：中。当前硬编码值可能已足够
-- **风险**：中。需要监控避免阈值漂移
-
-### 3.3 第二轮提案：基于项目特征的预训练模型
-
-**核心思想**：分析不同类型项目的特征，预训练阈值推荐模型。
-
-**技术方案**：
-```python
-class ProjectAwareThresholds:
-    def __init__(self):
-        self.project_profiles = {}
-        self.threshold_recommender = self._train_recommender()
-    
-    def recommend_thresholds(self, project_features: dict) -> dict:
-        """推荐项目特定的阈值"""
-        # project_features: 项目大小、语言特征、团队规模等
-        return self.threshold_recommender.predict(project_features)
-    
-    def _train_recommender(self):
-        """训练推荐模型"""
-        # 从开源项目收集数据
-        # 分析项目特征和最优阈值的关系
-        # 训练回归模型
+    def _get_layer(self, csf: dict, layer: int) -> dict:
+        """获取指定层"""
+        # 按层级返回节点
         pass
 ```
 
-**项目特征**：
-- 代码规模（LOC、文件数）
-- 平均函数长度
-- 嵌套深度分布
-- 团队规模
-- 领域（Web、数据科学、系统编程）
-
 **优势**：
-- 冷启动友好
-- 基于真实数据
-- 可解释性强
+- 控制 working set 大小
+- 渐进式信息呈现
+- 降低认知负载
 
 **劣势**：
-- 需要大量项目数据
-- 模型训练成本高
-- 可能过拟合特定项目类型
+- 需要定义层级结构
+- 可能影响用户查找效率
 
-**技术成熟度**：低（需要数据收集和模型训练）
-
-**自我评估**：
-- **服务项目目标**：✓ 是。提供开箱即用的体验
-- **优先级**：低。当前用户量少，不需要
-- **风险**：中。数据收集和模型维护成本
-
-### 3.4 第三轮提案：A/B 测试框架
-
-**核心思想**：构建 A/B 测试框架，系统性地评估不同阈值配置的效果。
-
-**技术方案**：
-```python
-class ThresholdABTest:
-    def __init__(self):
-        self.variants = [
-            {'name': 'conservative', 'thresholds': CONSERVATIVE_THRESHOLDS},
-            {'name': 'aggressive', 'thresholds': AGGRESSIVE_THRESHOLDS},
-            {'name': 'default', 'thresholds': DEFAULT_THRESHOLDS},
-        ]
-        self.user_assignments = {}
-        self.metrics = {}
-    
-    def assign_variant(self, user_id: str) -> dict:
-        """分配测试变体"""
-        variant = self._hash_assign(user_id, self.variants)
-        self.user_assignments[user_id] = variant['name']
-        return variant['thresholds']
-    
-    def record_metric(self, user_id: str, metric: str, value: float):
-        """记录指标"""
-        variant = self.user_assignments.get(user_id)
-        if variant:
-            if variant not in self.metrics:
-                self.metrics[variant] = {}
-            if metric not in self.metrics[variant]:
-                self.metrics[variant][metric] = []
-            self.metrics[variant][metric].append(value)
-```
-
-**指标**：
-- 手动操作频率
-- 用户满意度
-- 任务完成时间
-- 系统响应时间
-
-**优势**：
-- 数据驱动决策
-- 可量化效果
-- 风险可控
-
-**劣势**：
-- 需要足够用户量
-- 测试周期长
-- 实现复杂
-
-**技术成熟度**：中等（需要产品支持）
+**技术成熟度**：高（常见信息呈现模式）
 
 **自我评估**：
-- **服务项目目标**：✓ 是。科学决策
-- **优先级**：低。当前用户量不足
-- **风险**：低。可以逐步实施
+- **服务项目目标**：✓ 是。核心功能
+- **优先级**：高。必须实现
+- **风险**：低
 
-### 3.5 最终推荐
+### 3.3 最终推荐
 
-**推荐方案**：第一轮提案（基于用户反馈的在线学习）
+**推荐方案**：第一轮提案（按 WS 预算逐层揭示）
 
 **理由**：
-- 实现简单，可快速见效
-- 适合当前用户量
-- 可作为后续方案的基础
+- 实现简单，风险低
+- 直接解决 working set 爆炸问题
+- 符合认知科学原理
 
-**技术成熟度**：中等
+**技术成熟度**：高
 
 ---
 
-## 提案四：Structural Operation 完整可逆性
+## 提案四：Adaptive Projection 自适应投影
 
 ### 4.1 问题背景
 
-当前 writer.py 中的 extract_function 和 add_early_return 返回空结果，未实现真正的代码变换。即使实现后，也存在以下问题：
+当前 projection 是 static 的，不能根据用户目标、WS 预算、当前 focus、thrash history 动态调整。
 
-1. **不可逆**：用户无法撤销操作
-2. **无预览**：用户无法预览变换结果
-3. **无冲突检测**：可能破坏代码逻辑
-4. **无版本控制集成**：无法与 Git 等工具集成
+### 4.2 第一轮提案：Dynamic Projection Scheduler
 
-### 4.2 第一轮提案：基于操作日志的撤销系统
-
-**核心思想**：记录所有 Structural Operation 的操作日志，支持撤销和重做。
+**核心思想**：实现真正的 projection scheduling runtime。
 
 **技术方案**：
 ```python
-class OperationLog:
-    def __init__(self):
-        self.operations = []
-        self.current_index = -1
-    
-    def record_operation(self, op: dict):
-        """记录操作"""
-        # op: {'type': 'extract_function', 'node_ids': [...], 'patch': '...'}
-        self.operations = self.operations[:self.current_index + 1]
-        self.operations.append(op)
-        self.current_index += 1
-    
-    def undo(self) -> dict:
-        """撤销操作"""
-        if self.current_index >= 0:
-            op = self.operations[self.current_index]
-            self.current_index -= 1
-            return {'reverse_patch': op['reverse_patch']}
-        return None
-    
-    def redo(self) -> dict:
-        """重做操作"""
-        if self.current_index < len(self.operations) - 1:
-            self.current_index += 1
-            op = self.operations[self.current_index]
-            return {'patch': op['patch']}
-        return None
+class ProjectionScheduler:
+    def schedule_projection(
+        self,
+        csf: dict,
+        user_goal: str,
+        ws_budget: WSBudget,
+        current_focus: str,
+        thrash_history: list
+    ) -> dict:
+        """调度 projection"""
+        # 1. 检测 projection mode
+        mode = self._detect_mode(user_goal)
+
+        # 2. 应用 mode 过滤
+        filtered_csf = self._apply_mode(csf, mode)
+
+        # 3. 检查 WS 预算
+        violations = ws_budget.check_budget(self._compute_ws_state(filtered_csf))
+
+        # 4. 如果违反预算，压缩
+        if violations:
+            filtered_csf = self._compress(filtered_csf, violations)
+
+        # 5. 如果有 focus，锁定
+        if current_focus:
+            filtered_csf = self._lock_focus(filtered_csf, current_focus)
+
+        # 6. 如果检测到 thrash，regroup
+        if thrash_history:
+            filtered_csf = self._regroup(filtered_csf, thrash_history)
+
+        # 7. 渐进式揭示
+        projection = self._progressive_reveal(filtered_csf)
+
+        return {
+            'mode': mode,
+            'projection': projection,
+            'ws_state': self._compute_ws_state(projection),
+            'compressed_count': len(csf['nodes']) - len(projection['nodes']),
+            'thrash_risk': self._compute_thrash_risk(thrash_history)
+        }
 ```
 
 **优势**：
-- 实现简单
-- 符合用户直觉
-- 可扩展
+- 真正实现 working-set-aware projection
+- 动态调整认知可见性
+- 符合理论目标
 
 **劣势**：
-- 日志可能很大
-- 不处理冲突
-- 不支持分支
+- 实现复杂度高
+- 需要调优多个参数
+- 依赖多个子模块
 
-**技术成熟度**：高（常见模式）
-
-**自我评估**：
-- **服务项目目标**：✓ 是。基本功能
-- **优先级**：高。用户期望
-- **风险**：低
-
-### 4.3 第二轮提案：基于 Git 的版本集成
-
-**核心思想**：将 Structural Operation 与 Git commit 关联，支持基于 Git 的撤销。
-
-**技术方案**：
-```python
-class GitIntegratedOperations:
-    def __init__(self, repo_path: str):
-        self.repo = git.Repo(repo_path)
-        self.operation_commits = {}
-    
-    def apply_operation(self, op: dict, message: str) -> str:
-        """应用操作并创建 commit"""
-        # 1. 应用操作
-        patch = self._apply_operation(op)
-        
-        # 2. 创建 commit
-        commit = self.repo.index.commit(message)
-        
-        # 3. 记录关联
-        self.operation_commits[commit.hexsha] = op
-        
-        return commit.hexsha
-    
-    def revert_operation(self, commit_hash: str) -> bool:
-        """撤销操作"""
-        op = self.operation_commits.get(commit_hash)
-        if op:
-            # 使用 git revert
-            self.repo.git.revert(commit_hash)
-            return True
-        return False
-```
-
-**优势**：
-- 与现有工具集成
-- 支持分支和合并
-- 历史记录完整
-
-**劣势**：
-- 依赖 Git
-- commit 频繁可能影响工作流
-- 复杂度高
-
-**技术成熟度**：中等（需要 Git 集成经验）
+**技术成熟度**：低（需要大量工程优化）
 
 **自我评估**：
-- **服务项目目标**：✓ 是。专业工具应该有
-- **优先级**：中。第一轮提案可能已足够
-- **风险**：中。Git 集成可能引入问题
+- **服务项目目标**：✓ 是。核心目标
+- **优先级**：高。最终目标
+- **风险**：高。需要分阶段实施
 
-### 4.4 第三轮提案：基于 AST 的智能冲突检测和解决
-
-**核心思想**：在应用操作前，检测潜在冲突并提供解决方案。
-
-**技术方案**：
-```python
-class ConflictAwareOperations:
-    def __init__(self):
-        self.conflict_resolver = ConflictResolver()
-    
-    def apply_operation_safe(self, op: dict, csf: dict) -> dict:
-        """安全应用操作"""
-        # 1. 检测冲突
-        conflicts = self._detect_conflicts(op, csf)
-        
-        if conflicts:
-            # 2. 提供解决方案
-            solutions = self.conflict_resolver.resolve(conflicts, csf)
-            
-            # 3. 用户选择或自动解决
-            solution = self._select_solution(solutions)
-            
-            if solution:
-                return self._apply_with_solution(op, solution)
-            else:
-                return None  # 用户取消
-        else:
-            return self._apply_operation(op, csf)
-    
-    def _detect_conflicts(self, op: dict, csf: dict) -> list:
-        """检测冲突"""
-        conflicts = []
-        
-        # 检测命名冲突
-        if op['type'] == 'extract_function':
-            new_name = op['new_name']
-            if any(n['label'] == new_name for n in csf['nodes'].values()):
-                conflicts.append({'type': 'name_conflict', 'name': new_name})
-        
-        # 检测依赖冲突
-        # ...
-        
-        return conflicts
-```
-
-**冲突类型**：
-- 命名冲突
-- 依赖冲突
-- 作用域冲突
-- 类型冲突
-
-**优势**：
-- 提高安全性
-- 减少用户错误
-- 更专业
-
-**劣势**：
-- 实现复杂
-- 可能误报
-- 需要用户理解
-
-**技术成熟度**：低（需要大量测试）
-
-**自我评估**：
-- **服务项目目标**：✓ 是。提升可靠性
-- **优先级**：中。可以先实现基础功能
-- **风险**：高。冲突检测可能不准确
-
-### 4.5 最终推荐
+### 4.3 最终推荐
 
 **推荐方案**：分阶段实施
 
-**阶段 1**：第一轮提案（操作日志）
-- 实现基本的撤销/重做
-- 验证用户需求
+**阶段 1**：实现基础调度器框架
+- 实现 schedule_projection 函数
+- 实现基础的 mode 检测和过滤
 
-**阶段 2**：实现真正的代码变换
-- 完善 extract_function 和 add_early_return
-- 添加预览功能
+**阶段 2**：集成 WS Budget 和 Focus Lock
+- 集成预算检查
+- 集成 focus 锁定
 
-**阶段 3**：第二或第三轮提案
-- 根据用户反馈选择
-- 可能先实现 Git 集成
+**阶段 3**：集成 Thrash Detection 和 Progressive Reveal
+- 集成 thrash 检测
+- 集成渐进式揭示
 
-**技术成熟度**：中等（分阶段降低风险）
+**技术成熟度**：低（分阶段降低风险）
 
 ---
 
-## 提案五：多语言支持
+## 提案五：业界参考方案与新功能建议
 
-### 5.1 问题背景
+### 5.1 业界参考方案
 
-当前 v0 仅支持 Python，限制了工具的适用范围。多语言支持需要考虑：
+#### VS Code 的 CodeLens
+- **功能**：在代码行上方显示上下文相关的操作按钮
+- **参考价值**：减少上下文切换，提升操作效率
+- **可借鉴**：在 CSF 视图中为每个节点添加快速操作按钮（展开/折叠、查看依赖、查看变异影响）
 
-1. **语言特性差异**：不同语言的 AST 结构、语法特性
-2. **工具链差异**：不同语言的解析器、格式化工具
-3. **CSF 通用性**：CSF schema 是否需要语言特定扩展
-4. **维护成本**：多语言支持显著增加维护负担
+#### JetBrains IDE 的 Structure View
+- **功能**：分层显示代码结构，支持过滤和搜索
+- **参考价值**：清晰的层次结构，快速导航
+- **可借鉴**：改进 CSF 树形视图，添加过滤选项（按类型、按复杂度、按变异影响）
 
-### 5.2 第一轮提案：语言插件架构
+#### GitHub Copilot 的 Code Suggestions
+- **功能**：基于上下文的智能代码建议
+- **参考价值**：减少重复工作，提升编码效率
+- **可借鉴**：结合 pattern matching，提供代码重构建议
 
-**核心思想**：设计插件架构，每种语言作为独立插件实现。
+#### SonarQube 的 Code Quality Metrics
+- **功能**：显示代码质量指标（复杂度、重复率、技术债务）
+- **参考价值**：量化代码质量，指导重构
+- **可借鉴**：在 CSF 中显示每个节点的复杂度指标，帮助识别重构目标
 
-**技术方案**：
+#### Sourcegraph 的 Code Intelligence
+- **功能**：跨文件代码导航和依赖分析
+- **参考价值**：理解大型代码库的全局关系
+- **可借鉴**：扩展 CSF 支持跨文件依赖分析，提供全局视图
+
+### 5.2 新功能建议
+
+#### 5.2.1 CodeLens 集成
+**功能描述**：在 CSF 视图中为每个节点添加上下文操作按钮
+
+**实现方案**：
 ```python
-class LanguagePlugin:
-    """语言插件基类"""
-    
-    @abstractmethod
-    def parse(self, source: str, path: str) -> dict:
-        """解析源码为 CSF"""
-        pass
-    
-    @abstractmethod
-    def write(self, csf: dict, patch: str) -> str:
-        """应用 patch 写回源码"""
-        pass
-    
-    @abstractmethod
-    def get_language_features(self) -> dict:
-        """返回语言特性"""
-        pass
-
-class PythonPlugin(LanguagePlugin):
-    """Python 插件"""
-    def parse(self, source: str, path: str) -> dict:
-        # 使用 ast 模块
-        pass
-
-class JavaScriptPlugin(LanguagePlugin):
-    """JavaScript 插件"""
-    def parse(self, source: str, path: str) -> dict:
-        # 使用 Babel/TypeScript
-        pass
-```
-
-**插件注册**：
-```python
-class PluginManager:
-    def __init__(self):
-        self.plugins = {}
-    
-    def register(self, language: str, plugin: LanguagePlugin):
-        """注册插件"""
-        self.plugins[language] = plugin
-    
-    def get_plugin(self, path: str) -> LanguagePlugin:
-        """根据文件路径获取插件"""
-        ext = Path(path).suffix
-        language = self._ext_to_language(ext)
-        return self.plugins.get(language)
-```
-
-**优势**：
-- 架构清晰，易于扩展
-- 语言解耦
-- 社区可贡献插件
-
-**劣势**：
-- 需要设计通用接口
-- 插件质量参差不齐
-- 增加测试负担
-
-**技术成熟度**：高（常见模式）
-
-**自我评估**：
-- **服务项目目标**：✓ 是。扩大适用范围
-- **优先级**：低。当前专注 Python
-- **风险**：中。架构设计需要深思熟虑
-
-### 5.3 第二轮提案：基于 Tree-sitter 的通用解析
-
-**核心思想**：使用 Tree-sitter 作为统一解析器，支持多种语言。
-
-**技术方案**：
-```python
-class TreeSitterParser:
-    def __init__(self):
-        self.parsers = {}
-        self._load_parsers()
-    
-    def parse(self, source: str, language: str) -> dict:
-        """使用 Tree-sitter 解析"""
-        parser = self.parsers.get(language)
-        if not parser:
-            raise ValueError(f"Unsupported language: {language}")
+class CodeLens:
+    def get_codelens_actions(self, node: dict, csf: dict) -> list:
+        """为节点生成 CodeLens 操作"""
+        actions = []
         
-        tree = parser.parse(source.encode())
-        return self._tree_to_csf(tree, language)
-    
-    def _tree_to_csf(self, tree: Tree, language: str) -> dict:
-        """将 Tree-sitter 树转换为 CSF"""
-        # 语言特定的转换逻辑
-        pass
+        if node['kind'] == 'function':
+            actions.append({
+                'label': 'View Dependencies',
+                'action': 'show_dependencies'
+            })
+            actions.append({
+                'label': 'View Mutation Effects',
+                'action': 'show_mutation_effects'
+            })
+            
+            if len(node['children']) > 5:
+                actions.append({
+                    'label': 'Extract Method',
+                    'action': 'extract_method'
+                })
+        
+        return actions
 ```
 
 **优势**：
-- 统一解析器
-- 支持语言多（Tree-sitter 支持 40+ 语言）
-- 性能好
+- 减少上下文切换
+- 提升操作效率
+- 符合现代 IDE 习惯
 
-**劣势**：
-- Tree-sitter AST 与 CSF 映射复杂
-- 某些语言特性可能不支持
-- 依赖外部库
+**技术成熟度**：高
 
-**技术成熟度**：中等（Tree-sitter 成熟但映射复杂）
+#### 5.2.2 复杂度可视化
+**功能描述**：在 CSF 中显示每个节点的复杂度指标
 
-**自我评估**：
-- **服务项目目标**：✓ 是。快速支持多语言
-- **优先级**：低。当前专注 Python
-- **风险**：中。映射可能不准确
-
-### 5.4 第三轮提案：渐进式多语言支持
-
-**核心思想**：先支持与 Python 相似的语言（如 JavaScript、TypeScript），逐步扩展。
-
-**技术方案**：
+**实现方案**：
 ```python
-# 阶段 1: JavaScript
-class JavaScriptPlugin(LanguagePlugin):
-    def parse(self, source: str, path: str) -> dict:
-        # 使用 Babel 解析
-        # 转换为类似 Python 的 CSF 结构
+class ComplexityAnalyzer:
+    def compute_complexity(self, node: dict, csf: dict) -> dict:
+        """计算节点复杂度"""
+        metrics = {
+            'cyclomatic': self._compute_cyclomatic(node),
+            'cognitive': self._compute_cognitive(node),
+            'nesting_depth': self._compute_nesting_depth(node, csf),
+            'fanout': len(node.get('mutation_affects', [])),
+            'fanin': len(node.get('dependencies', []))
+        }
+        return metrics
+    
+    def _compute_cyclomatic(self, node: dict) -> int:
+        """计算圈复杂度"""
+        # 基于控制流图计算
         pass
-
-# 阶段 2: TypeScript
-class TypeScriptPlugin(JavaScriptPlugin):
-    def parse(self, source: str, path: str) -> dict:
-        # 添加类型信息
+    
+    def _compute_cognitive(self, node: dict) -> int:
+        """计算认知复杂度"""
+        # 基于嵌套深度和控制流计算
         pass
-
-# 阶段 3: Go, Rust 等
 ```
 
-**优先级排序**：
-1. JavaScript/TypeScript（前端生态）
-2. Go（系统编程）
-3. Rust（系统编程）
-4. Java（企业级）
+**优势**：
+- 量化代码质量
+- 指导重构决策
+- 识别技术债务
+
+**技术成熟度**：高
+
+#### 5.2.3 跨文件依赖分析
+**功能描述**：扩展 CSF 支持跨文件依赖分析
+
+**实现方案**：
+```python
+class CrossFileAnalyzer:
+    def analyze_cross_file_dependencies(self, csf: dict, project_root: str) -> dict:
+        """分析跨文件依赖"""
+        # 使用 pydeps 或类似工具分析模块依赖
+        # 将跨文件依赖信息添加到 CSF
+        pass
+    
+    def build_dependency_graph(self, project_root: str) -> dict:
+        """构建项目依赖图"""
+        # 生成模块级别的依赖图
+        pass
+```
 
 **优势**：
-- 风险可控
-- 逐步积累经验
-- 优先支持高需求语言
+- 理解全局架构
+- 识别循环依赖
+- 优化模块划分
 
-**劣势**：
-- 周期长
-- 每种语言都需要适配
-- 可能错过某些语言
+**技术成熟度**：中等
 
-**技术成熟度**：高（渐进式是常见策略）
+#### 5.2.4 重构建议引擎
+**功能描述**：基于 pattern matching 和复杂度分析，提供重构建议
 
-**自我评估**：
-- **服务项目目标**：✓ 是。务实路线
-- **优先级**：低。当前专注 Python
-- **风险**：低
+**实现方案**：
+```python
+class RefactoringSuggester:
+    def suggest_refactorings(self, csf: dict) -> list:
+        """生成重构建议"""
+        suggestions = []
+        
+        for node_id, node in csf['nodes'].items():
+            if node['kind'] == 'function':
+                complexity = self.complexity_analyzer.compute_complexity(node, csf)
+                
+                if complexity['cyclomatic'] > 10:
+                    suggestions.append({
+                        'node_id': node_id,
+                        'type': 'extract_method',
+                        'reason': f'High cyclomatic complexity ({complexity["cyclomatic"]})',
+                        'confidence': 0.8
+                    })
+                
+                if complexity['nesting_depth'] > 4:
+                    suggestions.append({
+                        'node_id': node_id,
+                        'type': 'reduce_nesting',
+                        'reason': f'Deep nesting ({complexity["nesting_depth"]})',
+                        'confidence': 0.7
+                    })
+        
+        return suggestions
+```
 
-### 5.5 最终推荐
+**优势**：
+- 自动识别重构机会
+- 提升代码质量
+- 减少技术债务
 
-**推荐方案**：暂不实施
+**技术成熟度**：中等
 
-**理由**：
-- 当前 Python 支持还不够完善
-- 多语言支持需要大量资源
-- 市场需求不明确
+### 5.3 实施优先级
 
-**未来时机**：
-- Python 版本稳定且有大量用户
-- 明确的多语言需求
-- 有足够的开发资源
+**高优先级**（立即实施）：
+1. CodeLens 集成
+2. 复杂度可视化
 
-**技术成熟度**：高（架构设计可提前进行）
+**中优先级**（3-6 个月）：
+3. 跨文件依赖分析
+4. 重构建议引擎
+
+**低优先级**（6-12 个月）：
+5. 时间旅行调试
+6. 协作标注
 
 ---
 
@@ -928,46 +664,344 @@ class TypeScriptPlugin(JavaScriptPlugin):
 ### 优先级排序
 
 1. **高优先级**：
-   - CSF 增量同步完整算法（混合策略）
-   - Structural Operation 完整可逆性（操作日志）
+   - WS Budget 控制
+   - Projection Mode 切换
+   - Focus Lock 机制
+   - Progressive Reveal
+   - CodeLens 集成
+   - 复杂度可视化
 
 2. **中优先级**：
-   - Recognition Matrix 阈值校准（在线学习）
-   - Projection Hysteresis（时间窗口防抖）
+   - Thrash Detection
+   - Adaptive Projection 调度器框架
+   - 跨文件依赖分析
+   - 重构建议引擎
 
 3. **低优先级**：
-   - 多语言支持（暂不实施）
+   - 时间旅行调试
+   - 协作标注
 
 ### 实施建议
 
 1. **短期（1-2 个月）**：
-   - 实现增量同步的指纹匹配
-   - 实现操作日志系统
-   - 实现时间窗口防抖
+   - 实现 WS Budget 控制
+   - 实现 Focus Lock 机制
+   - 实现 Progressive Reveal
+   - 实现 CodeLens 集成
+   - 实现复杂度可视化
 
 2. **中期（3-6 个月）**：
-   - 实现增量同步的图匹配和混合策略
-   - 实现真正的代码变换（extract_function, add_early_return）
-   - 实现在线学习阈值调整
+   - 实现 Projection Mode 切换
+   - 实现基础调度器框架
+   - 集成各子模块
+   - 实现跨文件依赖分析
+   - 实现重构建议引擎
 
 3. **长期（6-12 个月）**：
-   - 考虑 Git 集成
-   - 考虑冲突检测
-   - 评估多语言支持需求
+   - 实现 Thrash Detection
+   - 完善自适应投影
+   - 优化调度算法
+   - 实现时间旅行调试
+   - 实现协作标注
 
-### 风险管理
+### 核心价值
 
-1. **技术风险**：
-   - 所有提案都应先在小规模测试
-   - 保留回滚机制
-   - 充分的单元测试和集成测试
+从 "structure-aware analyzer" 转换为 "working-set-aware projection runtime"：
 
-2. **产品风险**：
-   - 收集用户反馈
-   - A/B 测试验证效果
-   - 监控关键指标
+- **当前**：分析代码是什么
+- **目标**：决定现在不该给用户看什么
 
-3. **资源风险**：
-   - 优先级排序，聚焦高价值功能
-   - 分阶段实施，控制范围
-   - 定期评估投入产出比
+Cognitive Matrix 的真正价值：
+- 不是解释复杂度
+- 而是实时调度认知可见性
+
+---
+
+## 提案五：代码重构与模块化
+
+### 5.1 问题背景
+
+当前代码库中存在超过三个函数的长文件，需要按照功能拆分成多个文件以提高可维护性。
+
+### 5.2 已完成的模块化工作
+
+#### 5.2.1 CLI 模块化
+
+**原文件**：`project/cli.py` (4 functions)
+- `print_tree` - 打印 CSF 树
+- `print_heatmap` - 打印约束热力图
+- `print_generated_code` - 打印生成的代码
+- `main` - CLI 入口
+
+**拆分后**：
+- `project/cli/tree_printer.py` - 树打印功能
+- `project/cli/heatmap_printer.py` - 热力图打印功能
+- `project/cli/code_printer.py` - 代码打印功能
+- `project/cli.py` - 主入口，导入上述模块
+
+#### 5.2.2 Dependency 模块化
+
+**原文件**：`project/core/expansion/dependency.py` (4 functions)
+- `expand_dependencies` - 扩展依赖链
+- `_build_dependency_graph` - 构建依赖图
+- `_calculate_dependency_span` - 计算依赖跨度
+- `_inline_dependency` - 内联依赖
+
+**拆分后**：
+- `project/core/expansion/dependency_graph.py` - 图构建和跨度计算
+- `project/core/expansion/dependency_inliner.py` - 内联逻辑
+- `project/core/expansion/dependency.py` - 主函数，导入上述模块
+
+### 5.3 业界参考方案
+
+#### 5.3.1 VS Code 模块化实践
+
+VS Code 采用分层架构：
+- `src/vs/base/` - 基础层
+- `src/vs/platform/` - 平台层
+- `src/vs/workbench/` - 工作台层
+- `src/vs/editor/` - 编辑器层
+
+每个层级按功能进一步细分：
+- `services/` - 服务层
+- `common/` - 通用组件
+- `browser/` - 浏览器相关
+
+#### 5.3.2 PyTorch 模块化实践
+
+PyTorch 采用功能模块化：
+- `torch/nn/` - 神经网络模块
+- `torch/optim/` - 优化器模块
+- `torch/utils/` - 工具模块
+- `torch/distributed/` - 分布式模块
+
+每个模块内部按具体功能细分：
+- `functional/` - 函数式 API
+- `modules/` - 模块化组件
+- `loss/` - 损失函数
+
+#### 5.3.3 推荐的模块化原则
+
+1. **单一职责原则**：每个模块只负责一个功能
+2. **依赖倒置原则**：高层模块不依赖低层模块
+3. **接口隔离原则**：模块间通过接口通信
+4. **开闭原则**：对扩展开放，对修改关闭
+
+### 5.4 实用的功能建议
+
+#### 5.4.1 代码导航功能
+
+参考业界 IDE 实现：
+- **Go to Definition**：跳转到定义
+- **Find References**：查找引用
+- **Call Hierarchy**：调用层级
+- **Type Hierarchy**：类型层级
+
+#### 5.4.2 代码重构功能
+
+参考 JetBrains IDE 实现：
+- **Extract Method**：提取方法
+- **Inline Method**：内联方法
+- **Rename**：重命名
+- **Move**：移动代码
+
+#### 5.4.3 代码分析功能
+
+参考 SonarQube 实现：
+- **Code Smell Detection**：代码异味检测
+- **Complexity Analysis**：复杂度分析
+- **Duplicate Detection**：重复代码检测
+- **Security Issues**：安全问题检测
+
+### 5.5 Pattern 类型扩展
+
+#### 5.5.1 当前 Pattern 类型
+
+当前系统已实现的 Pattern：
+- `pipeline` - 流水线模式
+- `branch` - 分支模式
+- `fetch_transform_cache` - 获取-转换-缓存模式
+- `validation_chain` - 验证链模式
+- `event_handler` - 事件处理模式
+
+#### 5.5.2 建议新增 Pattern 类型
+
+1. **Singleton Pattern（单例模式）**
+   - 识别：类中只有一个实例
+   - 规则：类有私有构造函数，有静态获取实例方法
+
+2. **Factory Pattern（工厂模式）**
+   - 识别：创建对象的工厂类
+   - 规则：有创建方法，返回不同类型的对象
+
+3. **Observer Pattern（观察者模式）**
+   - 识别：事件订阅和通知机制
+   - 规则：有订阅方法，有通知方法
+
+4. **Strategy Pattern（策略模式）**
+   - 识别：可互换的算法族
+   - 规则：有策略接口，有多个实现
+
+5. **Decorator Pattern（装饰器模式）**
+   - 识别：动态添加功能
+   - 规则：有装饰器函数或类
+
+6. **Repository Pattern（仓储模式）**
+   - 识别：数据访问抽象层
+   - 规则：有 CRUD 操作，有数据映射
+
+7. **Service Layer Pattern（服务层模式）**
+   - 识别：业务逻辑层
+   - 规则：有业务方法，不直接操作数据库
+
+8. **Command Pattern（命令模式）**
+   - 识别：命令封装
+   - 规则：有执行方法，有撤销方法
+
+### 5.6 实施建议
+
+#### 5.6.1 短期（1-2 周）
+
+1. 完成剩余文件的模块化
+2. 添加基础 Pattern 类型
+3. 实现代码导航功能
+
+#### 5.6.2 中期（1-2 个月）
+
+1. 实现代码重构功能
+2. 添加高级 Pattern 类型
+3. 实现代码分析功能
+
+#### 5.6.3 长期（3-6 个月）
+
+1. 完善 Pattern 匹配算法
+2. 优化模块化架构
+3. 集成到 Projection Runtime
+
+### 5.7 额外实用功能建议
+
+#### 5.7.1 AI 辅助功能
+
+参考 GitHub Copilot、Cursor、Replit AI 实现：
+- **AI Code Completion**：基于 CSF 上下文的智能代码补全
+- **AI Refactoring Suggestions**：AI 驱动的重构建议
+- **AI Documentation Generation**：自动生成代码文档
+- **AI Test Generation**：基于代码结构自动生成测试用例
+- **AI Code Review**：AI 代码审查助手
+
+#### 5.7.2 性能分析功能
+
+参考 Py-Spy、cProfile、Blackfire 实现：
+- **Performance Profiling**：性能瓶颈识别
+- **Memory Leak Detection**：内存泄漏检测
+- **CPU Usage Analysis**：CPU 使用分析
+- **I/O Operation Tracking**：I/O 操作追踪
+- **Database Query Optimization**：数据库查询优化建议
+- **N+1 Query Detection**：N+1 查询检测
+- **Slow Query Identification**：慢查询识别
+
+#### 5.7.3 安全分析功能
+
+参考 Bandit、Safety、Snyk 实现：
+- **Security Vulnerability Scanning**：安全漏洞扫描
+- **Secret Detection**：密钥和敏感信息检测（密码、API keys）
+- **Dependency Vulnerability Scanning**：依赖漏洞扫描
+- **SQL Injection Detection**：SQL 注入检测
+- **XSS Vulnerability Detection**：XSS 漏洞检测
+- **Authentication Pattern Analysis**：认证模式分析
+- **Authorization Pattern Analysis**：授权模式分析
+
+#### 5.7.4 测试辅助功能
+
+参考 pytest、Coverage.py、Hypothesis 实现：
+- **Test Coverage Visualization**：测试覆盖率可视化
+- **Test Generation Suggestions**：测试生成建议
+- **Mock/Stub Generation**：Mock/Stub 自动生成
+- **Property-Based Testing**：基于属性的测试建议
+- **Integration Test Suggestions**：集成测试建议
+- **Edge Case Detection**：边界情况检测
+
+#### 5.7.5 文档生成功能
+
+参考 Sphinx、MkDocs、Swagger/OpenAPI 实现：
+- **API Documentation Generation**：API 文档自动生成
+- **OpenAPI/Swagger Integration**：OpenAPI/Swagger 集成
+- **GraphQL Schema Analysis**：GraphQL Schema 分析
+- **REST API Documentation**：REST API 文档生成
+- **Database Schema Documentation**：数据库 Schema 文档
+- **Architecture Diagram Generation**：架构图自动生成
+
+#### 5.7.6 DevOps 集成功能
+
+参考 GitHub Actions、GitLab CI、Jenkins 实现：
+- **CI/CD Pipeline Integration**：CI/CD 流水线集成
+- **Docker Configuration Analysis**：Docker 配置分析
+- **Kubernetes Configuration Analysis**：Kubernetes 配置分析
+- **Infrastructure as Code Validation**：基础设施即代码验证
+- **Health Check Suggestions**：健康检查端点建议
+- **Graceful Shutdown Patterns**：优雅关闭模式检测
+
+#### 5.7.7 微服务架构分析
+
+参考 Istio、Service Mesh、Microservices Patterns 实现：
+- **Service Dependency Graph**：服务依赖图
+- **API Gateway Pattern Detection**：API 网关模式检测
+- **CQRS Pattern Detection**：CQRS 模式检测
+- **Event Sourcing Pattern Detection**：事件溯源模式检测
+- **Saga Pattern Detection**：Saga 模式检测
+- **Circuit Breaker Pattern Detection**：断路器模式检测
+- **Rate Limiting Pattern Detection**：限流模式检测
+- **Bulkhead Pattern Detection**：舱壁模式检测
+
+#### 5.7.8 并发与异步分析
+
+参考 asyncio、concurrent.futures 实现：
+- **Thread Safety Analysis**：线程安全分析
+- **Concurrency Pattern Detection**：并发模式检测
+- **Race Condition Detection**：竞态条件检测
+- **Deadlock Detection**：死锁检测
+- **Resource Leak Detection**：资源泄漏检测
+- **Backpressure Handling Suggestions**：背压处理建议
+
+#### 5.7.9 代码质量保证
+
+参考 SonarQube、CodeClimate、DeepSource 实现：
+- **Code Smell Detection**：代码异味检测
+- **Code Duplication Detection**：代码重复检测
+- **Complexity Metrics**：复杂度指标（圈复杂度、认知复杂度）
+- **Maintainability Index**：可维护性指数
+
+#### 5.7.10 协作功能
+
+参考 GitHub、GitLab、VS Code Live Share 实现：
+- **Real-time Collaboration**：实时协作编辑
+- **Code Review Automation**：代码审查自动化
+- **Pull Request Analysis**：Pull Request 分析
+- **Merge Conflict Resolution Suggestions**：合并冲突解决建议
+- **Team Code Style Enforcement**：团队代码风格强制执行
+- **Knowledge Sharing**：知识共享和文档
+
+#### 5.7.11 可观测性集成
+
+参考 Prometheus、Grafana、Jaeger、OpenTelemetry 实现：
+- **Distributed Tracing Integration**：分布式追踪集成
+- **Metrics Collection Suggestions**：指标收集建议
+- **Logging Analysis**：日志分析
+- **Error Tracking Integration**：错误追踪集成（Sentry）
+- **Performance Monitoring**：性能监控
+- **Health Check Endpoints**：健康检查端点
+
+#### 5.7.12 配置管理分析
+
+参考 Ansible、Terraform、Consul 实现：
+- **Configuration Management Analysis**：配置管理分析
+- **Environment Variable Tracking**：环境变量追踪
+- **Secret Management**：密钥管理建议
+- **Configuration Drift Detection**：配置漂移检测
+- **Feature Flag Analysis**：功能开关分析
+
+### 5.8 总结
+
+模块化是提升代码可维护性的关键步骤。通过参考业界最佳实践，我们可以构建更加清晰、可扩展的代码架构。Pattern 类型的扩展将增强系统的代码识别能力，为用户提供更强大的代码分析和重构工具。
+
+额外的实用功能建议涵盖了 AI 辅助、性能分析、安全分析、测试辅助、文档生成、DevOps 集成、微服务架构分析、并发分析、代码质量保证、协作功能、可观测性集成和配置管理等多个领域。这些功能参考了业界领先的工具和框架，可以为用户提供全面的代码分析和开发辅助能力。

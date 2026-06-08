@@ -1,6 +1,9 @@
 *
 !DRAFT.txt
 !TODO.txt
-!manuel.txt
+!manual.txt
 !project/
 !.gitignore
+!prompt.txt
+!todo/
+!run_verifiers.py
