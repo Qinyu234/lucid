@@ -1,1001 +1,209 @@
-# CSF Expansion Engine - Projection Runtime Proposals
-
-## 概述
-
-本文档基于 prompt.txt 中的指导思想，提出将当前系统从 "structure-aware analyzer" 转换为 "working-set-aware projection runtime" 的技术提案。
-
-当前系统问题：
-- 虽然有 projection 概念，但实际上只是把结构换一种格式打印出来
-- 没有真正控制 working set
-- Cognitive Matrix 被当作 metadata，而不是驱动 projection runtime
-
-目标架构：
-```
-Structural Truth Layer
-    ↓
-Canonical IR
-    ↓
-Recognition Graph
-    ↓
-RPCM Scheduler
-    ↓
-Stable Projection View
-```
-
----
-
-## 提案一：Projection Scheduler 核心层
-
-### 1.1 问题背景
-
-当前系统流程：
-```text
-AST → CSF → projection → dump
-```
-
-问题：
-- projection 是 static 的，不是 working-set-reactive 的
-- 系统输出所有 state、mutation、causal effect、fanout
-- working set 直接爆炸，用户无法处理
-- Cognitive Matrix 只用于 observation，不用于 action
-
-### 1.2 第一轮提案：WS Budget 控制
-
-**核心思想**：为每个 Recognition Region 设置预算，超过自动 compress。
-
-**技术方案**：
-```python
-class WSBudget:
-    MAX_R0 = 12  # 最大结构节点数
-    MAX_R1_CHAIN = 5  # 最大执行链长度
-    MAX_R2_PROPAGATION = 4  # 最大传播深度
-
-    def check_budget(self, ws_state: dict) -> dict:
-        """检查 WS 预算并返回压缩建议"""
-        violations = []
-
-        if ws_state['R0']['node_count'] > self.MAX_R0:
-            violations.append({
-                'region': 'R0',
-                'current': ws_state['R0']['node_count'],
-                'limit': self.MAX_R0,
-                'action': 'compress_low_priority_nodes'
-            })
-
-        if ws_state['R1']['chain_length'] > self.MAX_R1_CHAIN:
-            violations.append({
-                'region': 'R1',
-                'current': ws_state['R1']['chain_length'],
-                'limit': self.MAX_R1_CHAIN,
-                'action': 'split_execution_chain'
-            })
-
-        if ws_state['R2']['propagation_depth'] > self.MAX_R2_PROPAGATION:
-            violations.append({
-                'region': 'R2',
-                'current': ws_state['R2']['propagation_depth'],
-                'limit': self.MAX_R2_PROPAGATION,
-                'action': 'compress_propagation_region'
-            })
-
-        return violations
-```
-
-**优势**：
-- 实现简单，直接控制认知负载
-- 可配置预算参数
-- 自动触发压缩
-
-**劣势**：
-- 固定预算可能不适合所有场景
-- 需要定义优先级规则
-
-**技术成熟度**：高（常见资源管理模式）
-
-**自我评估**：
-- **服务项目目标**：✓ 是。核心功能
-- **优先级**：高。必须实现
-- **风险**：低
-
-### 1.3 第二轮提案：Projection Mode 切换
-
-**核心思想**：根据用户目标自动切换 projection mode，只显示相关 graph。
-
-**技术方案**：
-```python
-class ProjectionMode:
-    MODES = ['execution', 'mutation', 'architecture']
-
-    def detect_mode(self, user_goal: str, csf: dict) -> str:
-        """根据用户目标检测 projection mode"""
-        if 'async' in user_goal or 'await' in user_goal:
-            return 'execution'
-        elif 'refactor' in user_goal or 'extract' in user_goal:
-            return 'mutation'
-        elif 'structure' in user_goal or 'architecture' in user_goal:
-            return 'architecture'
-        else:
-            return 'execution'  # 默认
-
-    def apply_mode(self, csf: dict, mode: str) -> dict:
-        """应用 projection mode 过滤"""
-        if mode == 'execution':
-            return self._filter_execution_graph(csf)
-        elif mode == 'mutation':
-            return self._filter_mutation_graph(csf)
-        elif mode == 'architecture':
-            return self._filter_architecture_graph(csf)
-
-    def _filter_execution_graph(self, csf: dict) -> dict:
-        """只保留执行相关节点"""
-        # 隐藏：inheritance, low-risk nodes, unrelated mutation region, static structure
-        # 显示：async chain, await boundary, call continuation, event propagation
-        pass
-
-    def _filter_mutation_graph(self, csf: dict) -> dict:
-        """只保留变异相关节点"""
-        pass
-
-    def _filter_architecture_graph(self, csf: dict) -> dict:
-        """只保留架构相关节点"""
-        pass
-```
-
-**优势**：
-- 自适应不同用户目标
-- 减少无关信息干扰
-- 提升认知聚焦
-
-**劣势**：
-- 需要定义不同模式的过滤规则
-- 模式检测可能不准确
-
-**技术成熟度**：中等（需要模式识别经验）
-
-**自我评估**：
-- **服务项目目标**：✓ 是。核心功能
-- **优先级**：高。必须实现
-- **风险**：中
-
-### 1.4 第三轮提案：Thrash Detection
-
-**核心思想**：检测用户认知抖动行为，自动 regroup。
-
-**技术方案**：
-```python
-class ThrashDetector:
-    def __init__(self):
-        self.expand_history = []
-        self.retrace_history = []
-        self.scope_history = []
-
-    def detect_thrash(self) -> dict:
-        """检测 thrash 行为"""
-        thrash_types = []
-
-        # 检测 expand/collapse loop
-        if self._detect_expand_collapse_loop():
-            thrash_types.append('expand_collapse_loop')
-
-        # 检测 retrace loop
-        if self._detect_retrace_loop():
-            thrash_types.append('retrace_loop')
-
-        # 检测 scope jumping
-        if self._detect_scope_jumping():
-            thrash_types.append('scope_jumping')
-
-        return {
-            'has_thrash': len(thrash_types) > 0,
-            'thrash_types': thrash_types,
-            'action': 'regroup_projection'
-        }
-
-    def _detect_expand_collapse_loop(self) -> bool:
-        """检测 expand/collapse 循环"""
-        # 分析最近 10 次操作是否有循环模式
-        pass
-
-    def _detect_retrace_loop(self) -> bool:
-        """检测 retrace 循环"""
-        pass
-
-    def _detect_scope_jumping(self) -> bool:
-        """检测 scope 跳跃"""
-        pass
-```
-
-**优势**：
-- 识别用户认知困难
-- 自动调整 projection
-- 提升用户体验
-
-**劣势**：
-- 需要收集用户行为数据
-- 检测算法可能误报
-
-**技术成熟度**：低（需要用户行为研究）
-
-**自我评估**：
-- **服务项目目标**：✓ 是。提升用户体验
-- **优先级**：中。可以先实现基础版本
-- **风险**：中
-
-### 1.5 最终推荐
-
-**推荐方案**：分阶段实施
-
-**阶段 1**：WS Budget 控制
-- 实现基础的预算检查
-- 实现自动压缩逻辑
-
-**阶段 2**：Projection Mode 切换
-- 实现模式检测
-- 实现基础过滤规则
-
-**阶段 3**：Thrash Detection
-- 收集用户行为数据
-- 实现检测算法
-
-**技术成熟度**：中等（分阶段降低风险）
-
----
-
-## 提案二：Focus Lock 机制
-
-### 2.1 问题背景
-
-用户在编辑时 focus 某个函数，但系统仍然显示所有无关分支，导致认知负载过高。
-
-### 2.2 第一轮提案：Focus Lock 冻结无关分支
-
-**核心思想**：用户 focus 时，自动冻结无关分支。
-
-**技术方案**：
-```python
-class FocusLock:
-    def lock_focus(self, csf: dict, focus_node_id: str) -> dict:
-        """锁定 focus，冻结无关分支"""
-        focus_node = csf['nodes'][focus_node_id]
-
-        # 计算相关节点（focus 节点的依赖链和被依赖链）
-        related_nodes = self._compute_related_nodes(csf, focus_node_id)
-
-        # 冻结无关节点
-        frozen_nodes = []
-        for node_id, node in csf['nodes'].items():
-            if node_id not in related_nodes:
-                node['frozen'] = True
-                frozen_nodes.append(node_id)
-
-        return {
-            'focus_node': focus_node_id,
-            'related_count': len(related_nodes),
-            'frozen_count': len(frozen_nodes)
-        }
-
-    def _compute_related_nodes(self, csf: dict, focus_node_id: str) -> set:
-        """计算相关节点"""
-        related = set()
-
-        # 上游依赖
-        related.update(self._get_upstream_dependencies(csf, focus_node_id))
-
-        # 下游影响
-        related.update(self._get_downstream_affects(csf, focus_node_id))
-
-        # 同级兄弟节点
-        related.update(self._get_siblings(csf, focus_node_id))
-
-        return related
-```
-
-**优势**：
-- 实现简单
-- 直接减少认知负载
-- 符合用户直觉
-
-**劣势**：
-- 可能过度隐藏
-- 需要定义"相关"的标准
-
-**技术成熟度**：高（常见 IDE 功能）
-
-**自我评估**：
-- **服务项目目标**：✓ 是。核心功能
-- **优先级**：高。必须实现
-- **风险**：低
-
-### 2.3 最终推荐
-
-**推荐方案**：第一轮提案（Focus Lock 冻结无关分支）
-
-**理由**：
-- 实现简单，风险低
-- 直接解决认知负载问题
-- 可作为基础，后续迭代
-
-**技术成熟度**：高
-
----
-
-## 提案三：Progressive Reveal 渐进式揭示
-
-### 3.1 问题背景
-
-当前系统一次性打印所有信息，导致 working set 爆炸。
-
-### 3.2 第一轮提案：按 WS 预算逐层揭示
-
-**核心思想**：不要一次全打印，而是按 WS 预算逐层 reveal。
-
-**技术方案**：
-```python
-class ProgressiveReveal:
-    def __init__(self, ws_budget: WSBudget):
-        self.ws_budget = ws_budget
-        self.revealed_layers = 0
-
-    def reveal_next_layer(self, csf: dict) -> dict:
-        """揭示下一层"""
-        if self._can_reveal_more():
-            self.revealed_layers += 1
-            return self._get_layer(csf, self.revealed_layers)
-        else:
-            return {'message': 'WS budget exhausted'}
-
-    def _can_reveal_more(self) -> bool:
-        """检查是否可以揭示更多"""
-        # 根据 WS 预算判断
-        pass
-
-    def _get_layer(self, csf: dict, layer: int) -> dict:
-        """获取指定层"""
-        # 按层级返回节点
-        pass
-```
-
-**优势**：
-- 控制 working set 大小
-- 渐进式信息呈现
-- 降低认知负载
-
-**劣势**：
-- 需要定义层级结构
-- 可能影响用户查找效率
-
-**技术成熟度**：高（常见信息呈现模式）
-
-**自我评估**：
-- **服务项目目标**：✓ 是。核心功能
-- **优先级**：高。必须实现
-- **风险**：低
-
-### 3.3 最终推荐
-
-**推荐方案**：第一轮提案（按 WS 预算逐层揭示）
-
-**理由**：
-- 实现简单，风险低
-- 直接解决 working set 爆炸问题
-- 符合认知科学原理
-
-**技术成熟度**：高
-
----
-
-## 提案四：Adaptive Projection 自适应投影
-
-### 4.1 问题背景
-
-当前 projection 是 static 的，不能根据用户目标、WS 预算、当前 focus、thrash history 动态调整。
-
-### 4.2 第一轮提案：Dynamic Projection Scheduler
-
-**核心思想**：实现真正的 projection scheduling runtime。
-
-**技术方案**：
-```python
-class ProjectionScheduler:
-    def schedule_projection(
-        self,
-        csf: dict,
-        user_goal: str,
-        ws_budget: WSBudget,
-        current_focus: str,
-        thrash_history: list
-    ) -> dict:
-        """调度 projection"""
-        # 1. 检测 projection mode
-        mode = self._detect_mode(user_goal)
-
-        # 2. 应用 mode 过滤
-        filtered_csf = self._apply_mode(csf, mode)
-
-        # 3. 检查 WS 预算
-        violations = ws_budget.check_budget(self._compute_ws_state(filtered_csf))
-
-        # 4. 如果违反预算，压缩
-        if violations:
-            filtered_csf = self._compress(filtered_csf, violations)
-
-        # 5. 如果有 focus，锁定
-        if current_focus:
-            filtered_csf = self._lock_focus(filtered_csf, current_focus)
-
-        # 6. 如果检测到 thrash，regroup
-        if thrash_history:
-            filtered_csf = self._regroup(filtered_csf, thrash_history)
-
-        # 7. 渐进式揭示
-        projection = self._progressive_reveal(filtered_csf)
-
-        return {
-            'mode': mode,
-            'projection': projection,
-            'ws_state': self._compute_ws_state(projection),
-            'compressed_count': len(csf['nodes']) - len(projection['nodes']),
-            'thrash_risk': self._compute_thrash_risk(thrash_history)
-        }
-```
-
-**优势**：
-- 真正实现 working-set-aware projection
-- 动态调整认知可见性
-- 符合理论目标
-
-**劣势**：
-- 实现复杂度高
-- 需要调优多个参数
-- 依赖多个子模块
-
-**技术成熟度**：低（需要大量工程优化）
-
-**自我评估**：
-- **服务项目目标**：✓ 是。核心目标
-- **优先级**：高。最终目标
-- **风险**：高。需要分阶段实施
-
-### 4.3 最终推荐
-
-**推荐方案**：分阶段实施
-
-**阶段 1**：实现基础调度器框架
-- 实现 schedule_projection 函数
-- 实现基础的 mode 检测和过滤
-
-**阶段 2**：集成 WS Budget 和 Focus Lock
-- 集成预算检查
-- 集成 focus 锁定
-
-**阶段 3**：集成 Thrash Detection 和 Progressive Reveal
-- 集成 thrash 检测
-- 集成渐进式揭示
-
-**技术成熟度**：低（分阶段降低风险）
-
----
-
-## 提案五：业界参考方案与新功能建议
-
-### 5.1 业界参考方案
-
-#### VS Code 的 CodeLens
-- **功能**：在代码行上方显示上下文相关的操作按钮
-- **参考价值**：减少上下文切换，提升操作效率
-- **可借鉴**：在 CSF 视图中为每个节点添加快速操作按钮（展开/折叠、查看依赖、查看变异影响）
-
-#### JetBrains IDE 的 Structure View
-- **功能**：分层显示代码结构，支持过滤和搜索
-- **参考价值**：清晰的层次结构，快速导航
-- **可借鉴**：改进 CSF 树形视图，添加过滤选项（按类型、按复杂度、按变异影响）
-
-#### GitHub Copilot 的 Code Suggestions
-- **功能**：基于上下文的智能代码建议
-- **参考价值**：减少重复工作，提升编码效率
-- **可借鉴**：结合 pattern matching，提供代码重构建议
-
-#### SonarQube 的 Code Quality Metrics
-- **功能**：显示代码质量指标（复杂度、重复率、技术债务）
-- **参考价值**：量化代码质量，指导重构
-- **可借鉴**：在 CSF 中显示每个节点的复杂度指标，帮助识别重构目标
-
-#### Sourcegraph 的 Code Intelligence
-- **功能**：跨文件代码导航和依赖分析
-- **参考价值**：理解大型代码库的全局关系
-- **可借鉴**：扩展 CSF 支持跨文件依赖分析，提供全局视图
-
-### 5.2 新功能建议
-
-#### 5.2.1 CodeLens 集成
-**功能描述**：在 CSF 视图中为每个节点添加上下文操作按钮
-
-**实现方案**：
-```python
-class CodeLens:
-    def get_codelens_actions(self, node: dict, csf: dict) -> list:
-        """为节点生成 CodeLens 操作"""
-        actions = []
-        
-        if node['kind'] == 'function':
-            actions.append({
-                'label': 'View Dependencies',
-                'action': 'show_dependencies'
-            })
-            actions.append({
-                'label': 'View Mutation Effects',
-                'action': 'show_mutation_effects'
-            })
-            
-            if len(node['children']) > 5:
-                actions.append({
-                    'label': 'Extract Method',
-                    'action': 'extract_method'
-                })
-        
-        return actions
-```
-
-**优势**：
-- 减少上下文切换
-- 提升操作效率
-- 符合现代 IDE 习惯
-
-**技术成熟度**：高
-
-#### 5.2.2 复杂度可视化
-**功能描述**：在 CSF 中显示每个节点的复杂度指标
-
-**实现方案**：
-```python
-class ComplexityAnalyzer:
-    def compute_complexity(self, node: dict, csf: dict) -> dict:
-        """计算节点复杂度"""
-        metrics = {
-            'cyclomatic': self._compute_cyclomatic(node),
-            'cognitive': self._compute_cognitive(node),
-            'nesting_depth': self._compute_nesting_depth(node, csf),
-            'fanout': len(node.get('mutation_affects', [])),
-            'fanin': len(node.get('dependencies', []))
-        }
-        return metrics
-    
-    def _compute_cyclomatic(self, node: dict) -> int:
-        """计算圈复杂度"""
-        # 基于控制流图计算
-        pass
-    
-    def _compute_cognitive(self, node: dict) -> int:
-        """计算认知复杂度"""
-        # 基于嵌套深度和控制流计算
-        pass
-```
-
-**优势**：
-- 量化代码质量
-- 指导重构决策
-- 识别技术债务
-
-**技术成熟度**：高
-
-#### 5.2.3 跨文件依赖分析
-**功能描述**：扩展 CSF 支持跨文件依赖分析
-
-**实现方案**：
-```python
-class CrossFileAnalyzer:
-    def analyze_cross_file_dependencies(self, csf: dict, project_root: str) -> dict:
-        """分析跨文件依赖"""
-        # 使用 pydeps 或类似工具分析模块依赖
-        # 将跨文件依赖信息添加到 CSF
-        pass
-    
-    def build_dependency_graph(self, project_root: str) -> dict:
-        """构建项目依赖图"""
-        # 生成模块级别的依赖图
-        pass
-```
-
-**优势**：
-- 理解全局架构
-- 识别循环依赖
-- 优化模块划分
-
-**技术成熟度**：中等
-
-#### 5.2.4 重构建议引擎
-**功能描述**：基于 pattern matching 和复杂度分析，提供重构建议
-
-**实现方案**：
-```python
-class RefactoringSuggester:
-    def suggest_refactorings(self, csf: dict) -> list:
-        """生成重构建议"""
-        suggestions = []
-        
-        for node_id, node in csf['nodes'].items():
-            if node['kind'] == 'function':
-                complexity = self.complexity_analyzer.compute_complexity(node, csf)
-                
-                if complexity['cyclomatic'] > 10:
-                    suggestions.append({
-                        'node_id': node_id,
-                        'type': 'extract_method',
-                        'reason': f'High cyclomatic complexity ({complexity["cyclomatic"]})',
-                        'confidence': 0.8
-                    })
-                
-                if complexity['nesting_depth'] > 4:
-                    suggestions.append({
-                        'node_id': node_id,
-                        'type': 'reduce_nesting',
-                        'reason': f'Deep nesting ({complexity["nesting_depth"]})',
-                        'confidence': 0.7
-                    })
-        
-        return suggestions
-```
-
-**优势**：
-- 自动识别重构机会
-- 提升代码质量
-- 减少技术债务
-
-**技术成熟度**：中等
-
-### 5.3 实施优先级
-
-**高优先级**（立即实施）：
-1. CodeLens 集成
-2. 复杂度可视化
-
-**中优先级**（3-6 个月）：
-3. 跨文件依赖分析
-4. 重构建议引擎
-
-**低优先级**（6-12 个月）：
-5. 时间旅行调试
-6. 协作标注
-
----
-
-## 总结
-
-### 优先级排序
-
-1. **高优先级**：
-   - WS Budget 控制
-   - Projection Mode 切换
-   - Focus Lock 机制
+# Architecture Design and Questions
+
+## New Vision Summary
+- Desugar code, make state explicit
+- Break classes into functions, decompose inheritance
+- Map inheritance tree to virtual files, edit virtual files
+- Images as virtual files
+- AI confidence/complexity visualization (green=good, red=bad)
+- Support function duplication, typeflow analysis, state visualization
+- Test-driven workspace (auto-write tests via data flow, state)
+- Local APP interface (NOT web)
+- Code writing: flowchart → skeleton, estimate complexity/reliability/readability via dataflow/stateflow
+- Cognitive matrix can be ignored for now
+
+## Code to Remove/Simplify
+
+### Remove Entirely:
+1. **Web UI Components**
+   - `project/web/` directory (Flask app, routes, services)
+   - All HTTP endpoints
+   - Browser-based interface
+
+2. **Cognitive Matrix Components** (can be ignored for now)
+   - `project/core/recognition/` (RPCM, R0-R3 states)
+   - `project/core/projection/` (scheduler, projection runtime)
+   - `project/web/services/ws_budget.py`
+   - `project/web/services/focus_lock.py`
+   - `project/web/services/progressive_reveal.py`
+   - `project/web/services/projection_mode.py`
+   - `project/web/services/thrash_detector.py`
+
+3. **Projection Runtime Features**
+   - WS Budget control
+   - Focus Lock mechanism
    - Progressive Reveal
-   - CodeLens 集成
-   - 复杂度可视化
-
-2. **中优先级**：
+   - Projection Mode switching
    - Thrash Detection
-   - Adaptive Projection 调度器框架
-   - 跨文件依赖分析
-   - 重构建议引擎
 
-3. **低优先级**：
-   - 时间旅行调试
-   - 协作标注
-
-### 实施建议
-
-1. **短期（1-2 个月）**：
-   - 实现 WS Budget 控制
-   - 实现 Focus Lock 机制
-   - 实现 Progressive Reveal
-   - 实现 CodeLens 集成
-   - 实现复杂度可视化
-
-2. **中期（3-6 个月）**：
-   - 实现 Projection Mode 切换
-   - 实现基础调度器框架
-   - 集成各子模块
-   - 实现跨文件依赖分析
-   - 实现重构建议引擎
-
-3. **长期（6-12 个月）**：
-   - 实现 Thrash Detection
-   - 完善自适应投影
-   - 优化调度算法
-   - 实现时间旅行调试
-   - 实现协作标注
-
-### 核心价值
-
-从 "structure-aware analyzer" 转换为 "working-set-aware projection runtime"：
-
-- **当前**：分析代码是什么
-- **目标**：决定现在不该给用户看什么
-
-Cognitive Matrix 的真正价值：
-- 不是解释复杂度
-- 而是实时调度认知可见性
-
----
-
-## 提案五：代码重构与模块化
-
-### 5.1 问题背景
-
-当前代码库中存在超过三个函数的长文件，需要按照功能拆分成多个文件以提高可维护性。
-
-### 5.2 已完成的模块化工作
-
-#### 5.2.1 CLI 模块化
-
-**原文件**：`project/cli.py` (4 functions)
-- `print_tree` - 打印 CSF 树
-- `print_heatmap` - 打印约束热力图
-- `print_generated_code` - 打印生成的代码
-- `main` - CLI 入口
-
-**拆分后**：
-- `project/cli/tree_printer.py` - 树打印功能
-- `project/cli/heatmap_printer.py` - 热力图打印功能
-- `project/cli/code_printer.py` - 代码打印功能
-- `project/cli.py` - 主入口，导入上述模块
-
-#### 5.2.2 Dependency 模块化
-
-**原文件**：`project/core/expansion/dependency.py` (4 functions)
-- `expand_dependencies` - 扩展依赖链
-- `_build_dependency_graph` - 构建依赖图
-- `_calculate_dependency_span` - 计算依赖跨度
-- `_inline_dependency` - 内联依赖
-
-**拆分后**：
-- `project/core/expansion/dependency_graph.py` - 图构建和跨度计算
-- `project/core/expansion/dependency_inliner.py` - 内联逻辑
-- `project/core/expansion/dependency.py` - 主函数，导入上述模块
-
-### 5.3 业界参考方案
-
-#### 5.3.1 VS Code 模块化实践
-
-VS Code 采用分层架构：
-- `src/vs/base/` - 基础层
-- `src/vs/platform/` - 平台层
-- `src/vs/workbench/` - 工作台层
-- `src/vs/editor/` - 编辑器层
-
-每个层级按功能进一步细分：
-- `services/` - 服务层
-- `common/` - 通用组件
-- `browser/` - 浏览器相关
-
-#### 5.3.2 PyTorch 模块化实践
-
-PyTorch 采用功能模块化：
-- `torch/nn/` - 神经网络模块
-- `torch/optim/` - 优化器模块
-- `torch/utils/` - 工具模块
-- `torch/distributed/` - 分布式模块
-
-每个模块内部按具体功能细分：
-- `functional/` - 函数式 API
-- `modules/` - 模块化组件
-- `loss/` - 损失函数
-
-#### 5.3.3 推荐的模块化原则
-
-1. **单一职责原则**：每个模块只负责一个功能
-2. **依赖倒置原则**：高层模块不依赖低层模块
-3. **接口隔离原则**：模块间通过接口通信
-4. **开闭原则**：对扩展开放，对修改关闭
-
-### 5.4 实用的功能建议
-
-#### 5.4.1 代码导航功能
-
-参考业界 IDE 实现：
-- **Go to Definition**：跳转到定义
-- **Find References**：查找引用
-- **Call Hierarchy**：调用层级
-- **Type Hierarchy**：类型层级
-
-#### 5.4.2 代码重构功能
-
-参考 JetBrains IDE 实现：
-- **Extract Method**：提取方法
-- **Inline Method**：内联方法
-- **Rename**：重命名
-- **Move**：移动代码
-
-#### 5.4.3 代码分析功能
-
-参考 SonarQube 实现：
-- **Code Smell Detection**：代码异味检测
-- **Complexity Analysis**：复杂度分析
-- **Duplicate Detection**：重复代码检测
-- **Security Issues**：安全问题检测
-
-### 5.5 Pattern 类型扩展
-
-#### 5.5.1 当前 Pattern 类型
-
-当前系统已实现的 Pattern：
-- `pipeline` - 流水线模式
-- `branch` - 分支模式
-- `fetch_transform_cache` - 获取-转换-缓存模式
-- `validation_chain` - 验证链模式
-- `event_handler` - 事件处理模式
-
-#### 5.5.2 建议新增 Pattern 类型
-
-1. **Singleton Pattern（单例模式）**
-   - 识别：类中只有一个实例
-   - 规则：类有私有构造函数，有静态获取实例方法
-
-2. **Factory Pattern（工厂模式）**
-   - 识别：创建对象的工厂类
-   - 规则：有创建方法，返回不同类型的对象
-
-3. **Observer Pattern（观察者模式）**
-   - 识别：事件订阅和通知机制
-   - 规则：有订阅方法，有通知方法
-
-4. **Strategy Pattern（策略模式）**
-   - 识别：可互换的算法族
-   - 规则：有策略接口，有多个实现
-
-5. **Decorator Pattern（装饰器模式）**
-   - 识别：动态添加功能
-   - 规则：有装饰器函数或类
-
-6. **Repository Pattern（仓储模式）**
-   - 识别：数据访问抽象层
-   - 规则：有 CRUD 操作，有数据映射
-
-7. **Service Layer Pattern（服务层模式）**
-   - 识别：业务逻辑层
-   - 规则：有业务方法，不直接操作数据库
-
-8. **Command Pattern（命令模式）**
-   - 识别：命令封装
-   - 规则：有执行方法，有撤销方法
-
-### 5.6 实施建议
-
-#### 5.6.1 短期（1-2 周）
-
-1. 完成剩余文件的模块化
-2. 添加基础 Pattern 类型
-3. 实现代码导航功能
-
-#### 5.6.2 中期（1-2 个月）
-
-1. 实现代码重构功能
-2. 添加高级 Pattern 类型
-3. 实现代码分析功能
-
-#### 5.6.3 长期（3-6 个月）
-
-1. 完善 Pattern 匹配算法
-2. 优化模块化架构
-3. 集成到 Projection Runtime
-
-### 5.7 额外实用功能建议
-
-#### 5.7.1 AI 辅助功能
-
-参考 GitHub Copilot、Cursor、Replit AI 实现：
-- **AI Code Completion**：基于 CSF 上下文的智能代码补全
-- **AI Refactoring Suggestions**：AI 驱动的重构建议
-- **AI Documentation Generation**：自动生成代码文档
-- **AI Test Generation**：基于代码结构自动生成测试用例
-- **AI Code Review**：AI 代码审查助手
-
-#### 5.7.2 性能分析功能
-
-参考 Py-Spy、cProfile、Blackfire 实现：
-- **Performance Profiling**：性能瓶颈识别
-- **Memory Leak Detection**：内存泄漏检测
-- **CPU Usage Analysis**：CPU 使用分析
-- **I/O Operation Tracking**：I/O 操作追踪
-- **Database Query Optimization**：数据库查询优化建议
-- **N+1 Query Detection**：N+1 查询检测
-- **Slow Query Identification**：慢查询识别
-
-#### 5.7.3 安全分析功能
-
-参考 Bandit、Safety、Snyk 实现：
-- **Security Vulnerability Scanning**：安全漏洞扫描
-- **Secret Detection**：密钥和敏感信息检测（密码、API keys）
-- **Dependency Vulnerability Scanning**：依赖漏洞扫描
-- **SQL Injection Detection**：SQL 注入检测
-- **XSS Vulnerability Detection**：XSS 漏洞检测
-- **Authentication Pattern Analysis**：认证模式分析
-- **Authorization Pattern Analysis**：授权模式分析
-
-#### 5.7.4 测试辅助功能
-
-参考 pytest、Coverage.py、Hypothesis 实现：
-- **Test Coverage Visualization**：测试覆盖率可视化
-- **Test Generation Suggestions**：测试生成建议
-- **Mock/Stub Generation**：Mock/Stub 自动生成
-- **Property-Based Testing**：基于属性的测试建议
-- **Integration Test Suggestions**：集成测试建议
-- **Edge Case Detection**：边界情况检测
-
-#### 5.7.5 文档生成功能
-
-参考 Sphinx、MkDocs、Swagger/OpenAPI 实现：
-- **API Documentation Generation**：API 文档自动生成
-- **OpenAPI/Swagger Integration**：OpenAPI/Swagger 集成
-- **GraphQL Schema Analysis**：GraphQL Schema 分析
-- **REST API Documentation**：REST API 文档生成
-- **Database Schema Documentation**：数据库 Schema 文档
-- **Architecture Diagram Generation**：架构图自动生成
-
-#### 5.7.6 DevOps 集成功能
-
-参考 GitHub Actions、GitLab CI、Jenkins 实现：
-- **CI/CD Pipeline Integration**：CI/CD 流水线集成
-- **Docker Configuration Analysis**：Docker 配置分析
-- **Kubernetes Configuration Analysis**：Kubernetes 配置分析
-- **Infrastructure as Code Validation**：基础设施即代码验证
-- **Health Check Suggestions**：健康检查端点建议
-- **Graceful Shutdown Patterns**：优雅关闭模式检测
-
-#### 5.7.7 微服务架构分析
-
-参考 Istio、Service Mesh、Microservices Patterns 实现：
-- **Service Dependency Graph**：服务依赖图
-- **API Gateway Pattern Detection**：API 网关模式检测
-- **CQRS Pattern Detection**：CQRS 模式检测
-- **Event Sourcing Pattern Detection**：事件溯源模式检测
-- **Saga Pattern Detection**：Saga 模式检测
-- **Circuit Breaker Pattern Detection**：断路器模式检测
-- **Rate Limiting Pattern Detection**：限流模式检测
-- **Bulkhead Pattern Detection**：舱壁模式检测
-
-#### 5.7.8 并发与异步分析
-
-参考 asyncio、concurrent.futures 实现：
-- **Concurrency Pattern Detection**：并发模式检测
-- **Backpressure Handling Suggestions**：背压处理建议
-
-#### 5.7.9 代码质量保证
-
-参考 SonarQube、CodeClimate、DeepSource 实现：
-- **Code Smell Detection**：代码异味检测
-- **Complexity Metrics**：复杂度指标（圈复杂度、认知复杂度）
-
-#### 5.7.10 协作功能
-
-参考 GitHub、GitLab、VS Code Live Share 实现：
-- **Real-time Collaboration**：实时协作编辑
-- **Code Review Automation**：代码审查自动化
-- **Pull Request Analysis**：Pull Request 分析
-- **Merge Conflict Resolution Suggestions**：合并冲突解决建议
-- **Team Code Style Enforcement**：团队代码风格强制执行
-- **Knowledge Sharing**：知识共享和文档
-
-#### 5.7.11 可观测性集成
-
-参考 Prometheus、Grafana、Jaeger、OpenTelemetry 实现：
-- **Distributed Tracing Integration**：分布式追踪集成
-- **Metrics Collection Suggestions**：指标收集建议
-- **Logging Analysis**：日志分析
-- **Error Tracking Integration**：错误追踪集成（Sentry）
-- **Performance Monitoring**：性能监控
-- **Health Check Endpoints**：健康检查端点
-
-#### 5.7.12 配置管理分析
-
-参考 Ansible、Terraform、Consul 实现：
-- **Configuration Management Analysis**：配置管理分析
-- **Environment Variable Tracking**：环境变量追踪
-- **Secret Management**：密钥管理建议
-- **Configuration Drift Detection**：配置漂移检测
-- **Feature Flag Analysis**：功能开关分析
-
-### 5.8 总结
-
-模块化是提升代码可维护性的关键步骤。通过参考业界最佳实践，我们可以构建更加清晰、可扩展的代码架构。Pattern 类型的扩展将增强系统的代码识别能力，为用户提供更强大的代码分析和重构工具。
-
-额外的实用功能建议涵盖了 AI 辅助、性能分析、安全分析、测试辅助、文档生成、DevOps 集成、微服务架构分析、并发分析、代码质量保证、协作功能、可观测性集成和配置管理等多个领域。这些功能参考了业界领先的工具和框架，可以为用户提供全面的代码分析和开发辅助能力。
+### Keep and Enhance:
+1. **Core CSF**
+   - `project/core/csf/schema.py` - CSF data structure
+   - `project/core/sync/parser.py` - Code → CSF parsing
+   - `project/core/sync/writer.py` - CSF → Code writing
+
+2. **Expansion Engine**
+   - `project/core/expansion/inheritance.py` - Inheritance expansion
+   - `project/core/expansion/dependency.py` - Dependency expansion
+   - `project/core/expansion/nesting.py` - Nesting flatten
+   - `project/core/expansion/mutation.py` - Mutation annotation
+
+3. **Pattern Matching**
+   - `project/core/pattern/` - Structural pattern matching
+
+4. **Template System**
+   - `project/core/template/` - Code generation templates
+
+5. **Code Analysis** (simplify)
+   - Keep complexity analysis
+   - Keep dependency analysis
+   - Remove projection-specific features
+
+## New Architecture to Implement
+
+### 1. Desugaring Module
+```
+project/core/desugar/
+├── desugar.py          - Main desugaring logic
+├── class_to_func.py    - Class to function decomposition
+├── inheritance_decompose.py  - Inheritance decomposition
+└── state_explicit.py   - Make state explicit
+```
+
+### 2. Virtual File System
+```
+project/core/vfs/
+├── virtual_fs.py       - Virtual file system manager
+├── inheritance_mapper.py  - Inheritance tree to virtual file mapping
+├── image_virtual.py    - Image as virtual file
+└── editor.py           - Virtual file editor
+```
+
+### 3. Complexity Visualization
+```
+project/core/complexity/
+├── complexity_estimator.py  - Complexity estimation
+├── confidence_scorer.py     - AI confidence scoring
+├── color_mapper.py         - Green/red color mapping
+└── visualizer.py           - Visualization renderer
+```
+
+### 4. Typeflow & Stateflow Analysis
+```
+project/core/flow/
+├── typeflow.py         - Typeflow analysis
+├── stateflow.py        - Stateflow analysis
+├── dataflow.py         - Dataflow analysis
+└── state_visualizer.py - State visualization
+```
+
+### 5. Test Generation
+```
+project/core/testing/
+├── test_generator.py   - Auto test generation from dataflow/state
+├── test_runner.py     - Test execution
+└── coverage_analyzer.py - Coverage analysis
+```
+
+### 6. Local App Interface
+```
+project/app/
+├── main.py            - Local app entry point
+├── ui/
+│   ├── main_window.py - Main window
+│   ├── code_view.py   - Code view with complexity colors
+│   ├── flow_view.py   - Flowchart view
+│   └── test_view.py   - Test-driven workspace
+├── controllers/
+│   ├── code_controller.py  - Code editing controller
+│   ├── flow_controller.py  - Flowchart controller
+│   └── test_controller.py  - Test controller
+└── models/
+    ├── code_model.py  - Code data model
+    └── vfs_model.py   - Virtual file system model
+```
+
+## Questions for User
+
+### Architecture Questions:
+1. **Local App Framework**: Which framework should we use for the local app?
+   - Options: PyQt6, PySide6, Tkinter, Dear PyGui, Custom TUI
+   - Recommendation: PyQt6 or Dear PyGui for modern UI
+
+2. **Virtual File Format**: What format should virtual files use?
+   - Options: JSON, YAML, Custom binary format, In-memory only
+   - Need to decide persistence strategy
+
+3. **Desugaring Strategy**: How aggressive should desugaring be?
+   - Should we preserve original code structure?
+   - Should desugared code be editable?
+   - How to handle language-specific features?
+
+4. **Complexity Metrics**: Which complexity metrics to use?
+   - Cyclomatic complexity
+   - Cognitive complexity
+   - Semantic complexity
+   - AI confidence score
+   - Custom metrics?
+
+5. **Test Generation Strategy**: How to generate tests from dataflow/state?
+   - Property-based testing (Hypothesis)
+   - Unit test generation
+   - Integration test generation
+   - Edge case detection
+
+6. **Flowchart to Skeleton**: How to map flowchart to code skeleton?
+   - Should flowchart be visual only or editable?
+   - How to handle branching logic?
+   - How to handle loops?
+
+### Implementation Questions:
+7. **Incremental Migration**: Should we remove web UI first or build new features in parallel?
+   - Option A: Remove web UI, then build new features
+   - Option B: Build new features alongside, then remove web UI
+
+8. **Backward Compatibility**: Do we need to keep any web UI features?
+   - API endpoints for external tools?
+   - Command-line interface?
+
+9. **Data Storage**: Where to store virtual files and state?
+   - Local filesystem
+   - In-memory database (SQLite)
+   - No persistence (runtime only)
+
+10. **AI Integration**: How will AI be integrated for code writing?
+    - Local LLM (Ollama, etc.)
+    - Cloud API (OpenAI, etc.)
+    - Hybrid approach
+
+## Recommended Implementation Order
+
+### Phase 1: Cleanup (Week 1)
+1. Remove web UI components
+2. Remove cognitive matrix components
+3. Simplify code analysis modules
+4. Update manual.txt
+
+### Phase 2: Core New Features (Week 2-3)
+1. Implement desugaring module
+2. Implement virtual file system
+3. Implement complexity visualization
+4. Implement typeflow/stateflow analysis
+
+### Phase 3: Test Generation (Week 4)
+1. Implement test generation from dataflow/state
+2. Implement test runner
+3. Implement coverage analysis
+
+### Phase 4: Local App (Week 5-6)
+1. Choose UI framework
+2. Implement main window
+3. Implement code view with complexity colors
+4. Implement flowchart view
+5. Implement test-driven workspace
+
+### Phase 5: Integration (Week 7-8)
+1. Integrate all components
+2. Implement flowchart to skeleton mapping
+3. Implement AI integration
+4. Testing and refinement

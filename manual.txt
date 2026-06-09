@@ -2,7 +2,18 @@
 
 ## 概述
 
-CSF (Canonical Structural Form) Expansion Engine 是一个用于分析和展开 Python 代码隐式结构的工具。它将代码的隐式结构关系显式化，提供结构化视图，并支持 Working Set 感知的投影运行时。
+CSF (Canonical Structural Form) Expansion Engine 是一个用于分析和展开 Python 代码隐式结构的工具。它将代码的隐式结构关系显式化，提供结构化视图。
+
+**新愿景**：
+- Desugar 代码
+-使 state 显式化
+- 将 class 拆解为函数，函数拆解继承
+- 继承树映射到虚拟文件，编辑虚拟文件
+- 图像作为虚拟文件
+- AI 置信度/复杂度可视化（绿色=好，红色=差）
+- 支持函数重复、typeflow 分析、state 可视化
+- 通过 data flow、state 自动生成测试
+- 本地 APP 界面（非网页）
 
 ## 环境要求
 
@@ -23,7 +34,6 @@ CSF (Canonical Structural Form) Expansion Engine 是一个用于分析和展开 
 - libcst>=1.1.0 - 结构化代码写回，保留格式/注释
 - pydeps>=1.12.0 - 跨文件 module 依赖图
 - pytest>=7.0.0 - 测试框架
-- flask>=2.0.0 - Web UI 后端
 
 ## 目录结构
 
@@ -36,86 +46,21 @@ project/
 │   ├── csf/                 # Canonical Structural Form
 │   │   └── schema.py        # CSF 数据结构定义
 │   ├── expansion/           # Structural Expansion Engine
-│   │   ├── inheritance.py   # 继承关系展开
-│   │   ├── inheritance_methods.py  # 继承方法提取
-│   │   ├── inheritance_placeholder.py  # 继承占位符
+│   │   ├── inheritance/     # 继承关系展开
 │   │   ├── dependency.py    # 依赖链展开
 │   │   ├── dependency_graph.py  # 依赖图构建
 │   │   ├── dependency_inliner.py  # 依赖内联
 │   │   ├── nesting.py      # Nesting flatten
 │   │   ├── nesting_depth.py  # 嵌套深度计算
 │   │   ├── nesting_guard.py  # Guard 链识别
+│   │   ├── inheritance_methods.py  # 继承方法提取
+│   │   ├── inheritance_placeholder.py  # 继承占位符
 │   │   └── mutation.py     # Mutation 传播标注
-│   ├── sync/                # CSF ↔ Code 同步
-│   │   ├── parser.py        # Code → CSF
-│   │   ├── visitor.py       # AST 访问器
-│   │   ├── incremental.py   # 增量更新
-│   │   └── writer.py        # CSF patch → Code
-│   ├── projection/          # Recognition Projection
-│   │   ├── scheduler.py     # 决定什么展开什么折叠
-│   │   └── scheduler_helpers.py  # 调度器辅助函数
-│   ├── pattern/             # Structural Pattern Matching
-│   │   ├── patterns.py      # 内置 pattern 定义
-│   │   ├── matcher.py       # 确定性匹配
-│   │   └── matchers/        # 单个 pattern 匹配器
-│   │       ├── pipeline_matcher.py
-│   │       ├── branch_matcher.py
-│   │       ├── fetch_transform_cache_matcher.py
-│   │       ├── validation_chain_matcher.py
-│   │       └── event_handler_matcher.py
-│   ├── recognition/         # Recognition Matrix
-│   │   ├── rpcm.py         # Working Set 状态计算
-│   │   ├── r0_state.py     # R0 Structural WS
-│   │   ├── r1_state.py     # R1 Execution WS
-│   │   ├── r2_state.py     # R2 Causal WS
-│   │   └── r3_state.py     # R3 System WS
-│   └── template/           # 模板系统
-│       ├── registry.py      # 模板注册
-│       └── generator.py     # 代码生成
-├── navigation/             # 代码导航模块
-│   └── navigator.py        # 导航功能（跳转定义、查找引用等）
-├── refactoring/            # 代码重构模块
-│   └── extractor.py       # 重构功能（提取方法、内联方法等）
-├── code_analysis/          # 代码分析模块
-│   ├── codelens/           # CodeLens 集成
-│   │   └── codelens_provider.py  # CodeLens 注解生成
-│   ├── complexity/         # 复杂度分析
-│   │   └── complexity_analyzer.py  # 复杂度分析器
-│   ├── smell_detector.py   # 代码异味检测
-│   └── security/           # 安全分析
-│       ├── secrets.py      # 密钥检测
-│       └── dependencies.py # 依赖漏洞扫描
-│   └── dependency/         # 依赖分析
-│       └── cross_file.py  # 跨文件依赖分析
-│   └── testing/            # 测试分析
-│       └── coverage.py    # 测试覆盖率可视化
-│   └── documentation/      # 文档生成
-│       └── api_generator.py # API 文档生成
-├── web/                    # Web UI
-│   ├── app.py              # Flask 应用
-│   ├── routes/             # API 路由
-│   │   ├── csf_routes.py   # CSF 核心操作路由
-│   │   ├── template_routes.py  # 模板操作路由
-│   │   ├── template_routes_helpers.py  # 模板路由辅助函数
-│   │   ├── analysis_routes.py  # 分析操作路由
-│   │   ├── projection_routes.py  # 投影操作路由
-│   │   └── code_analysis_routes.py  # 代码分析路由
-│   └── services/           # Web 服务
-│       ├── ws_budget.py    # WS 预算控制
-│       ├── ws_budget_chain.py  # 执行链分析
-│       ├── ws_budget_propagation.py  # 传播深度分析
-│       ├── focus_lock.py   # Focus 锁定
-│       ├── focus_lock_helpers.py  # Focus 锁定辅助函数
-│       ├── progressive_reveal.py  # 渐进式揭示
-│       ├── projection_mode.py     # 投影模式切换
-│       ├── mermaid_generator.py   # Mermaid 图表生成
-│       ├── mermaid_structure.py  # 结构图生成
-│       ├── mermaid_dataflow.py    # 数据流图生成
-│       ├── mermaid_stateflow.py   # 状态流图生成
-│       ├── mermaid_eventflow.py   # 事件流图生成
-│       ├── mermaid_complexity.py  # Mermaid 复杂度分析
-│       ├── human_output.py        # 人类可读输出
-│       └── node_analysis.py       # 节点分析
+│   └── sync/                # CSF ↔ Code 同步
+│       ├── parser.py        # Code → CSF
+│       ├── visitor.py       # AST 访问器
+│       ├── incremental.py   # 增量更新
+│       └── writer.py        # CSF patch → Code
 ├── cli/                    # CLI 模块
 │   ├── tree_printer.py     # 树形打印
 │   ├── heatmap_printer.py  # 热力图打印
@@ -141,22 +86,6 @@ project/
 .venv\Scripts\python.exe project/cli.py expand project/examples/frontend_sample.py
 .venv\Scripts\python.exe project/cli.py expand project/examples/frontend_sample.py --show-mutations
 .venv\Scripts\python.exe project/cli.py expand project/examples/frontend_sample.py --show-inherited
-```
-
-### 2. heatmap - 显示模板约束热力图
-
-```bash
-.venv\Scripts\python.exe project/cli.py heatmap <source_path> --template <template_id>
-```
-
-可用模板：
-- `pipeline_template` - Pipeline 模板
-- `fetch_transform_cache_template` - Fetch-Transform-Cache 模板
-
-### 3. generate - 从模板生成代码
-
-```bash
-.venv\Scripts\python.exe project/cli.py generate <source_path> --template <template_id>
 ```
 
 ## Python API 使用
@@ -252,629 +181,6 @@ print(result['patch'])     # unified diff
 result = add_early_return(csf, 'block_node_id', 'path/to/file.py')
 ```
 
-### Working Set 状态计算
-
-```python
-from core.recognition.rpcm import compute_ws_state, WS_THRESHOLDS
-
-csf = expand('path/to/file.py')
-ws = compute_ws_state(csf)
-
-print(f"R0: {ws['R0']['ws_op']}")
-print(f"R1: {ws['R1']['ws_op']}")
-print(f"R2: {ws['R2']['ws_op']}")
-print(f"R3: {ws['R3']['ws_op']}")
-print(f"Thrash risk: {ws['thrash_risk']}")
-
-# 调整阈值
-WS_THRESHOLDS["R0_nesting_depth"]["compress"] = 4
-```
-
-### 投影调度
-
-```python
-from core.projection.scheduler import schedule
-from core.projection.scheduler_helpers import calculate_nesting_depth, calculate_dependency_span
-
-csf = expand('path/to/file.py')
-csf_scheduled = schedule(csf)
-
-# 辅助函数
-depth = calculate_nesting_depth(node, nodes)
-span = calculate_dependency_span(node, nodes, set())
-```
-
-### 模式匹配
-
-```python
-from core.pattern.matcher import match_patterns, match_pattern
-from core.pattern.patterns import BUILTIN_PATTERNS
-
-csf = expand('path/to/file.py')
-matches = match_patterns(csf)
-
-for match in matches:
-    print(f"Pattern: {match['pattern_id']}")
-    print(f"Node: {match['node_id']}")
-    print(f"Confidence: {match['confidence']}")
-    print(f"Evidence: {match['evidence']}")
-
-# 单个 pattern 匹配
-node = csf['nodes']['some_node_id']
-pattern = BUILTIN_PATTERNS[0]
-result = match_pattern(node, pattern, csf['nodes'])
-```
-
-### 模板操作
-
-```python
-from core.template.registry import check_constraints, TEMPLATE_REGISTRY
-from core.template.generator import generate
-
-# 检查约束
-result = check_constraints('pipeline_template', csf)
-print(f"Satisfied: {result['satisfied']}")
-print(f"Missing: {result['missing']}")
-print(f"Heatmap: {result['heatmap']}")
-print(f"Ready: {result['ready']}")
-
-# 获取可用模板
-for template in TEMPLATE_REGISTRY:
-    print(f"{template['id']}: {template['name']}")
-
-# 生成代码
-result = generate('pipeline_template', csf, params={'name': 'my_pipeline'})
-if result['ok']:
-    print(result['code'])
-    print(f"LLM needed: {result['llm_needed']}")
-```
-
-### Web 服务
-
-```python
-from web.services.ws_budget import check_ws_budget
-from web.services.focus_lock import lock_focus
-from web.services.focus_lock_helpers import compute_related_nodes
-from web.services.ws_budget_chain import compute_max_execution_chain, compute_chain_length
-from web.services.ws_budget_propagation import compute_max_propagation_depth, compute_propagation_depth
-from web.services.human_output import generate_human_output
-from web.services.mermaid_generator import generate_mermaid_diagram
-
-# WS 预算检查
-result = check_ws_budget(csf)
-print(f"Has violations: {result['has_violations']}")
-print(f"Severity: {result['severity']}")
-
-# Focus 锁定
-result = lock_focus(csf, 'node_id')
-print(f"Related count: {result['related_count']}")
-print(f"Frozen count: {result['frozen_count']}")
-
-# 计算相关节点
-related = compute_related_nodes(csf, 'focus_node_id')
-
-# 执行链分析
-chain_length = compute_max_execution_chain(csf)
-depth = compute_chain_length(csf, 'node_id', set())
-
-# 传播深度分析
-prop_depth = compute_max_propagation_depth(csf)
-depth = compute_propagation_depth(csf, 'node_id', set())
-
-# 人类可读输出
-output = generate_human_output(csf)
-print(output)
-
-# Mermaid 图表
-mermaid_code = generate_mermaid_diagram(csf, diagram_type='structure')
-```
-
-### 代码分析
-
-```python
-from code_analysis.codelens.codelens_provider import generate_codelens_annotations
-from code_analysis.complexity.complexity_analyzer import analyze_complexity, generate_complexity_heatmap
-
-# CodeLens 注解
-annotations = generate_codelens_annotations(csf)
-for annotation in annotations:
-    print(f"{annotation['label']} at line {annotation['position']}")
-
-# 复杂度分析
-complexity_data = analyze_complexity(csf)
-for node_id, metrics in complexity_data.items():
-    print(f"Node {node_id}:")
-    print(f"  Cyclomatic: {metrics['cyclomatic_complexity']}")
-    print(f"  Cognitive: {metrics['cognitive_complexity']}")
-    print(f"  Nesting: {metrics['nesting_depth']}")
-    print(f"  Maintainability: {metrics['maintainability_index']}")
-
-# 复杂度热力图
-heatmap = generate_complexity_heatmap(csf)
-for item in heatmap:
-    print(f"{item['label']}: {item['color']} (complexity: {item['cyclomatic_complexity']})")
-
-# 代码异味检测
-from code_analysis.smell_detector import detect_code_smells, generate_smell_report
-smells = detect_code_smells(csf)
-print(generate_smell_report(smells))
-
-# 密钥检测
-from code_analysis.security.secrets import detect_secrets, generate_secret_report
-secrets = detect_secrets(csf)
-print(generate_secret_report(secrets))
-
-# 依赖漏洞扫描
-from code_analysis.security.dependencies import scan_dependencies, generate_dependency_report
-vulnerabilities = scan_dependencies()
-print(generate_dependency_report(vulnerabilities))
-
-# 自适应投影调度
-from core.projection.adaptive_scheduler import create_scheduler
-scheduler = create_scheduler()
-scheduler.record_user_action('expand', {'node_id': 'node1'})
-result = scheduler.apply_projection(csf)
-print(f"Mode: {result['mode']}, Goal: {result['user_goal']}")
-
-# 代码导航
-from core.navigation.navigator import go_to_definition, find_references, get_call_hierarchy, get_type_hierarchy
-definition = go_to_definition(csf, 'node1', 'my_function')
-references = find_references(csf, 'node1')
-hierarchy = get_call_hierarchy(csf, 'node1')
-type_hierarchy = get_type_hierarchy(csf, 'node1')
-
-# 代码重构
-from core.refactoring.extractor import extract_method, inline_method, rename_node, suggest_refactoring
-result = extract_method(csf, ['node1', 'node2'], 'new_method', 'source.py')
-result = inline_method(csf, 'node1', 'source.py')
-result = rename_node(csf, 'node1', 'new_name', 'source.py')
-suggestions = suggest_refactoring(csf)
-
-# 跨文件依赖分析
-from code_analysis.dependency.cross_file import analyze_cross_file_dependencies, detect_circular_dependencies
-analysis = analyze_cross_file_dependencies(csfs)
-print(f"Circular dependencies: {analysis['metrics']['circular_dependencies']}")
-
-# 测试覆盖率可视化
-from code_analysis.testing.coverage import visualize_coverage, generate_coverage_report
-coverage_map = visualize_coverage(csf, coverage_data)
-report = generate_coverage_report(coverage_map)
-
-# API 文档生成
-from code_analysis.documentation.api_generator import generate_api_docs, generate_markdown_docs
-api_docs = generate_api_docs(csf)
-markdown = generate_markdown_docs(api_docs)
-```
-
-## Web UI 服务
-
-### 启动 Web UI
-
-```bash
-.venv\Scripts\python.exe project/web/app.py
-```
-
-启动后访问: http://localhost:5000
-
-Web UI 提供以下 API 端点：
-
-#### CSF 核心操作
-- `POST /api/expand` - 展开源文件
-- `POST /api/ws_state` - 计算 Working Set 状态
-- `POST /api/schedule` - 调度投影
-- `POST /api/match_patterns` - 匹配结构模式
-
-#### 模板操作
-- `POST /api/check_constraints` - 检查模板约束
-- `POST /api/generate` - 从模板生成代码
-- `GET /api/templates` - 获取可用模板
-
-#### 分析操作
-- `POST /api/human_output` - 生成人类可读输出
-- `POST /api/mermaid_diagram` - 生成 Mermaid 图表
-- `POST /api/analyze_node` - 分析特定节点
-- `POST /api/search_nodes` - 搜索节点
-
-#### 投影操作
-- `POST /api/check_ws_budget` - 检查 WS 预算
-- `POST /api/lock_focus` - 锁定焦点
-- `POST /api/progressive_reveal` - 渐进式揭示
-- `POST /api/set_projection_mode` - 设置投影模式
-- `POST /api/detect_thrash` - 检测认知抖动
-
-#### 代码分析操作
-- `POST /api/codelens` - 生成 CodeLens 注解
-- `POST /api/complexity` - 分析代码复杂度
-- `POST /api/complexity_heatmap` - 生成复杂度热力图
-- `POST /api/code_smells` - 检测代码异味
-- `POST /api/secrets` - 检测硬编码密钥
-- `GET /api/dependency_vulnerabilities` - 扫描依赖漏洞
-
-#### 代码导航操作
-- `POST /api/go_to_definition` - 跳转到定义
-- `POST /api/find_references` - 查找引用
-- `POST /api/call_hierarchy` - 获取调用层次
-- `POST /api/type_hierarchy` - 获取类型层次
-
-#### 代码重构操作
-- `POST /api/extract_method` - 提取方法
-- `POST /api/inline_method` - 内联方法
-- `POST /api/rename_node` - 重命名节点
-- `POST /api/suggest_refactoring` - 重构建议
-
-#### 跨文件依赖分析
-- `POST /api/cross_file_dependencies` - 跨文件依赖分析
-
-#### 测试覆盖率分析
-- `POST /api/test_coverage` - 测试覆盖率可视化
-
-#### API 文档生成
-- `POST /api/generate_api_docs` - 生成 API 文档
-
-#### 时间旅行调试
-- `POST /api/time_travel_record` - 记录 CSF 快照
-- `POST /api/time_travel_compare` - 比较两个快照
-
-#### 协作标注
-- `POST /api/collaboration_add_annotation` - 添加标注
-- `POST /api/collaboration_get_annotations` - 获取节点标注
-
-#### 异步模式分析
-- `POST /api/async_analysis` - 分析 async/await 模式
-
-#### 线程安全分析
-- `POST /api/thread_safety_analysis` - 分析线程安全问题
-
-#### 资源泄漏检测
-- `POST /api/detect_resource_leaks` - 检测资源泄漏
-
-#### 死锁检测
-- `POST /api/detect_deadlocks` - 检测死锁
-
-#### 竞态条件检测
-- `POST /api/detect_race_conditions` - 检测竞态条件
-
-#### 死代码检测
-- `POST /api/detect_dead_code` - 检测未使用的代码
-
-#### 未使用导入检测
-- `POST /api/detect_unused_imports` - 检测未使用的导入
-
-#### 循环依赖检测
-- `POST /api/detect_circular_dependencies` - 检测循环依赖
-
-#### 代码重复检测
-- `POST /api/detect_code_duplication` - 检测代码重复
-
-#### 可维护性指数
-- `POST /api/calculate_maintainability` - 计算可维护性指数
-
-### 时间旅行调试
-
-记录代码变更历史，支持时间旅行查看。
-
-#### 功能
-- **记录快照**：记录 CSF 快照到历史记录
-- **获取快照**：获取指定时间点的快照
-- **比较快照**：比较两个时间点的差异
-
-#### 使用示例
-```python
-from code_analysis.debugging.time_travel import TimeTravelDebugger
-
-debugger = TimeTravelDebugger()
-debugger.record_change(csf, timestamp)
-snapshot = debugger.get_snapshot(timestamp)
-changes = debugger.compare_snapshots(t1, t2)
-```
-
-### 协作标注
-
-支持多人协作时在 CSF 中添加标注和评论。
-
-#### 功能
-- **添加标注**：为节点添加标注和评论
-- **获取标注**：获取节点的所有标注
-- **删除标注**：删除指定标注
-
-#### 使用示例
-```python
-from code_analysis.collaboration.annotations import CollaborationAnnotations
-
-annotations = CollaborationAnnotations()
-annotations.add_annotation(node_id, user, comment)
-node_annotations = annotations.get_annotations(node_id)
-```
-
-### 异步模式分析
-
-分析 async/await 模式，识别潜在问题。
-
-#### 功能
-- **识别异步函数**：识别所有 async 函数
-- **识别 await 调用**：识别所有 await 调用
-- **检测问题**：检测 async 函数没有 await 调用等问题
-- **建议改进**：提供改进建议
-
-#### 使用示例
-```python
-from code_analysis.async_analysis.async_patterns import analyze_async_patterns, suggest_async_improvements
-
-analysis = analyze_async_patterns(csf)
-suggestions = suggest_async_improvements(analysis)
-```
-
-### 线程安全分析
-
-分析线程安全问题，识别潜在的并发问题。
-
-#### 功能
-- **检测共享状态修改**：识别修改共享状态的代码
-- **检测非线程安全操作**：识别非线程安全的操作
-- **建议改进**：提供线程安全改进建议
-
-#### 使用示例
-```python
-from code_analysis.async_analysis.thread_safety import analyze_thread_safety, suggest_thread_safety_improvements
-
-analysis = analyze_thread_safety(csf)
-suggestions = suggest_thread_safety_improvements(analysis)
-```
-
-### 资源泄漏检测
-
-检测资源泄漏，识别未正确关闭的资源。
-
-#### 功能
-- **检测文件泄漏**：识别未正确关闭的文件
-- **检测数据库连接泄漏**：识别未正确关闭的数据库连接
-- **检测网络连接泄漏**：识别未正确关闭的网络连接
-- **建议修复**：提供修复建议
-
-#### 使用示例
-```python
-from code_analysis.async_analysis.resource_leak import detect_resource_leaks, suggest_resource_leak_fixes
-
-analysis = detect_resource_leaks(csf)
-suggestions = suggest_resource_leak_fixes(analysis)
-```
-
-### 死锁检测
-
-检测潜在的死锁情况，识别锁获取顺序问题。
-
-#### 功能
-- **检测锁获取模式**：识别函数中的锁获取模式
-- **检测循环等待条件**：识别可能导致循环等待的锁获取顺序
-- **建议预防**：提供死锁预防建议
-
-#### 使用示例
-```python
-from code_analysis.async_analysis.deadlock import detect_deadlocks, suggest_deadlock_prevention
-
-analysis = detect_deadlocks(csf)
-suggestions = suggest_deadlock_prevention(analysis)
-```
-
-### 竞态条件检测
-
-检测潜在的竞态条件，识别共享状态访问问题。
-
-#### 功能
-- **检测未同步的共享状态访问**：识别未同步的共享状态访问
-- **检测检查-执行模式**：识别可能导致竞态的检查-执行模式
-- **建议修复**：提供修复建议
-
-#### 使用示例
-```python
-from code_analysis.async_analysis.race_condition import detect_race_conditions, suggest_race_condition_fixes
-
-analysis = detect_race_conditions(csf)
-suggestions = suggest_race_condition_fixes(analysis)
-```
-
-### 死代码检测
-
-识别未使用的代码，建议删除以减少维护负担。
-
-#### 功能
-- **检测未使用函数**：识别从未被调用的函数
-- **检测未使用变量**：识别从未被使用的变量
-- **检测未使用导入**：识别从未被使用的导入
-- **建议删除**：提供删除建议
-
-#### 使用示例
-```python
-from code_analysis.quality.dead_code import detect_dead_code, suggest_dead_code_removal
-
-analysis = detect_dead_code(csf)
-suggestions = suggest_dead_code_removal(analysis)
-```
-
-### 未使用导入检测
-
-识别未使用的导入，建议删除以减少依赖。
-
-#### 功能
-- **检测未使用导入**：识别从未被使用的导入
-- **建议删除**：提供删除建议
-
-#### 使用示例
-```python
-from code_analysis.quality.unused_imports import detect_unused_imports, suggest_import_removal
-
-analysis = detect_unused_imports(csf)
-suggestions = suggest_import_removal(analysis)
-```
-
-### 循环依赖检测
-
-识别循环依赖，建议重构以避免循环引用。
-
-#### 功能
-- **检测循环依赖**：识别函数/模块之间的循环依赖
-- **显示依赖链**：显示完整的循环依赖链
-- **建议重构**：提供重构建议
-
-#### 使用示例
-```python
-from code_analysis.quality.circular_dependencies import detect_circular_dependencies, suggest_circular_dependency_resolution
-
-analysis = detect_circular_dependencies(csf)
-suggestions = suggest_circular_dependency_resolution(analysis)
-```
-
-### 代码重复检测
-
-识别重复的代码块，建议提取公共代码。
-
-#### 功能
-- **检测重复代码**：识别相似的代码块
-- **计算相似度**：计算代码块之间的相似度
-- **建议提取**：建议提取公共代码
-
-#### 使用示例
-```python
-from code_analysis.quality.code_duplication import detect_code_duplication, suggest_duplication_removal
-
-analysis = detect_code_duplication(csf)
-suggestions = suggest_duplication_removal(analysis)
-```
-
-### 可维护性指数
-
-计算代码的可维护性指数，评估代码的可维护性。
-
-#### 功能
-- **计算可维护性指数**：基于复杂度和代码行数计算可维护性指数
-- **评级**：提供 A/B/C/D 评级
-- **统计信息**：提供代码统计信息（总行数、函数数、类数、平均复杂度）
-- **建议改进**：提供改进建议
-
-#### 使用示例
-```python
-from code_analysis.quality.maintainability import calculate_maintainability_index, suggest_maintainability_improvements
-
-analysis = calculate_maintainability_index(csf)
-suggestions = suggest_maintainability_improvements(analysis)
-```
-
-### 投影服务功能
-
-#### WS Budget 控制
-控制 Working Set 大小，超过预算自动压缩：
-- MAX_R0: 最大结构节点数 (12)
-- MAX_R1_CHAIN: 最大执行链长度 (5)
-- MAX_R2_PROPAGATION: 最大传播深度 (4)
-
-#### Focus Lock 机制
-锁定焦点节点，冻结无关节点：
-- 计算相关节点（依赖链、被依赖链、兄弟节点）
-- 冻结无关节点以减少认知负载
-
-#### Progressive Reveal
-渐进式揭示 CSF 层：
-- 按层级逐步揭示节点
-- 每层最多显示 8 个节点
-
-#### Projection Mode 切换
-根据用户目标切换投影模式：
-- `execution` - 执行模式（显示执行链、事件传播）
-- `mutation` - 变异模式（仅显示变异相关节点）
-- `architecture` - 架构模式（仅显示类和方法）
-
-#### Mermaid 图表生成
-支持多种图表类型：
-- `structure` - 结构图
-- `dataflow` - 数据流图
-- `stateflow` - 状态流图
-- `eventflow` - 事件流图
-
-## 内置 Pattern
-
-系统支持 13 个内置结构模式：
-
-### 数据流模式
-
-1. **pipeline** - 流水线模式
-   - 线性变换链，A→B→C→D，无分支
-   - 每个函数的输出是下一个的输入
-   - 最少 2 个函数
-
-2. **branch** - 分支模式
-   - 条件分支执行路径
-   - 有分支结构
-   - 最少 2 个分支
-
-3. **fetch_transform_cache** - 获取-转换-缓存模式
-   - 外部获取 → 处理 → 本地存储
-   - 有外部调用依赖
-   - 有赋值（cache）
-   - 有转换步骤
-
-### 控制流模式
-
-4. **validation_chain** - 验证链模式
-   - 连续 guard clause，early return 形式
-   - 有 guard_chain=True 的块
-   - 最少 2 个 guard
-
-5. **event_handler** - 事件处理器模式
-   - 接收输入 → 验证 → 处理 → 响应
-   - 有分支结构
-   - 有变异
-   - 有返回语句
-
-### 设计模式
-
-6. **singleton** - 单例模式
-   - 类中只有一个实例
-   - 有私有构造函数
-   - 有静态实例方法
-   - 有实例变量
-
-7. **factory** - 工厂模式
-   - 创建对象的工厂类
-   - 有创建方法
-   - 返回不同类型
-   - 有工厂类
-
-8. **observer** - 观察者模式
-   - 事件订阅和通知机制
-   - 有订阅方法
-   - 有通知方法
-   - 有观察者列表
-
-9. **strategy** - 策略模式
-   - 可互换的算法族
-   - 有策略接口
-   - 有多个实现
-   - 有上下文类
-
-10. **decorator** - 装饰器模式
-    - 动态添加功能
-    - 有装饰器函数
-    - 有包装函数
-    - 保持接口不变
-
-11. **repository** - 仓储模式
-    - 数据访问抽象层
-    - 有 CRUD 方法
-    - 有数据映射
-    - 有抽象层
-
-12. **service_layer** - 服务层模式
-    - 业务逻辑层
-    - 有业务方法
-    - 无直接数据库访问
-    - 有服务类
-
-13. **command** - 命令模式
-    - 命令封装
-    - 有执行方法
-    - 有撤销方法
-    - 有命令接口
-
 ## 运行测试
 
 ### Smoke Tests
@@ -921,92 +227,38 @@ suggestions = suggest_maintainability_improvements(analysis)
 - CSF → Code patch（extract_function, add_early_return）
 - Code → CSF 增量更新（incremental_update）
 
-### v0.3 - Recognition Projection
-- RPCM Working Set 状态计算（R0, R1, R2, R3）
-- Projection Scheduler 自动调度
+## 未来规划
 
-### v0.4 - Structural Pattern Matching
-- 13 个内置 pattern（pipeline, branch, fetch_transform_cache, validation_chain, event_handler, singleton, factory, observer, strategy, decorator, repository, service_layer, command）
-- 确定性匹配（不用 LLM）
+根据新愿景，计划实现以下功能：
 
-### v0.5 - 热力图 + 开发引导
-- 模板约束检查
-- 代码骨架生成
-- CLI heatmap 和 generate 命令
+### Desugaring 模块
+- Class 到函数分解
+- 继承分解
+- State 显式化
 
-### v0.6 - Web UI + 投影运行时
-- Flask Web UI 后端
-- WS Budget 控制
-- Focus Lock 机制
-- Progressive Reveal
-- Projection Mode 切换
-- Mermaid 图表生成
-- 人类可读输出
-- 节点分析
+### 虚拟文件系统
+- 继承树到虚拟文件映射
+- 图像作为虚拟文件
+- 虚拟文件编辑器
 
-### v0.7 - 代码分析功能
-- CodeLens 集成
-- 复杂度分析（圈复杂度、认知复杂度）
-- 复杂度热力图可视化
-- 可维护性指数计算
+### 复杂度可视化
+- 复杂度估计
+- AI 置信度评分
+- 绿/红颜色映射
 
-### v0.8 - 安全与质量分析
-- 代码异味检测
-- 密钥检测
-- 依赖漏洞扫描
-- 自适应投影调度
+### Typeflow & Stateflow 分析
+- Typeflow 分析
+- Stateflow 分析
+- Dataflow 分析
+- State 可视化
 
-### v0.9 - 代码导航与重构
-- 代码导航（跳转定义、查找引用、调用层次、类型层次）
-- 代码重构（提取方法、内联方法、重命名、重构建议）
+### 测试生成
+- 从 dataflow/state 自动生成测试
+- 测试执行
+- 覆盖率分析
 
-### v0.10 - 跨文件依赖分析
-- 跨文件依赖分析
-- 循环依赖检测
-- 依赖图生成
-- 依赖重构建议
-
-### v0.11 - 测试覆盖率可视化
-- 测试覆盖率可视化
-- 测试覆盖率报告
-- 测试改进建议
-
-### v0.12 - API 文档生成
-- API 文档自动生成
-- Markdown 格式文档
-- 文档改进建议
-
-## 故障排除
-
-### 缓存问题
-
-如果遇到 pip 缓存错误：
-
-```bash
-.venv\Scripts\python.exe -m pip cache purge
-.venv\Scripts\python.exe -m pip install --no-cache-dir -r project/requirements.txt
-```
-
-### 模块未找到
-
-确保使用虚拟环境运行：
-
-```bash
-.venv\Scripts\python.exe <command>
-```
-
-## 项目状态
-
-所有核心功能已完成并通过验证：
-- v0.1: Structural Expansion Engine ✓
-- v0.2: CSF ↔ Code 增量同步 ✓
-- v0.3: Recognition Projection ✓
-- v0.4: Structural Pattern Matching ✓
-- v0.5: 热力图 + 开发引导 ✓
-- v0.6: Web UI + 投影运行时 ✓
-- v0.7: 代码分析功能 ✓
-- v0.8: 安全与质量分析 ✓
-- v0.9: 代码导航与重构 ✓
-- v0.10: 跨文件依赖分析 ✓
-- v0.11: 测试覆盖率可视化 ✓
-- v0.12: API 文档生成 ✓
+### 本地 APP 界面
+- 本地应用界面（非网页）
+- 代码视图（带复杂度颜色）
+- 流程图视图
+- 测试驱动工作区
