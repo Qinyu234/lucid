@@ -956,20 +956,14 @@ PyTorch 采用功能模块化：
 #### 5.7.8 并发与异步分析
 
 参考 asyncio、concurrent.futures 实现：
-- **Thread Safety Analysis**：线程安全分析
 - **Concurrency Pattern Detection**：并发模式检测
-- **Race Condition Detection**：竞态条件检测
-- **Deadlock Detection**：死锁检测
-- **Resource Leak Detection**：资源泄漏检测
 - **Backpressure Handling Suggestions**：背压处理建议
 
 #### 5.7.9 代码质量保证
 
 参考 SonarQube、CodeClimate、DeepSource 实现：
 - **Code Smell Detection**：代码异味检测
-- **Code Duplication Detection**：代码重复检测
 - **Complexity Metrics**：复杂度指标（圈复杂度、认知复杂度）
-- **Maintainability Index**：可维护性指数
 
 #### 5.7.10 协作功能
 

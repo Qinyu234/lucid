@@ -522,6 +522,18 @@ Web UI 提供以下 API 端点：
 #### 异步模式分析
 - `POST /api/async_analysis` - 分析 async/await 模式
 
+#### 线程安全分析
+- `POST /api/thread_safety_analysis` - 分析线程安全问题
+
+#### 资源泄漏检测
+- `POST /api/detect_resource_leaks` - 检测资源泄漏
+
+#### 死锁检测
+- `POST /api/detect_deadlocks` - 检测死锁
+
+#### 竞态条件检测
+- `POST /api/detect_race_conditions` - 检测竞态条件
+
 #### 死代码检测
 - `POST /api/detect_dead_code` - 检测未使用的代码
 
@@ -530,6 +542,12 @@ Web UI 提供以下 API 端点：
 
 #### 循环依赖检测
 - `POST /api/detect_circular_dependencies` - 检测循环依赖
+
+#### 代码重复检测
+- `POST /api/detect_code_duplication` - 检测代码重复
+
+#### 可维护性指数
+- `POST /api/calculate_maintainability` - 计算可维护性指数
 
 ### 时间旅行调试
 
@@ -586,6 +604,75 @@ analysis = analyze_async_patterns(csf)
 suggestions = suggest_async_improvements(analysis)
 ```
 
+### 线程安全分析
+
+分析线程安全问题，识别潜在的并发问题。
+
+#### 功能
+- **检测共享状态修改**：识别修改共享状态的代码
+- **检测非线程安全操作**：识别非线程安全的操作
+- **建议改进**：提供线程安全改进建议
+
+#### 使用示例
+```python
+from code_analysis.async_analysis.thread_safety import analyze_thread_safety, suggest_thread_safety_improvements
+
+analysis = analyze_thread_safety(csf)
+suggestions = suggest_thread_safety_improvements(analysis)
+```
+
+### 资源泄漏检测
+
+检测资源泄漏，识别未正确关闭的资源。
+
+#### 功能
+- **检测文件泄漏**：识别未正确关闭的文件
+- **检测数据库连接泄漏**：识别未正确关闭的数据库连接
+- **检测网络连接泄漏**：识别未正确关闭的网络连接
+- **建议修复**：提供修复建议
+
+#### 使用示例
+```python
+from code_analysis.async_analysis.resource_leak import detect_resource_leaks, suggest_resource_leak_fixes
+
+analysis = detect_resource_leaks(csf)
+suggestions = suggest_resource_leak_fixes(analysis)
+```
+
+### 死锁检测
+
+检测潜在的死锁情况，识别锁获取顺序问题。
+
+#### 功能
+- **检测锁获取模式**：识别函数中的锁获取模式
+- **检测循环等待条件**：识别可能导致循环等待的锁获取顺序
+- **建议预防**：提供死锁预防建议
+
+#### 使用示例
+```python
+from code_analysis.async_analysis.deadlock import detect_deadlocks, suggest_deadlock_prevention
+
+analysis = detect_deadlocks(csf)
+suggestions = suggest_deadlock_prevention(analysis)
+```
+
+### 竞态条件检测
+
+检测潜在的竞态条件，识别共享状态访问问题。
+
+#### 功能
+- **检测未同步的共享状态访问**：识别未同步的共享状态访问
+- **检测检查-执行模式**：识别可能导致竞态的检查-执行模式
+- **建议修复**：提供修复建议
+
+#### 使用示例
+```python
+from code_analysis.async_analysis.race_condition import detect_race_conditions, suggest_race_condition_fixes
+
+analysis = detect_race_conditions(csf)
+suggestions = suggest_race_condition_fixes(analysis)
+```
+
 ### 死代码检测
 
 识别未使用的代码，建议删除以减少维护负担。
@@ -635,6 +722,41 @@ from code_analysis.quality.circular_dependencies import detect_circular_dependen
 
 analysis = detect_circular_dependencies(csf)
 suggestions = suggest_circular_dependency_resolution(analysis)
+```
+
+### 代码重复检测
+
+识别重复的代码块，建议提取公共代码。
+
+#### 功能
+- **检测重复代码**：识别相似的代码块
+- **计算相似度**：计算代码块之间的相似度
+- **建议提取**：建议提取公共代码
+
+#### 使用示例
+```python
+from code_analysis.quality.code_duplication import detect_code_duplication, suggest_duplication_removal
+
+analysis = detect_code_duplication(csf)
+suggestions = suggest_duplication_removal(analysis)
+```
+
+### 可维护性指数
+
+计算代码的可维护性指数，评估代码的可维护性。
+
+#### 功能
+- **计算可维护性指数**：基于复杂度和代码行数计算可维护性指数
+- **评级**：提供 A/B/C/D 评级
+- **统计信息**：提供代码统计信息（总行数、函数数、类数、平均复杂度）
+- **建议改进**：提供改进建议
+
+#### 使用示例
+```python
+from code_analysis.quality.maintainability import calculate_maintainability_index, suggest_maintainability_improvements
+
+analysis = calculate_maintainability_index(csf)
+suggestions = suggest_maintainability_improvements(analysis)
 ```
 
 ### 投影服务功能
