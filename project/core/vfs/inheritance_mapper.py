@@ -42,7 +42,7 @@ def map_inheritance_to_vfs(csf: Dict[str, Any], vfs: VirtualFileSystem) -> None:
             virtual_path = f"classes/{class_label}.py"
             virtual_file = vfs.create_file(virtual_path, file_type="code")
             
-            # Generate content for the virtual file
+            # Generate content for the virtual file (functional style)
             content = generate_class_virtual_file_content(csf, function_ids, class_label)
             virtual_file.update_content(content)
             
@@ -52,6 +52,7 @@ def map_inheritance_to_vfs(csf: Dict[str, Any], vfs: VirtualFileSystem) -> None:
             virtual_file.set_metadata('function_ids', function_ids)
             virtual_file.set_metadata('inheritance_depth', constructor_node['meta'].get('inheritance_depth', 0))
             virtual_file.set_metadata('inheritance_chain', constructor_node['meta'].get('inheritance_chain', []))
+            virtual_file.set_metadata('style', 'functional')  # Mark as functional style
 
 
 def group_by_original_class(csf: Dict[str, Any]) -> Dict[str, List[str]]:
@@ -79,7 +80,7 @@ def group_by_original_class(csf: Dict[str, Any]) -> Dict[str, List[str]]:
 
 def generate_class_virtual_file_content(csf: Dict[str, Any], function_ids: List[str], class_label: str) -> str:
     """
-    Generate content for a class virtual file.
+    Generate content for a class virtual file in functional style.
     
     Args:
         csf: Desugared CSF structure
@@ -87,25 +88,55 @@ def generate_class_virtual_file_content(csf: Dict[str, Any], function_ids: List[
         class_label: Original class label
         
     Returns:
-        Generated Python code content
+        Generated Python code content (functional style with call markers)
     """
     lines = []
     lines.append(f"# Virtual file for class: {class_label}")
-    lines.append("# This file represents the desugared version of the class")
-    lines.append("")
-    lines.append(f"class {class_label}:")
-    lines.append("    pass  # Placeholder for virtual class structure")
-    lines.append("")
-    lines.append("# Methods (desugared from original class):")
+    lines.append("# Functional style - classes desugared to functions")
+    lines.append("# Click on [CALL] markers to expand function calls")
     lines.append("")
     
+    # Find constructor
+    constructor_id = None
+    for func_id in function_ids:
+        func_node = csf['nodes'].get(func_id)
+        if func_node and func_node['meta'].get('is_constructor'):
+            constructor_id = func_id
+            break
+    
+    # Generate constructor function
+    if constructor_id:
+        constructor_node = csf['nodes'][constructor_id]
+        lines.append(f"# Constructor for {class_label}")
+        lines.append(f"def {constructor_node['label']}(*args, **kwargs):")
+        lines.append("    # Constructor implementation")
+        lines.append("    state = {}")
+        
+        # Add call markers for dependencies
+        for dep_id in constructor_node.get('dependencies', []):
+            dep_node = csf['nodes'].get(dep_id)
+            if dep_node:
+                lines.append(f"    # [CALL] {dep_node['label']} -> expand to see call details")
+        
+        lines.append("    return state")
+        lines.append("")
+    
+    # Generate method functions (with explicit state parameter)
     for func_id in function_ids:
         func_node = csf['nodes'].get(func_id)
         if func_node and not func_node['meta'].get('is_constructor'):
             func_label = func_node['label']
             lines.append(f"# Method: {func_label}")
-            lines.append(f"def {func_label}(self, *args, **kwargs):")
-            lines.append("    pass  # Desugared method implementation")
+            lines.append(f"def {func_label}(state, *args, **kwargs):")
+            lines.append("    # Method implementation with explicit state")
+            
+            # Add call markers for dependencies
+            for dep_id in func_node.get('dependencies', []):
+                dep_node = csf['nodes'].get(dep_id)
+                if dep_node:
+                    lines.append(f"    # [CALL] {dep_node['label']} -> expand to see call details")
+            
+            lines.append("    return state")
             lines.append("")
     
     return "\n".join(lines)

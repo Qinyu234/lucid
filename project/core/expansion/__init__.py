@@ -6,6 +6,7 @@ from core.expansion.inheritance import expand_inheritance
 from core.expansion.dependency import expand_dependencies
 from core.expansion.nesting import flatten_nesting
 from core.expansion.mutation import annotate_mutations
+from core.expansion.deduplication import deduplicate_functions, track_function_reuse
 
 
 def expand(source_path: str, options: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
@@ -31,6 +32,8 @@ def expand(source_path: str, options: Optional[Dict[str, Any]] = None) -> Dict[s
             "dependency_max_span": 2,
             "nesting_max_depth": 3,
             "mutations": True,
+            "deduplication": True,
+            "reuse_tracking": True,
         }
     
     # Step 1: Parse source to CSF

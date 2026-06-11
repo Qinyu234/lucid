@@ -4,6 +4,7 @@ AST visitor that builds CSF structure from Python source code
 """
 
 import ast
+from pathlib import Path
 from typing import Dict, List, Any, Optional
 from core.csf.schema import empty_csf, make_node, generate_node_id
 

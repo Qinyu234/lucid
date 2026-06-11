@@ -1,209 +1,33 @@
-# Architecture Design and Questions
+# 功能实现清单
 
-## New Vision Summary
-- Desugar code, make state explicit
-- Break classes into functions, decompose inheritance
-- Map inheritance tree to virtual files, edit virtual files
-- Images as virtual files
-- AI confidence/complexity visualization (green=good, red=bad)
-- Support function duplication, typeflow analysis, state visualization
-- Test-driven workspace (auto-write tests via data flow, state)
-- Local APP interface (NOT web)
-- Code writing: flowchart → skeleton, estimate complexity/reliability/readability via dataflow/stateflow
-- Cognitive matrix can be ignored for now
+根据 prompt.txt 对照检查，以下功能已完全实现：
 
-## Code to Remove/Simplify
+## 1. 支持多次的函数重复
+- 描述：支持函数的重复使用和去重
+- 状态：已实现
+- 优先级：高
+- 实现细节：修复了 track_function_reuse 函数，正确映射函数名到节点ID
 
-### Remove Entirely:
-1. **Web UI Components**
-   - `project/web/` directory (Flask app, routes, services)
-   - All HTTP endpoints
-   - Browser-based interface
+## 2. 虚拟文件编辑功能
+- 描述：GUI 中能够编辑虚拟文件
+- 状态：已实现
+- 优先级：高
+- 实现细节：在 main_window.py 中添加了文件选择器、可编辑文本区域和保存按钮
 
-2. **Cognitive Matrix Components** (can be ignored for now)
-   - `project/core/recognition/` (RPCM, R0-R3 states)
-   - `project/core/projection/` (scheduler, projection runtime)
-   - `project/web/services/ws_budget.py`
-   - `project/web/services/focus_lock.py`
-   - `project/web/services/progressive_reveal.py`
-   - `project/web/services/projection_mode.py`
-   - `project/web/services/thrash_detector.py`
+## 3. 流程图映射到骨架
+- 描述：写入代码的过程是，流程图映射到骨架
+- 状态：已实现
+- 优先级：高
+- 实现细节：增强了 skeleton_generator.py，支持从流程图节点和边生成代码骨架
 
-3. **Projection Runtime Features**
-   - WS Budget control
-   - Focus Lock mechanism
-   - Progressive Reveal
-   - Projection Mode switching
-   - Thrash Detection
+## 4. AI 复杂度/可靠性/可读性评估集成到代码生成
+- 描述：预估 AI 会在内部的复杂度和可靠性和可读性，集成到代码写入流程
+- 状态：已实现
+- 优先级：中
+- 实现细节：扩展了 complexity_estimator.py，添加 reliability_score、readability_score 和 semantic_complexity
 
-### Keep and Enhance:
-1. **Core CSF**
-   - `project/core/csf/schema.py` - CSF data structure
-   - `project/core/sync/parser.py` - Code → CSF parsing
-   - `project/core/sync/writer.py` - CSF → Code writing
-
-2. **Expansion Engine**
-   - `project/core/expansion/inheritance.py` - Inheritance expansion
-   - `project/core/expansion/dependency.py` - Dependency expansion
-   - `project/core/expansion/nesting.py` - Nesting flatten
-   - `project/core/expansion/mutation.py` - Mutation annotation
-
-3. **Pattern Matching**
-   - `project/core/pattern/` - Structural pattern matching
-
-4. **Template System**
-   - `project/core/template/` - Code generation templates
-
-5. **Code Analysis** (simplify)
-   - Keep complexity analysis
-   - Keep dependency analysis
-   - Remove projection-specific features
-
-## New Architecture to Implement
-
-### 1. Desugaring Module
-```
-project/core/desugar/
-├── desugar.py          - Main desugaring logic
-├── class_to_func.py    - Class to function decomposition
-├── inheritance_decompose.py  - Inheritance decomposition
-└── state_explicit.py   - Make state explicit
-```
-
-### 2. Virtual File System
-```
-project/core/vfs/
-├── virtual_fs.py       - Virtual file system manager
-├── inheritance_mapper.py  - Inheritance tree to virtual file mapping
-├── image_virtual.py    - Image as virtual file
-└── editor.py           - Virtual file editor
-```
-
-### 3. Complexity Visualization
-```
-project/core/complexity/
-├── complexity_estimator.py  - Complexity estimation
-├── confidence_scorer.py     - AI confidence scoring
-├── color_mapper.py         - Green/red color mapping
-└── visualizer.py           - Visualization renderer
-```
-
-### 4. Typeflow & Stateflow Analysis
-```
-project/core/flow/
-├── typeflow.py         - Typeflow analysis
-├── stateflow.py        - Stateflow analysis
-├── dataflow.py         - Dataflow analysis
-└── state_visualizer.py - State visualization
-```
-
-### 5. Test Generation
-```
-project/core/testing/
-├── test_generator.py   - Auto test generation from dataflow/state
-├── test_runner.py     - Test execution
-└── coverage_analyzer.py - Coverage analysis
-```
-
-### 6. Local App Interface
-```
-project/app/
-├── main.py            - Local app entry point
-├── ui/
-│   ├── main_window.py - Main window
-│   ├── code_view.py   - Code view with complexity colors
-│   ├── flow_view.py   - Flowchart view
-│   └── test_view.py   - Test-driven workspace
-├── controllers/
-│   ├── code_controller.py  - Code editing controller
-│   ├── flow_controller.py  - Flowchart controller
-│   └── test_controller.py  - Test controller
-└── models/
-    ├── code_model.py  - Code data model
-    └── vfs_model.py   - Virtual file system model
-```
-
-## Questions for User
-
-### Architecture Questions:
-1. **Local App Framework**: Which framework should we use for the local app?
-   - Options: PyQt6, PySide6, Tkinter, Dear PyGui, Custom TUI
-   - Recommendation: PyQt6 or Dear PyGui for modern UI
-
-2. **Virtual File Format**: What format should virtual files use?
-   - Options: JSON, YAML, Custom binary format, In-memory only
-   - Need to decide persistence strategy
-
-3. **Desugaring Strategy**: How aggressive should desugaring be?
-   - Should we preserve original code structure?
-   - Should desugared code be editable?
-   - How to handle language-specific features?
-
-4. **Complexity Metrics**: Which complexity metrics to use?
-   - Cyclomatic complexity
-   - Cognitive complexity
-   - Semantic complexity
-   - AI confidence score
-   - Custom metrics?
-
-5. **Test Generation Strategy**: How to generate tests from dataflow/state?
-   - Property-based testing (Hypothesis)
-   - Unit test generation
-   - Integration test generation
-   - Edge case detection
-
-6. **Flowchart to Skeleton**: How to map flowchart to code skeleton?
-   - Should flowchart be visual only or editable?
-   - How to handle branching logic?
-   - How to handle loops?
-
-### Implementation Questions:
-7. **Incremental Migration**: Should we remove web UI first or build new features in parallel?
-   - Option A: Remove web UI, then build new features
-   - Option B: Build new features alongside, then remove web UI
-
-8. **Backward Compatibility**: Do we need to keep any web UI features?
-   - API endpoints for external tools?
-   - Command-line interface?
-
-9. **Data Storage**: Where to store virtual files and state?
-   - Local filesystem
-   - In-memory database (SQLite)
-   - No persistence (runtime only)
-
-10. **AI Integration**: How will AI be integrated for code writing?
-    - Local LLM (Ollama, etc.)
-    - Cloud API (OpenAI, etc.)
-    - Hybrid approach
-
-## Recommended Implementation Order
-
-### Phase 1: Cleanup (Week 1)
-1. Remove web UI components
-2. Remove cognitive matrix components
-3. Simplify code analysis modules
-4. Update manual.txt
-
-### Phase 2: Core New Features (Week 2-3)
-1. Implement desugaring module
-2. Implement virtual file system
-3. Implement complexity visualization
-4. Implement typeflow/stateflow analysis
-
-### Phase 3: Test Generation (Week 4)
-1. Implement test generation from dataflow/state
-2. Implement test runner
-3. Implement coverage analysis
-
-### Phase 4: Local App (Week 5-6)
-1. Choose UI framework
-2. Implement main window
-3. Implement code view with complexity colors
-4. Implement flowchart view
-5. Implement test-driven workspace
-
-### Phase 5: Integration (Week 7-8)
-1. Integrate all components
-2. Implement flowchart to skeleton mapping
-3. Implement AI integration
-4. Testing and refinement
+## 5. dataflow/stateflow 详细设置和语义复杂度评估
+- 描述：通过 dataflow, stateflow 的设置详细和语义的复杂度评估
+- 状态：已实现
+- 优先级：中
+- 实现细节：在 dataflow.py 和 stateflow.py 中添加了 variables、flow、settings、states、transitions 等详细设置

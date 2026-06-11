@@ -63,15 +63,49 @@ project/
 │       └── writer.py        # CSF patch → Code
 ├── cli/                    # CLI 模块
 │   ├── tree_printer.py     # 树形打印
-│   ├── heatmap_printer.py  # 热力图打印
-│   └── code_printer.py     # 代码打印
+│   └── __init__.py
+├── app/                    # GUI 应用
+│   ├── main.py             # GUI 入口
+│   ├── ui/
+│   │   └── main_window.py  # PyQt6 主窗口
+│   ├── build_exe.py       # EXE 构建脚本
+│   └── build_exe.spec     # PyInstaller 配置
 ├── examples/               # 示例文件
-└── tests/                  # 测试文件
 ```
 
-## CLI 命令
+## 使用方式
 
-### 1. expand - 展开源文件结构
+### GUI 应用（推荐）
+
+启动本地 GUI 应用：
+
+```bash
+python project/app/main.py
+```
+
+GUI 应用提供：
+- **代码视图** - 查看带复杂度颜色指示的代码（绿/黄/红）
+- **流程图** - 可视化状态流图
+- **测试** - 查看从流分析生成的测试
+- **虚拟文件** - 浏览从继承树创建的虚拟文件系统
+
+### 构建 EXE
+
+构建独立的 exe 文件：
+
+```bash
+# 安装依赖
+pip install -r project/requirements.txt
+
+# 构建 exe
+python project/build_exe.py
+
+# exe 将创建于: project/dist/CSF_App.exe
+```
+
+### CLI 命令
+
+#### 1. expand - 展开源文件结构
 
 ```bash
 .venv\Scripts\python.exe project/cli.py expand <source_path>
@@ -81,12 +115,45 @@ project/
 - `--show-mutations` - 显示 mutation_affects
 - `--show-inherited` - 显示继承的虚拟节点
 
-示例：
+#### 2. desugar - Desugar 代码
+
 ```bash
-.venv\Scripts\python.exe project/cli.py expand project/examples/frontend_sample.py
-.venv\Scripts\python.exe project/cli.py expand project/examples/frontend_sample.py --show-mutations
-.venv\Scripts\python.exe project/cli.py expand project/examples/frontend_sample.py --show-inherited
+.venv\Scripts\python.exe project/cli.py desugar <source_path>
 ```
+
+将类转换为函数，使 state 显式化。
+
+#### 3. analyze - 分析流
+
+```bash
+.venv\Scripts\python.exe project/cli.py analyze <source_path>
+```
+
+分析 typeflow、stateflow 和 dataflow。
+
+#### 4. complexity - 可视化复杂度
+
+```bash
+.venv\Scripts\python.exe project/cli.py complexity <source_path>
+```
+
+添加复杂度分数和颜色指示器。
+
+#### 5. vfs - 创建虚拟文件系统
+
+```bash
+.venv\Scripts\python.exe project/cli.py vfs <source_path>
+```
+
+从继承树创建虚拟文件系统。
+
+#### 6. test - 生成测试
+
+```bash
+.venv\Scripts\python.exe project/cli.py test <source_path>
+```
+
+从流分析自动生成测试。
 
 ## Python API 使用
 

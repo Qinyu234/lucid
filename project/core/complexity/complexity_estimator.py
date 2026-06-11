@@ -6,30 +6,46 @@ Estimates complexity scores for CSF nodes based on various metrics.
 from typing import Dict, Any, List
 
 
-def estimate_complexity(csf: Dict[str, Any]) -> Dict[str, float]:
+def estimate_complexity(csf: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Estimate complexity score for each node in the CSF.
+    Estimate complexity score for each node in the CSF and add metadata.
     
     Args:
         csf: Input CSF structure
         
     Returns:
-        Dictionary mapping node_id to complexity score (0.0 to 1.0)
+        CSF structure with complexity metadata added to nodes
     """
-    complexity_scores = {}
-    
     for node_id, node in csf['nodes'].items():
         if node['kind'] == 'function':
             # Calculate complexity based on multiple factors
             complexity = calculate_function_complexity(node, csf)
-            complexity_scores[node_id] = complexity
+            node['meta']['complexity_score'] = complexity
+            
+            # Calculate reliability score (inverse of complexity)
+            reliability = 1.0 - complexity
+            node['meta']['reliability_score'] = reliability
+            
+            # Calculate readability score (based on complexity and structure)
+            readability = calculate_readability_score(node, csf)
+            node['meta']['readability_score'] = readability
+            
+            # Calculate semantic complexity
+            semantic_complexity = calculate_semantic_complexity(node, csf)
+            node['meta']['semantic_complexity'] = semantic_complexity
         elif node['kind'] == 'class':
             complexity = calculate_class_complexity(node, csf)
-            complexity_scores[node_id] = complexity
+            node['meta']['complexity_score'] = complexity
+            node['meta']['reliability_score'] = 1.0 - complexity
+            node['meta']['readability_score'] = 0.7  # Default for classes
+            node['meta']['semantic_complexity'] = complexity * 0.8
         else:
-            complexity_scores[node_id] = 0.5  # Default complexity
+            node['meta']['complexity_score'] = 0.5
+            node['meta']['reliability_score'] = 0.5
+            node['meta']['readability_score'] = 0.5
+            node['meta']['semantic_complexity'] = 0.5
     
-    return complexity_scores
+    return csf
 
 
 def calculate_function_complexity(node: Dict[str, Any], csf: Dict[str, Any]) -> float:
@@ -100,6 +116,70 @@ def calculate_class_complexity(node: Dict[str, Any], csf: Dict[str, Any]) -> flo
     complexity += avg_method_complexity * 0.3
     
     return min(complexity, 1.0)
+
+
+def calculate_readability_score(node: Dict[str, Any], csf: Dict[str, Any]) -> float:
+    """
+    Calculate readability score for a function node.
+    
+    Args:
+        node: Function node
+        csf: CSF structure
+        
+    Returns:
+        Readability score (0.0 to 1.0, higher is more readable)
+    """
+    readability = 1.0
+    
+    # Factor 1: Reduce readability based on nesting depth
+    child_count = len(node.get('children', []))
+    readability -= min(child_count / 20.0, 0.3)
+    
+    # Factor 2: Reduce readability based on dependencies
+    dep_count = len(node.get('dependencies', []))
+    readability -= min(dep_count / 15.0, 0.2)
+    
+    # Factor 3: Reduce readability based on mutations
+    mutation_count = len(node.get('mutations', []))
+    readability -= min(mutation_count / 10.0, 0.2)
+    
+    return max(readability, 0.0)
+
+
+def calculate_semantic_complexity(node: Dict[str, Any], csf: Dict[str, Any]) -> float:
+    """
+    Calculate semantic complexity for a function node.
+    
+    Args:
+        node: Function node
+        csf: CSF structure
+        
+    Returns:
+        Semantic complexity score (0.0 to 1.0, higher is more complex)
+    """
+    semantic_complexity = 0.0
+    
+    # Factor 1: Based on dataflow complexity
+    if 'dataflow' in node['meta']:
+        dataflow = node['meta']['dataflow']
+        variable_count = len(dataflow.get('variables', []))
+        semantic_complexity += min(variable_count / 10.0, 0.3)
+    
+    # Factor 2: Based on stateflow complexity
+    if 'stateflow' in node['meta']:
+        stateflow = node['meta']['stateflow']
+        state_count = len(stateflow.get('states', []))
+        semantic_complexity += min(state_count / 5.0, 0.3)
+    
+    # Factor 3: Based on control flow complexity
+    child_count = len(node.get('children', []))
+    semantic_complexity += min(child_count / 15.0, 0.2)
+    
+    # Factor 4: Based on operation complexity
+    dep_count = len(node.get('dependencies', []))
+    semantic_complexity += min(dep_count / 10.0, 0.2)
+    
+    return min(semantic_complexity, 1.0)
 
 
 __all__ = ['estimate_complexity']
