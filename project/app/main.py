@@ -1,6 +1,6 @@
 """
 Local Application Entry Point
-Main entry point for the local CSF GUI application.
+Main entry point for the Lucid GUI application.
 """
 
 import sys
