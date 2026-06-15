@@ -1,11 +1,18 @@
 """
 Code parser for Lucid ingestion layer
+Based on ARCHITECTURE.html specification
 Supports multiple languages using tree-sitter
+Outputs: AST, symbol table, import relations
 """
 
 from pathlib import Path
-from typing import Dict, Any, Optional
-import tree_sitter
+from typing import Dict, Any, Optional, List
+
+try:
+    import tree_sitter
+    TREE_SITTER_AVAILABLE = True
+except ImportError:
+    TREE_SITTER_AVAILABLE = False
 
 
 # Language mappings
@@ -41,7 +48,8 @@ def get_language(file_path: str) -> Optional[str]:
 
 def parse_file(file_path: str) -> Dict[str, Any]:
     """
-    Parse a source file and extract its structure.
+    Parse a source file and extract its structure per ARCHITECTURE.html.
+    Outputs: AST, symbol table, import relations.
     
     Args:
         file_path: Path to the source file
@@ -52,6 +60,8 @@ def parse_file(file_path: str) -> Dict[str, Any]:
         - file_path: original file path
         - source_code: raw source code
         - ast: tree-sitter AST (if available)
+        - symbol_table: symbol table per ARCHITECTURE
+        - import_relations: import relations per ARCHITECTURE
         - functions: list of function definitions
         - classes: list of class definitions
         - variables: list of variable assignments
@@ -73,7 +83,7 @@ def parse_file(file_path: str) -> Dict[str, Any]:
 
 def parse_code_string(source_code: str, language: str, file_path: str = "<string>") -> Dict[str, Any]:
     """
-    Parse source code string and extract its structure.
+    Parse source code string and extract its structure per ARCHITECTURE.html.
     
     Args:
         source_code: Source code string
@@ -81,13 +91,15 @@ def parse_code_string(source_code: str, language: str, file_path: str = "<string
         file_path: Original file path (for reference)
         
     Returns:
-        Parsed code structure
+        Parsed code structure with symbol table and import relations
     """
     result = {
         'language': language,
         'file_path': file_path,
         'source_code': source_code,
         'ast': None,
+        'symbol_table': {},  # Symbol table per ARCHITECTURE
+        'import_relations': [],  # Import relations per ARCHITECTURE
         'functions': [],
         'classes': [],
         'variables': [],
@@ -95,26 +107,194 @@ def parse_code_string(source_code: str, language: str, file_path: str = "<string
     }
     
     # Try to use tree-sitter if available
-    try:
-        import tree_sitter_languages as tsl
-        
-        parser = tree_sitter.Parser()
-        parser.set_language(tsl.get_language(language))
-        
-        tree = parser.parse(bytes(source_code, 'utf8'))
-        result['ast'] = tree
-        
-        # Extract information from AST
-        _extract_from_ast(tree, language, result)
-        
-    except (ImportError, AttributeError):
+    if TREE_SITTER_AVAILABLE:
+        try:
+            import tree_sitter_languages as tsl
+            
+            parser = tree_sitter.Parser()
+            parser.set_language(tsl.get_language(language))
+            
+            tree = parser.parse(bytes(source_code, 'utf8'))
+            result['ast'] = tree
+            
+            # Extract information from AST
+            _extract_from_ast(tree, language, result)
+            
+            # Build symbol table per ARCHITECTURE
+            result['symbol_table'] = _build_symbol_table(tree, language, file_path)
+            
+            # Extract import relations per ARCHITECTURE
+            result['import_relations'] = _extract_import_relations(tree, language, file_path)
+        except (ImportError, AttributeError, Exception) as e:
+            # Fallback to basic regex-based parsing if tree-sitter fails
+            _extract_basic(source_code, language, result)
+            
+            # Build basic symbol table from regex extraction
+            result['symbol_table'] = _build_basic_symbol_table(result, file_path)
+    else:
         # Fallback to basic regex-based parsing if tree-sitter not available
         _extract_basic(source_code, language, result)
+        
+        # Build basic symbol table from regex extraction
+        result['symbol_table'] = _build_basic_symbol_table(result, file_path)
     
     return result
 
 
-def _extract_from_ast(tree: tree_sitter.Tree, language: str, result: Dict[str, Any]) -> None:
+def _build_symbol_table(tree, language: str, file_path: str) -> Dict[str, Any]:
+    """
+    Build symbol table from AST per ARCHITECTURE.html specification.
+    Symbol table maps symbols to their definitions and scopes.
+    
+    Args:
+        tree: Tree-sitter AST
+        language: Programming language
+        file_path: File path for reference
+        
+    Returns:
+        Symbol table dictionary
+    """
+    symbol_table = {
+        'functions': {},
+        'classes': {},
+        'variables': {},
+        'modules': {},
+    }
+    
+    def traverse(node, scope: str = "module", depth: int = 0):
+        node_type = node.type
+        
+        # Extract function definitions
+        if node_type in ['function_definition', 'function_declaration', 'method_definition']:
+            func_info = _extract_function_info(node, language)
+            if func_info:
+                symbol_table['functions'][func_info['name']] = {
+                    'defined': f"{file_path}:{func_info['line']}",
+                    'scope': scope,
+                    'parameters': func_info.get('parameters', []),
+                    'type': 'function'
+                }
+        
+        # Extract class definitions
+        elif node_type in ['class_definition', 'class_declaration']:
+            class_info = _extract_class_info(node, language)
+            if class_info:
+                symbol_table['classes'][class_info['name']] = {
+                    'defined': f"{file_path}:{class_info['line']}",
+                    'scope': scope,
+                    'base_class': class_info.get('base_class'),
+                    'type': 'class'
+                }
+        
+        # Extract variable assignments
+        elif node_type in ['assignment', 'assignment_expression']:
+            var_info = _extract_variable_info(node, language)
+            if var_info:
+                symbol_table['variables'][var_info['name']] = {
+                    'defined': f"{file_path}:{var_info['line']}",
+                    'scope': scope,
+                    'type': 'variable'
+                }
+        
+        # Track scope changes
+        new_scope = scope
+        if node_type in ['function_definition', 'function_declaration', 'method_definition', 'class_definition', 'class_declaration']:
+            name_node = None
+            for child in node.children:
+                if child.type == 'identifier':
+                    name_node = child
+                    break
+            if name_node:
+                new_scope = name_node.text.decode('utf-8')
+        
+        # Recursively traverse children
+        for child in node.children:
+            traverse(child, new_scope, depth + 1)
+    
+    traverse(tree.root_node)
+    return symbol_table
+
+
+def _build_basic_symbol_table(parsed_data: Dict[str, Any], file_path: str) -> Dict[str, Any]:
+    """
+    Build basic symbol table from regex-extracted data.
+    
+    Args:
+        parsed_data: Parsed data from regex extraction
+        file_path: File path for reference
+        
+    Returns:
+        Basic symbol table
+    """
+    symbol_table = {
+        'functions': {},
+        'classes': {},
+        'variables': {},
+        'modules': {},
+    }
+    
+    for func in parsed_data.get('functions', []):
+        symbol_table['functions'][func['name']] = {
+            'defined': f"{file_path}:{func['line']}",
+            'scope': 'module',
+            'parameters': func.get('parameters', []),
+            'type': 'function'
+        }
+    
+    for cls in parsed_data.get('classes', []):
+        symbol_table['classes'][cls['name']] = {
+            'defined': f"{file_path}:{cls['line']}",
+            'scope': 'module',
+            'base_class': cls.get('base_class'),
+            'type': 'class'
+        }
+    
+    for var in parsed_data.get('variables', []):
+        symbol_table['variables'][var['name']] = {
+            'defined': f"{file_path}:{var['line']}",
+            'scope': 'module',
+            'type': 'variable'
+        }
+    
+    return symbol_table
+
+
+def _extract_import_relations(tree, language: str, file_path: str) -> List[Dict[str, Any]]:
+    """
+    Extract import relations per ARCHITECTURE.html specification.
+    Tracks module dependencies.
+    
+    Args:
+        tree: Tree-sitter AST
+        language: Programming language
+        file_path: File path for reference
+        
+    Returns:
+        List of import relations
+    """
+    import_relations = []
+    
+    def traverse(node):
+        node_type = node.type
+        
+        if node_type in ['import_statement', 'import_from_statement', 'import_declaration']:
+            import_text = node.text.decode('utf-8')
+            import_relations.append({
+                'statement': import_text,
+                'line': node.start_point[0] + 1,
+                'column': node.start_point[1],
+                'file': file_path,
+                'type': node_type
+            })
+        
+        for child in node.children:
+            traverse(child)
+    
+    traverse(tree.root_node)
+    return import_relations
+
+
+def _extract_from_ast(tree, language: str, result: Dict[str, Any]) -> None:
     """
     Extract code structure from tree-sitter AST.
     
@@ -125,7 +305,7 @@ def _extract_from_ast(tree: tree_sitter.Tree, language: str, result: Dict[str, A
     """
     root_node = tree.root_node
     
-    def traverse(node: tree_sitter.Node, depth: int = 0):
+    def traverse(node, depth: int = 0):
         node_type = node.type
         
         # Extract function definitions
@@ -159,7 +339,7 @@ def _extract_from_ast(tree: tree_sitter.Tree, language: str, result: Dict[str, A
     traverse(root_node)
 
 
-def _extract_function_info(node: tree_sitter.Node, language: str) -> Optional[Dict[str, Any]]:
+def _extract_function_info(node, language: str) -> Optional[Dict[str, Any]]:
     """Extract function information from AST node."""
     try:
         name_node = None
@@ -198,7 +378,7 @@ def _extract_function_info(node: tree_sitter.Node, language: str) -> Optional[Di
         return None
 
 
-def _extract_class_info(node: tree_sitter.Node, language: str) -> Optional[Dict[str, Any]]:
+def _extract_class_info(node, language: str) -> Optional[Dict[str, Any]]:
     """Extract class information from AST node."""
     try:
         name_node = None
@@ -226,7 +406,7 @@ def _extract_class_info(node: tree_sitter.Node, language: str) -> Optional[Dict[
         return None
 
 
-def _extract_variable_info(node: tree_sitter.Node, language: str) -> Optional[Dict[str, Any]]:
+def _extract_variable_info(node, language: str) -> Optional[Dict[str, Any]]:
     """Extract variable assignment information from AST node."""
     try:
         left_node = None
@@ -256,7 +436,7 @@ def _extract_variable_info(node: tree_sitter.Node, language: str) -> Optional[Di
         return None
 
 
-def _extract_import_info(node: tree_sitter.Node, language: str) -> Optional[Dict[str, Any]]:
+def _extract_import_info(node, language: str) -> Optional[Dict[str, Any]]:
     """Extract import information from AST node."""
     try:
         import_text = node.text.decode('utf-8')

@@ -110,8 +110,8 @@ class TestDefUseView:
         high_impact = view.get_high_impact_variables(threshold=3)
         
         assert len(high_impact) == 1
-        assert 'high_impact' in high_impact
-        assert 'low_impact' not in high_impact
+        assert high_impact[0]['variable'] == 'high_impact'  # Returns dict per ARCHITECTURE
+        assert all(item['variable'] != 'low_impact' for item in high_impact)
     
     def test_get_high_impact_variables_sorted(self):
         """Test that high impact variables are sorted by use count."""
@@ -127,10 +127,10 @@ class TestDefUseView:
         view = DefUseView(contracts)
         high_impact = view.get_high_impact_variables(threshold=2)
         
-        # Should be sorted by use count (descending)
-        assert high_impact[0] == 'var5'
-        assert high_impact[1] == 'var4'
-        assert high_impact[2] == 'var3'
+        # Should be sorted by use count (descending) - returns dict per ARCHITECTURE
+        assert high_impact[0]['variable'] == 'var5'
+        assert high_impact[1]['variable'] == 'var4'
+        assert high_impact[2]['variable'] == 'var3'
     
     def test_get_write_only_variables(self):
         """Test getting write-only variables."""
@@ -227,7 +227,7 @@ class TestRenderSummary:
         
         summary = render_summary(view)
         
-        assert "Access Contract Summary" in summary
+        assert "Def-Use Contract Summary (VIEW 04)" in summary  # Updated per ARCHITECTURE
         assert "2 variables" in summary or "Total variables analyzed: 2" in summary
     
     def test_render_summary_with_high_impact(self):

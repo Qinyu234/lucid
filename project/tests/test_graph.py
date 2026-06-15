@@ -32,28 +32,28 @@ class TestNodeCreation:
         assert len(node.callers) == 0
     
     def test_create_class_node(self):
-        """Test creation of class node."""
+        """Test creation of class node (mapped to MODULE per ARCHITECTURE)."""
         node = create_class_node("TestClass", 5, 0, "test.py", "BaseClass")
         
         assert node.name == "TestClass"
-        assert node.type == NodeType.CLASS
+        assert node.type == NodeType.MODULE  # Mapped to MODULE per ARCHITECTURE
         assert node.source_ref['line'] == 5
         assert node.meta['base_class'] == "BaseClass"
     
     def test_create_class_node_without_base(self):
-        """Test creation of class node without base class."""
+        """Test creation of class node (mapped to MODULE per ARCHITECTURE) without base class."""
         node = create_class_node("TestClass", 5, 0, "test.py")
         
         assert node.name == "TestClass"
-        assert node.type == NodeType.CLASS
+        assert node.type == NodeType.MODULE  # Mapped to MODULE per ARCHITECTURE
         assert node.meta.get('base_class') is None
     
     def test_create_variable_node(self):
-        """Test creation of variable node."""
+        """Test creation of variable node (mapped to STATE per ARCHITECTURE)."""
         node = create_variable_node("x", 15, 4, "test.py", "42")
         
         assert node.name == "x"
-        assert node.type == NodeType.VARIABLE
+        assert node.type == NodeType.STATE  # Mapped to STATE per ARCHITECTURE
         assert node.source_ref['line'] == 15
         assert node.meta['initial_value'] == "42"
     
@@ -227,7 +227,7 @@ class TestGraphBuilding:
         assert graph.get_functions()[0].name == 'func'
     
     def test_build_graph_with_classes(self):
-        """Test building graph with classes."""
+        """Test building graph with classes (mapped to MODULE per ARCHITECTURE)."""
         parsed_data = {
             'file_path': 'test.py',
             'language': 'python',
@@ -241,8 +241,12 @@ class TestGraphBuilding:
         
         graph = build_code_graph(parsed_data)
         
-        assert len(graph.get_classes()) == 1
-        assert graph.get_classes()[0].name == 'MyClass'
+        # Should have 1 class + 1 module node for the file itself (both are MODULE type per ARCHITECTURE)
+        assert len(graph.get_classes()) == 2
+        # Filter out the file module node to get actual class count
+        actual_classes = [c for c in graph.get_classes() if c.name != 'test.py']
+        assert len(actual_classes) == 1
+        assert actual_classes[0].name == 'MyClass'
     
     def test_build_graph_with_variables(self):
         """Test building graph with variables."""
@@ -292,7 +296,7 @@ def func_b():
         assert func_a.id in func_b.callers
     
     def test_build_graph_with_class_inheritance(self):
-        """Test building graph with class inheritance."""
+        """Test building graph with class inheritance (coupled_with edge per ARCHITECTURE)."""
         parsed_data = {
             'file_path': 'test.py',
             'language': 'python',
@@ -312,12 +316,15 @@ class Child(Parent):
         
         graph = build_code_graph(parsed_data)
         
-        parent = graph.get_classes()[0]
-        child = graph.get_classes()[1]
+        # Filter out file module node (mapped to MODULE per ARCHITECTURE)
+        actual_classes = [c for c in graph.get_classes() if c.name != 'test.py']
+        parent = actual_classes[0]
+        child = actual_classes[1]
         
-        # Child should inherit from Parent
-        assert parent.id in child.meta.get('inherits_from', '')
-        # Parent should be inherited by Child
+        # Child should have coupled_with edge to Parent per ARCHITECTURE
+        from core.graph.nodes import EdgeType
+        assert parent.id in child.edges[EdgeType.COUPLED_WITH]
+        # Parent should be inherited by Child (stored in meta)
         assert child.id in parent.meta.get('inherited_by', [])
 
 

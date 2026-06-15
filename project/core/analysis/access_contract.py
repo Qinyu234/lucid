@@ -1,5 +1,6 @@
 """
 Access Contract extraction for Lucid
+Based on ARCHITECTURE.html specification
 For every piece of state, track who writes it and who reads it
 """
 
@@ -28,7 +29,7 @@ class UseSite:
 @dataclass
 class AccessContract:
     """
-    Access Contract for a piece of state.
+    Access Contract for a piece of state per ARCHITECTURE.html.
     
     Example:
     {
@@ -39,6 +40,8 @@ class AccessContract:
         "source": "inferred"
       }
     }
+    
+    source field: "inferred" (tool-inferred, can be overridden) or "explicit" (human-declared, enforced)
     """
     variable_name: str
     defined: str  # Where it's first defined
@@ -47,7 +50,7 @@ class AccessContract:
     source: str = "inferred"  # "inferred" or "explicit"
     
     def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary format matching README example."""
+        """Convert to dictionary format matching ARCHITECTURE.html example."""
         return {
             self.variable_name: {
                 "defined": self.defined,
@@ -56,6 +59,18 @@ class AccessContract:
                 "source": self.source,
             }
         }
+    
+    def get_writers_count(self) -> int:
+        """Get number of writers for this state."""
+        return len(self.write_sites)
+    
+    def get_readers_count(self) -> int:
+        """Get number of readers for this state."""
+        return len(self.use_sites)
+    
+    def is_healthy(self, max_writers: int = 3) -> bool:
+        """Check if state has acceptable number of writers."""
+        return self.get_writers_count() <= max_writers
 
 
 def extract_access_contracts(graph, source_code: str, ast=None) -> Dict[str, AccessContract]:
@@ -73,7 +88,7 @@ def extract_access_contracts(graph, source_code: str, ast=None) -> Dict[str, Acc
     contracts: Dict[str, AccessContract] = {}
     lines = source_code.split('\n')
     
-    # Get all variable nodes
+    # Get all variable nodes (now StateNode per ARCHITECTURE.html)
     variables = graph.get_variables()
     
     # Build scope information from AST if available
@@ -98,6 +113,107 @@ def extract_access_contracts(graph, source_code: str, ast=None) -> Dict[str, Acc
         )
     
     return contracts
+
+
+def check_explicit_contract_violation(contract: AccessContract, allowed_writers: List[str], 
+                                       allowed_readers: List[str]) -> Dict[str, Any]:
+    """
+    Check if an explicit contract is violated.
+    Per ARCHITECTURE.html: explicit contracts are human-declared and tool-enforced.
+    
+    Args:
+        contract: AccessContract to check
+        allowed_writers: List of allowed writer contexts (function/module names)
+        allowed_readers: List of allowed reader contexts (function/module names)
+        
+    Returns:
+        Violation report with violations found
+    """
+    violations = {
+        'variable': contract.variable_name,
+        'violations': [],
+        'is_valid': True
+    }
+    
+    # Check writer violations
+    actual_writers = set(ws.context for ws in contract.write_sites)
+    for writer in actual_writers:
+        if writer not in allowed_writers:
+            violations['violations'].append({
+                'type': 'writer_violation',
+                'context': writer,
+                'message': f"Writer '{writer}' not in allowed writers list"
+            })
+    
+    # Check reader violations
+    actual_readers = set(us.context for us in contract.use_sites)
+    for reader in actual_readers:
+        if reader not in allowed_readers:
+            violations['violations'].append({
+                'type': 'reader_violation',
+                'context': reader,
+                'message': f"Reader '{reader}' not in allowed readers list"
+            })
+    
+    violations['is_valid'] = len(violations['violations']) == 0
+    return violations
+
+
+def analyze_impact(state_name: str, contracts: Dict[str, AccessContract]) -> Dict[str, Any]:
+    """
+    Analyze impact of changing a state variable.
+    Per ARCHITECTURE.html: show readers impact before changes.
+    
+    Args:
+        state_name: Name of the state being changed
+        contracts: All access contracts
+        
+    Returns:
+        Impact analysis showing which readers will be affected
+    """
+    if state_name not in contracts:
+        return {
+            'state': state_name,
+            'found': False,
+            'message': f"State '{state_name}' not found in contracts"
+        }
+    
+    contract = contracts[state_name]
+    
+    # Build impact chain
+    impact = {
+        'state': state_name,
+        'defined': contract.defined,
+        'writers': [ws.context for ws in contract.write_sites],
+        'readers': [us.context for us in contract.use_sites],
+        'total_readers': len(contract.use_sites),
+        'total_writers': len(contract.write_sites),
+        'risk_level': _calculate_risk_level(contract),
+        'affected_functions': _get_affected_functions(contract)
+    }
+    
+    return impact
+
+
+def _calculate_risk_level(contract: AccessContract) -> str:
+    """
+    Calculate risk level based on number of readers.
+    Per ARCHITECTURE.html: more readers = higher risk.
+    """
+    reader_count = len(contract.use_sites)
+    if reader_count == 0:
+        return "none"
+    elif reader_count <= 2:
+        return "low"
+    elif reader_count <= 5:
+        return "medium"
+    else:
+        return "high"
+
+
+def _get_affected_functions(contract: AccessContract) -> List[str]:
+    """Get unique functions affected by this state."""
+    return list(set(us.context for us in contract.use_sites))
 
 
 def _build_scope_info(ast, source_code: str, graph) -> Dict[str, Any]:
